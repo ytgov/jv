@@ -20,7 +20,7 @@ export const up = function (knex: knex.Knex, Promise: any) {
 		t.string('RecNote', 200).nullable();
 		t.string('RecApproveUser', 10).nullable();
 		t.date('RecApproveDate').nullable();
-		t.foreign('Recid').references('Recovery.id');
+		t.foreign('Recid').references('Recovery.recid');
 	});
 };
 

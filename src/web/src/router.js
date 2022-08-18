@@ -4,7 +4,6 @@ import VueRouter from "vue-router";
 import NotFound from "@/views/NotFound.vue";
 import Login from "@/components/Login";
 import LoginComplete from "@/components/LoginComplete";
-import Profile from "@/components/Profile";
 import store from "@/store";
 
 import homeRoutes from "@/modules/home/router";
@@ -21,14 +20,6 @@ const routes = [
     path: "/login-complete",
     name: "LoginComplete",
     component: LoginComplete
-  },
-  {
-    path: "/profile",
-    name: "Profile",
-    component: Profile,
-    meta: {
-      requiresAuth: true
-    }
   },
   ...homeRoutes,
   {

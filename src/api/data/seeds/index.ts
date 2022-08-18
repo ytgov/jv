@@ -1,12 +1,10 @@
-const environment = process.env.NODE_ENV || 'staging';
-const config = require('../../config/knexfile.js')[environment];
-const knex = require('knex')(config);
+import { sqldb } from '..';
 
 export async function seedUp() {
 	console.log('Seeding');
 
-	await knex('user').delete().whereRaw('1=1');
-	await knex('user').insert([
+	await sqldb('user').delete().whereRaw('1=1');
+	await sqldb('user').insert([
 		{
 			email: 'diedre.davidson@gov.yk.ca',
 			first_name: 'Diedre',

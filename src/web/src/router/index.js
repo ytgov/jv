@@ -1,44 +1,17 @@
 import Vue from "vue";
 import VueRouter from "vue-router";
-import Home from "../components/Home.vue";
-import Dashboard from "../components/Dashboard.vue";
-import NotFound from "../views/NotFound.vue";
-import Form from "../components/Form";
-import Grid from "../components/Grid";
-import Login from "../components/Login";
-import LoginComplete from "../components/LoginComplete";
-import Profile from "../components/Profile";
-import store from "../store";
+
+import NotFound from "@/views/NotFound.vue";
+import Login from "@/components/Login";
+import LoginComplete from "@/components/LoginComplete";
+import Profile from "@/components/Profile";
+import store from "@/store";
+
+import homeRoutes from "@/modules/home/router";
 
 Vue.use(VueRouter);
 
 const routes = [
-  {
-    path: "/",
-    name: "Home",
-    component: Home
-  },
-  {
-    path: "/dashboard",
-    name: "Dashboard",
-    component: Dashboard
-  },
-  {
-    path: "/form",
-    name: "Basic Form",
-    component: Form,
-    meta: {
-      requiresAuth: true
-    }
-  },
-  {
-    path: "/grid",
-    name: "Data grid",
-    component: Grid,
-    meta: {
-      requiresAuth: true
-    }
-  },
   {
     path: "/sign-in",
     name: "Login",
@@ -57,6 +30,7 @@ const routes = [
       requiresAuth: true
     }
   },
+  ...homeRoutes,
   {
     path: "*",
     name: "Not Found",

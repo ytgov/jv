@@ -12,6 +12,8 @@ services:
       - sqldata:/var/opt/sqlserver/data
       - sqllog:/var/opt/sqlserver/log
       - sqlbackup:/var/opt/sqlserver/backup
+    ports:
+     - "1433:1433"
 
 volumes:
   sqlsystem:

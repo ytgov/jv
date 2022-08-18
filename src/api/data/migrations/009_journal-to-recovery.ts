@@ -14,7 +14,7 @@ exports.up = function (knex: knex.Knex, Promise: any) {
 		t.integer('jvid').notNullable();
 		t.integer('recid').notNullable();
 		t.foreign('jvid').references('JournalVoucher.id');
-		t.foreign('recid').references('Recovery.id');
+		t.foreign('recid').references('Recovery.recid');
 	});
 };
 

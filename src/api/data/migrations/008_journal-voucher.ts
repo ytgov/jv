@@ -17,3 +17,7 @@ export const up = function (knex: knex.Knex, Promise: any) {
 		t.integer('JVamount').notNullable();
 	});
 };
+
+export const down = function (knex: knex.Knex, Promise: any) {
+	return knex.schema.dropTable('JournalVoucher');
+};

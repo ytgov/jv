@@ -30,7 +30,7 @@ export const up = function (knex: knex.Knex, Promise: any) {
 		t.date('StatusChangeDate').nullable();
 		t.string('StatusNote', 140).nullable();
 		t.string('StatusChangeUser', 10).nullable();
-		t.foreign('recid').references('Recovery.id');
+		t.foreign('recid').references('Recovery.recid');
 	});
 };
 

@@ -8,6 +8,8 @@ import store from "@/store";
 
 import homeRoutes from "@/modules/home/router";
 
+import DeptCodeAdmin from "@/components/admin/DeptCodeAdmin";
+
 Vue.use(VueRouter);
 
 const routes = [
@@ -26,6 +28,11 @@ const routes = [
     path: "*",
     name: "Not Found",
     component: NotFound
+  },
+  {
+    path: "/Admin/DeptCodeAdmin",
+    name: "Departmental Coding Admin",
+    component: DeptCodeAdmin
   }
 ];
 

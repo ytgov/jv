@@ -7,8 +7,9 @@ import LoginComplete from "@/components/LoginComplete";
 import store from "@/store";
 
 import homeRoutes from "@/modules/home/router";
+import recoveryRoutes from "@/modules/recovery/router";
 
-import DeptCodeAdmin from "@/components/admin/DeptCodeAdmin";
+import DeptCodeAdmin from "@/components/Admin/DeptCodeAdmin";
 
 Vue.use(VueRouter);
 
@@ -16,30 +17,31 @@ const routes = [
   {
     path: "/sign-in",
     name: "Login",
-    component: Login
+    component: Login,
   },
   {
     path: "/login-complete",
     name: "LoginComplete",
-    component: LoginComplete
+    component: LoginComplete,
   },
   ...homeRoutes,
+  ...recoveryRoutes,
   {
     path: "*",
     name: "Not Found",
-    component: NotFound
+    component: NotFound,
   },
   {
     path: "/Admin/DeptCodeAdmin",
     name: "Departmental Coding Admin",
-    component: DeptCodeAdmin
-  }
+    component: DeptCodeAdmin,
+  },
 ];
 
 const router = new VueRouter({
   mode: "history",
   base: process.env.BASE_URL,
-  routes
+  routes,
 });
 
 router.beforeEach(async (to, from, next) => {
@@ -53,7 +55,7 @@ router.beforeEach(async (to, from, next) => {
   var isAuthenticated = store.getters.isAuthenticated;
 
   if (requiresAuth && !isAuthenticated) {
-    console.log("You aren't authenticatd, redirecting to sign-in")
+    console.log("You aren't authenticatd, redirecting to sign-in");
     next("/sign-in");
     return;
   }

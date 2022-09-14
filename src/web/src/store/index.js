@@ -5,6 +5,7 @@ import auth from "./auth";
 import profile from "./profile";
 
 import home from "@/modules/home/store"
+import recovery from "@/modules/recovery/store"
 
 Vue.use(Vuex);
 
@@ -12,5 +13,5 @@ export default new Vuex.Store({
   state: {},
   mutations: {},
   actions: {},
-  modules: { auth, profile, home }
+  modules: { auth, profile, home, recovery }
 });

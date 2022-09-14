@@ -1,7 +1,7 @@
 
 const routes = [
     {
-      path: "/",
+      path: "/recovery",
       component: () => import("@/layouts/Layout"),
       children: [
         {
@@ -12,7 +12,7 @@ const routes = [
         },
         {
           name: "CreateRecovery",
-          path: "/create-recovery",
+          path: "create",
           meta: { requiresAuth: true },
           component: () => import("../views/CreateRecovery.vue"),
         },

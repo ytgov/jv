@@ -1,27 +1,40 @@
 import axios from "axios";
-import { DEPARTMENT_URL } from "@/urls";
+import { RECOVERY_URL } from "@/urls";
 
-const state = {
-  departments: [],
-};
+const state = {};
 
 const actions = {
   async initialize() {
-    console.log("-- Initializing Home Store");
-    
+    console.log("-- Initializing Recovery Store");
   },
-  async loadDepartments({ commit }) {
-    axios.get(DEPARTMENT_URL).then((resp) => {
-      commit("SET_DEPARTMENTS", resp.data);
+  async getAll() {
+    return axios.get(RECOVERY_URL).then((resp) => {
+      resp.data.data;
+    });
+  },
+  async create(store, { body }) {
+    console.log(body);
+
+    return axios.post(RECOVERY_URL, body).then((resp) => {
+      return resp.data;
+    });
+  },
+  async update(store, { item }) {
+    let id = item.id;
+    console.log(item);
+
+    return axios.put(`${RECOVERY_URL}/${id}`, item).then((resp) => {
+      return resp.data;
+    });
+  },
+  async delete(store, { id }) {
+    return axios.post(`${RECOVERY_URL}.${id}`).then((resp) => {
+      return resp.data;
     });
   },
 };
 
-const mutations = {
-  SET_DEPARTMENTS(state, value) {
-    state.departments = value;
-  },
-};
+const mutations = {};
 
 export default {
   namespaced: true,

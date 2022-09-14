@@ -2,7 +2,7 @@
   <v-container fluid class="down-top-padding">
     <h1>Create Recovery</h1>
 
-    <create-recovery-form></create-recovery-form>
+    <create-recovery-form :saveComplete="reloadList"></create-recovery-form>
   </v-container>
 </template>
 

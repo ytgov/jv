@@ -13,7 +13,7 @@
 
       <v-card tile>
         <v-card-text class="pt-3">
-          <create-recovery-form></create-recovery-form>
+          <create-recovery-form :saveComplete="loadList"></create-recovery-form>
         </v-card-text>
       </v-card>
     </v-dialog>
@@ -21,6 +21,7 @@
 </template>
 
 <script>
+import { mapActions } from "vuex";
 import CreateRecoveryForm from "../components/CreateRecoveryForm.vue";
 
 export default {
@@ -28,12 +29,20 @@ export default {
   components: { CreateRecoveryForm },
   data: () => ({
     showEditDialog: false,
+    items: [],
   }),
+  mounted() {
+    this.loadList();
+  },
   methods: {
+    ...mapActions("recovery", ["getAll"]),
     showEdit() {
-      //this.showEditDialog = true;
+      this.showEditDialog = true;
 
-      this.$router.push("/recovery/create")
+      //this.$router.push("/recovery/create");
+    },
+    async loadList() {
+      this.items = await this.getAll();
     },
   },
 };

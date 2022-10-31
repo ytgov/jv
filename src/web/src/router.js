@@ -9,7 +9,7 @@ import store from "@/store";
 import homeRoutes from "@/modules/home/router";
 import recoveryRoutes from "@/modules/recovery/router";
 
-import DeptCodeAdmin from "@/components/Admin/DeptCodeAdmin";
+import adminRoutes from "@/modules/admin/router";
 
 Vue.use(VueRouter);
 
@@ -26,15 +26,11 @@ const routes = [
   },
   ...homeRoutes,
   ...recoveryRoutes,
+  ...adminRoutes,
   {
     path: "*",
     name: "Not Found",
     component: NotFound,
-  },
-  {
-    path: "/Admin/DeptCodeAdmin",
-    name: "Departmental Coding Admin",
-    component: DeptCodeAdmin,
   },
 ];
 

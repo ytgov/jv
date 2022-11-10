@@ -16,6 +16,12 @@ const routes = [
           meta: { requiresAuth: true },
           component: () => import("../views/CreateRecovery.vue"),
         },
+        {
+          name: "EditRecovery",
+          path: ":id",
+          meta: { requiresAuth: true },
+          component: () => import("../views/EditRecovery.vue"),
+        },
       ]
     },
   ];

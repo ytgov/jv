@@ -12,5 +12,7 @@ import CreateRecoveryForm from "../components/CreateRecoveryForm.vue";
 export default {
   name: "DepartmentList",
   components: { CreateRecoveryForm },
+
+  methods: {},
 };
 </script>

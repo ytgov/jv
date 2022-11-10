@@ -18,6 +18,7 @@ formRouter.get("/", ReturnValidationErrors, async function (req: Request, res: R
     //get items from db for each recovery
 
     for (let recovery of recoveryList) {
+      recovery.display_name = `${recovery.FirstName} ${recovery.LastName}`;
       recovery.items = await db("Item").select("*").where("recid", recovery.recid);
     }
 
@@ -46,6 +47,9 @@ formRouter.post("/", ReturnValidationErrors, async function (req: Request, res: 
     await db.transaction(async (trx) => {
       let items = req.body.items;
       delete req.body.items;
+
+      console.log(req.body);
+
       let recovery = await db("Recovery").insert(req.body).returning("recid").transacting(trx);
 
       for (let index = 0; index < items.length; index++) {

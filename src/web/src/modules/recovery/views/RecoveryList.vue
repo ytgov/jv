@@ -2,7 +2,8 @@
   <v-container>
     <h1>Recovery List</h1>
     <v-btn @click="showEdit" color="primary">Create</v-btn>
-    <v-data-table></v-data-table>
+
+    <v-data-table :items="items" :headers="headers" @click:row="rowClick"></v-data-table>
 
     <v-dialog v-model="showEditDialog" persistent width="600">
       <v-app-bar dark color="#0097A9">
@@ -30,6 +31,14 @@ export default {
   data: () => ({
     showEditDialog: false,
     items: [],
+    headers: [
+      { text: "Create date", value: "CreateDate" },
+      { text: "Department", value: "Department" },
+      { text: "Request", value: "RequestDesc" },
+      { text: "Requestee", value: "display_name" },
+      { text: "Status", value: "" },
+      { text: "Item Status", value: "items.length" },
+    ],
   }),
   mounted() {
     this.loadList();
@@ -43,6 +52,9 @@ export default {
     },
     async loadList() {
       this.items = await this.getAll();
+    },
+    rowClick(item) {
+      this.$router.push(`/recovery/${item.recid}`);
     },
   },
 };

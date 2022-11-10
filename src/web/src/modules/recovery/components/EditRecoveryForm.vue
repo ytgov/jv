@@ -28,7 +28,8 @@
       ></v-col>
     </v-row>
 
-    <v-btn color="primary" @click="createClick" :disabled="!canCreate">Create</v-btn>
+    <v-btn color="primary" @click="saveClick" :disabled="!canSave" class="mr-5">Save</v-btn>
+    <v-btn color="secondary" @click="cancelClick">Cancel</v-btn>
   </v-form>
 </template>
 
@@ -41,17 +42,33 @@ export default {
     recovery: { items: [] },
   }),
   computed: {
-    canCreate() {
-      if (this.recovery.FirstName && this.recovery.LastName && this.recovery.Department && this.recovery.Branch && this.recovery.RefNum)
+    canSave() {
+      if (
+        this.recovery.FirstName &&
+        this.recovery.LastName &&
+        this.recovery.Department &&
+        this.recovery.Branch &&
+        this.recovery.RefNum
+      )
         return true;
 
       return false;
     },
   },
-  methods: {
-    ...mapActions("recovery", ["create"]),
+  async mounted() {
 
-    async createClick() {
+    console.log(this.$route.params.id)
+
+    let id = this.$route.params.id;
+    this.recovery = await this.getById({id:id});
+  },
+  methods: {
+    ...mapActions("recovery", ["getById", "update"]),
+
+    cancelClick() {
+      this.$router.push("/recovery");
+    },
+    async saveClick() {
       if (this.canCreate) {
         await this.create({ body: this.recovery });
       }

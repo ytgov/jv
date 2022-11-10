@@ -9,7 +9,12 @@ const actions = {
   },
   async getAll() {
     return axios.get(RECOVERY_URL).then((resp) => {
-      resp.data.data;
+      return resp.data.data;
+    });
+  },
+  async getById(store, { id }) {
+    return axios.get(`${RECOVERY_URL}/${id}`).then((resp) => {
+      return resp.data.data;
     });
   },
   async create(store, { body }) {

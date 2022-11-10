@@ -47,8 +47,6 @@ export default {
     ...mapActions("recovery", ["getAll"]),
     showEdit() {
       this.showEditDialog = true;
-
-      //this.$router.push("/recovery/create");
     },
     async loadList() {
       this.items = await this.getAll();

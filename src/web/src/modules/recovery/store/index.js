@@ -24,11 +24,10 @@ const actions = {
       return resp.data;
     });
   },
-  async update(store, { item }) {
-    let id = item.id;
-    console.log(item);
+  async update(store, { body }) {
+    let id = body.recid;
 
-    return axios.put(`${RECOVERY_URL}/${id}`, item).then((resp) => {
+    return axios.put(`${RECOVERY_URL}/${id}`, body).then((resp) => {
       return resp.data;
     });
   },

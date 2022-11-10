@@ -1,6 +1,9 @@
 <template>
   <v-form>
     <v-row>
+      <v-col cols="12">
+        <v-text-field label="Description" v-model="recovery.RequestDesc" dense outlined hide-details></v-text-field>
+      </v-col>
       <v-col cols="6">
         <v-text-field
           label="Requestor first name"
@@ -42,7 +45,14 @@ export default {
   }),
   computed: {
     canCreate() {
-      if (this.recovery.FirstName && this.recovery.LastName && this.recovery.Department && this.recovery.Branch && this.recovery.RefNum)
+      if (
+        this.recovery.RequestDesc &&
+        this.recovery.FirstName &&
+        this.recovery.LastName &&
+        this.recovery.Department &&
+        this.recovery.Branch &&
+        this.recovery.RefNum
+      )
         return true;
 
       return false;

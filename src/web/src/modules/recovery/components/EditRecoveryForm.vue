@@ -44,6 +44,7 @@ export default {
   computed: {
     canSave() {
       if (
+        this.recovery.RequestDesc &&
         this.recovery.FirstName &&
         this.recovery.LastName &&
         this.recovery.Department &&
@@ -56,11 +57,8 @@ export default {
     },
   },
   async mounted() {
-
-    console.log(this.$route.params.id)
-
     let id = this.$route.params.id;
-    this.recovery = await this.getById({id:id});
+    this.recovery = await this.getById({ id: id });
   },
   methods: {
     ...mapActions("recovery", ["getById", "update"]),
@@ -69,8 +67,8 @@ export default {
       this.$router.push("/recovery");
     },
     async saveClick() {
-      if (this.canCreate) {
-        await this.create({ body: this.recovery });
+      if (this.canSave) {
+        await this.update({ body: this.recovery });
       }
 
       if (this.saveComplete) this.saveComplete();

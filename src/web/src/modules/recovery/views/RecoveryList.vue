@@ -32,7 +32,7 @@ export default {
     showEditDialog: false,
     items: [],
     headers: [
-      { text: "Create date", value: "CreateDate" },
+      { text: "Create date", value: "display_create_date" },
       { text: "Department", value: "Department" },
       { text: "Request", value: "RequestDesc" },
       { text: "Requestee", value: "display_name" },
@@ -49,6 +49,7 @@ export default {
       this.showEditDialog = true;
     },
     async loadList() {
+      this.showEditDialog = false;
       this.items = await this.getAll();
     },
     rowClick(item) {

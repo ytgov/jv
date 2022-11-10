@@ -115,7 +115,7 @@ export default {
   name: "App",
   components: {},
   computed: {
-    ...mapState("isAuthenticated"),
+    ...mapState(["isAuthenticated"]),
     username() {
       return store.getters.fullName;
     },

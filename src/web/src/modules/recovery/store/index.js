@@ -36,6 +36,12 @@ const actions = {
       return resp.data;
     });
   },
+
+  async getCategories() {
+    return axios.get(`${RECOVERY_URL}/item-categories`).then((resp) => {
+      return resp.data.data;
+    });
+  },
 };
 
 const mutations = {};

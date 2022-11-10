@@ -31,6 +31,11 @@ recoveriesRouter.get("/", ReturnValidationErrors, async function (req: Request, 
   }
 });
 
+recoveriesRouter.get("/item-categories", ReturnValidationErrors, async function (req: Request, res: Response) {
+  let recoveryList = await db("ItemCategory");
+  res.status(200).json({ data: recoveryList });
+});
+
 recoveriesRouter.get("/:recid", ReturnValidationErrors, async function (req: Request, res: Response) {
   try {
     let recovery = await db("Recovery").select("*").where("recid", req.params.recid).first();

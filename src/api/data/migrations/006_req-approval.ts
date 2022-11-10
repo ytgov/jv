@@ -20,6 +20,7 @@ export const up = function (knex: knex.Knex, Promise: any) {
 		t.date('approveDate').nullable();
 		t.string('approveNote', 200).nullable();
 		t.string('reassignNote', 200).nullable();
+		t.string('action').nullable();
 		t.foreign('recid').references('Recovery.recid');
 	});
 };

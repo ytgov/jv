@@ -24,8 +24,8 @@ export const up = function (knex: knex.Knex, Promise: any) {
 		t.string('Branch', 50).notNullable();
 		t.string('RefNum', 20).nullable();
 		t.string('RequestDesc', 140).nullable();
-		t.date('CreateDate').nullable();
-		t.string('CreateUser', 10).nullable();
+		t.date('CreateDate').notNullable();
+		t.string('CreateUser', 100).notNullable();
 		t.integer('reqStatID').nullable();
 		t.date('CompleteDate').nullable();
 		t.string('CompleteUser', 10).nullable();

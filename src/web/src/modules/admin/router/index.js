@@ -5,6 +5,12 @@ const routes = [
       component: () => import("@/layouts/Layout"),
       children: [
         {
+          name: "",
+          path: "",
+          meta: { requiresAuth: true },
+          component: () => import("../views/Home.vue"),
+        },
+        {
           name: "DeptCodeList",
           path: "DeptCodeList",
           meta: { requiresAuth: true },

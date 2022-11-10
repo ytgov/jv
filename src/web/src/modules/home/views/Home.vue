@@ -1,17 +1,18 @@
 <template>
-    <div class="home">
-        <h1>{{ title }}</h1>
-        <p>
-            This is a template that can be used for many different types of
-            applications
-        </p>
-        <p>
-            It is probably best if you
-            <router-link to="/sign-in">sign in</router-link> to see more things.
-        </p>
-
-        {{ departments }}
-    </div>
+  <div class="home">
+    <h1>{{ title }}</h1>
+    <p>
+      This is a template that can be used for many different types of applications
+    </p>
+    <p>
+      It is probably best if you
+      <router-link to="/sign-in">sign in</router-link> to see more things.
+    </p>
+    <p>
+      <router-link to="/recovery">Recovery</router-link>
+    </p>
+    {{ departments }}
+  </div>
 </template>
 
 <script>
@@ -21,23 +22,23 @@ import store from "@/store";
 import { mapActions, mapState } from "vuex";
 
 export default {
-    name: "Home",
-    data: () => ({
-        title: `Welcome to ${config.applicationName}`,
-    }),
-    computed: {
-        ...mapState("home", ["departments"]),
-    },
-    async created() {
-        await this.loadDepartments();
+  name: "Home",
+  data: () => ({
+    title: `Welcome to ${config.applicationName}`,
+  }),
+  computed: {
+    ...mapState("home", ["departments"]),
+  },
+  async created() {
+    await this.loadDepartments();
 
-        await store.dispatch("checkAuthentication");
-        //var isAuth = store.getters.isAuthenticated;
+    await store.dispatch("checkAuthentication");
+    //var isAuth = store.getters.isAuthenticated;
 
-        //if (isAuth) router.push("/");
-    },
-    methods: {
-        ...mapActions("home", ["loadDepartments"]),
-    },
+    //if (isAuth) router.push("/");
+  },
+  methods: {
+    ...mapActions("home", ["loadDepartments"]),
+  },
 };
 </script>

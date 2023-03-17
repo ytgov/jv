@@ -69,6 +69,9 @@
             <v-list-item @click="routeTitle='Recovery List'" to="/recovery">
               <v-list-item-title>Recovery List</v-list-item-title>
             </v-list-item>
+            <v-list-item @click="routeTitle='Administration'" to="/administration">
+              <v-list-item-title>Administration</v-list-item-title>
+            </v-list-item>
           </v-list>
         </v-menu>
 

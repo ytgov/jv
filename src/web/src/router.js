@@ -12,6 +12,8 @@ import recoveriesRoutes from "@/modules/recoveries/router"
 
 import adminRoutes from "@/modules/admin/router";
 
+import administrationRoutes from "@/modules/administration/router";
+
 Vue.use(VueRouter);
 
 const routes = [
@@ -29,6 +31,7 @@ const routes = [
   ...recoveryRoutes,
   ...recoveriesRoutes,
   ...adminRoutes,
+  ...administrationRoutes,
   {
     path: "*",
     name: "Not Found",

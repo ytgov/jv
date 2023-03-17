@@ -10,3 +10,5 @@ export const RECOVERY_URL = `${config.apiBaseUrl}/api/recovery`;
 
 export const LOOKUP_URL = `${config.apiBaseUrl}/api/lookup`;
 export const RECOVERIES_URL = `${config.apiBaseUrl}/api/recoveries`;
+
+export const USERS_URL = `${config.apiBaseUrl}/api/user`;

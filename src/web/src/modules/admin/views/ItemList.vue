@@ -23,10 +23,12 @@
 
 <script>
 import { mapActions } from "vuex";
-import CreateItemForm from "../components/CreateItemForm.vue";
+// import CreateItemForm from "../components/CreateItemForm.vue";
 
 export default {
-  components: { CreateItemForm },
+  components: { 
+    // CreateItemForm 
+  },
   data: () => ({
     showEditDialog: false,
     items: [],

@@ -9,11 +9,11 @@ import { auth } from "express-openid-connect";
 
 const db = knex(DB_CONFIG);
 
-export const recoveriesRouter = express.Router();
+export const recoveryRouter = express.Router();
 const userService = new UserService();
 
 //Need to get items as well
-recoveriesRouter.get("/", ReturnValidationErrors, async function (req: Request, res: Response) {
+recoveryRouter.get("/", ReturnValidationErrors, async function (req: Request, res: Response) {
   try {
     let recoveryList = await db("Recovery").select("*");
     //get items from db for each recovery
@@ -31,12 +31,12 @@ recoveriesRouter.get("/", ReturnValidationErrors, async function (req: Request, 
   }
 });
 
-recoveriesRouter.get("/item-categories", ReturnValidationErrors, async function (req: Request, res: Response) {
+recoveryRouter.get("/item-categories", ReturnValidationErrors, async function (req: Request, res: Response) {
   let recoveryList = await db("ItemCategory");
   res.status(200).json({ data: recoveryList });
 });
 
-recoveriesRouter.get("/:recid", ReturnValidationErrors, async function (req: Request, res: Response) {
+recoveryRouter.get("/:recid", ReturnValidationErrors, async function (req: Request, res: Response) {
   try {
     let recovery = await db("Recovery").select("*").where("recid", req.params.recid).first();
 
@@ -49,7 +49,7 @@ recoveriesRouter.get("/:recid", ReturnValidationErrors, async function (req: Req
   }
 });
 
-recoveriesRouter.post("/", ReturnValidationErrors, async function (req: Request, res: Response) {
+recoveryRouter.post("/", ReturnValidationErrors, async function (req: Request, res: Response) {
   try {
     await db.transaction(async (trx) => {
       let items = req.body.items;
@@ -72,7 +72,7 @@ recoveriesRouter.post("/", ReturnValidationErrors, async function (req: Request,
   }
 });
 
-recoveriesRouter.put("/:recid", ReturnValidationErrors, async function (req: Request, res: Response) {
+recoveryRouter.put("/:recid", ReturnValidationErrors, async function (req: Request, res: Response) {
   try {
     await db.transaction(async (trx) => {
       let id = req.params.recid;

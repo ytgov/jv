@@ -7,3 +7,6 @@ export const PROFILE_URL = `${config.apiBaseUrl}/api/user`;
 
 export const DEPARTMENT_URL = `${config.apiBaseUrl}/api/department`;
 export const RECOVERY_URL = `${config.apiBaseUrl}/api/recovery`;
+
+export const LOOKUP_URL = `${config.apiBaseUrl}/api/lookup`;
+export const RECOVERIES_URL = `${config.apiBaseUrl}/api/recoveries`;

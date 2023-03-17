@@ -15,11 +15,11 @@ export const up = function (knex: knex.Knex, Promise: any) {
 	return knex.schema.createTable('ItemCategory', function (t) {
 		t.increments('ItemCatID').notNullable().primary();
 		t.string('Category', 60).notNullable();
-		t.string('Branch', 10).notNullable();
-		t.string('RecoveryType', 10).notNullable();
-		t.date('CreateDate').nullable();
+		t.string('Branch', 10);
+		t.string('RecoveryType', 10);
+		t.date('CreateDate').nullable().defaultTo(knex.fn.now());
 		t.string('CreateUser', 10).nullable();
-		t.date('ModDate').nullable();
+		t.date('ModDate').nullable().defaultTo(knex.fn.now());
 		t.string('ModUser', 10).nullable();
 	});
 };

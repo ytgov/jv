@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <v-navigation-drawer
+    <!-- <v-navigation-drawer
       v-bind:app="hasSidebar"
       permanent
       :expand-on-hover="hasSidebarClosable"
@@ -25,7 +25,7 @@
           </v-list-item-content>
         </v-list-item>
       </v-list>
-    </v-navigation-drawer>
+    </v-navigation-drawer> -->
 
     <v-app-bar
       app
@@ -60,6 +60,19 @@
       ></v-select> -->
 
       <div v-if="isAuthenticated">
+
+        <v-menu offset-y class="ml-0">
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn text color="primary" v-bind="attrs" v-on="on"> {{routeTitle}}<v-icon>mdi-menu-down</v-icon> </v-btn>
+          </template>
+          <v-list dense style="min-width: 200px">
+            <v-list-item @click="routeTitle='Recovery List'" to="/recovery">
+              <v-list-item-title>Recovery List</v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-menu>
+
+
         <span>{{ username }}</span>
         <v-menu bottom left class="ml-0">
           <template v-slot:activator="{ on, attrs }">
@@ -129,6 +142,7 @@ export default {
     drawerRight: null,
     headerShow: false,
     menuShow: false,
+    routeTitle: 'Home',
     loadingClass: "d-none",
     applicationName: config.applicationName,
     applicationIcon: config.applicationIcon,

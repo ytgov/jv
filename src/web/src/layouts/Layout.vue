@@ -68,10 +68,7 @@
           <v-list dense style="min-width: 200px">
             <v-list-item @click="routeTitle='Recovery List'" to="/recovery">
               <v-list-item-title>Recovery List</v-list-item-title>
-            </v-list-item>
-            <v-list-item @click="routeTitle='Administration'" to="/administration">
-              <v-list-item-title>Administration</v-list-item-title>
-            </v-list-item>
+            </v-list-item>            
           </v-list>
         </v-menu>
 
@@ -85,6 +82,14 @@
           </template>
 
           <v-list dense style="min-width: 200px">
+
+            <v-list-item to="/administration">
+              <v-list-item-icon>
+                <v-icon>mdi-table-edit</v-icon>
+              </v-list-item-icon>
+              <v-list-item-title>Administration</v-list-item-title>
+            </v-list-item>
+
             <v-list-item to="/profile">
               <v-list-item-icon>
                 <v-icon>mdi-account</v-icon>

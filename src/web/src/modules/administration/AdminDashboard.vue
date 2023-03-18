@@ -1,12 +1,14 @@
 <template>
-	<v-container :loading="loadingData" :disabled="loadingData" en class="px-5 pb-15">
+	<v-card :loading="loadingData" :disabled="loadingData" en class="px-5 pb-15">
 		<h1>Administration</h1>
+		
 		<Breadcrumbs />
 		<v-row>
 			<v-col cols="6">
 				<v-card elevation="1">				
 					<v-list class="pb-0 pt-0">
 						<v-list-item-group>
+
 							<v-list-item @click="goTo('/administration/users')">
 								<v-list-item-icon>
 									<v-icon v-text="'mdi-account-group'"></v-icon>
@@ -15,13 +17,31 @@
 									<v-list-item-title>User Management</v-list-item-title>
 								</v-list-item-content>
 							</v-list-item>
+
+							<v-list-item @click="goTo('/administration/departments')">
+								<v-list-item-icon>
+									<v-icon v-text="'mdi-code-array'"></v-icon>
+								</v-list-item-icon>
+								<v-list-item-content>
+									<v-list-item-title>Departments</v-list-item-title>
+								</v-list-item-content>
+							</v-list-item>
+
+							<v-list-item @click="goTo('/administration/items')">
+								<v-list-item-icon>
+									<v-icon v-text="'mdi-package'"></v-icon>
+								</v-list-item-icon>
+								<v-list-item-content>
+									<v-list-item-title>Items</v-list-item-title>
+								</v-list-item-content>
+							</v-list-item>
 						</v-list-item-group>
 					</v-list>
 				</v-card>
 			</v-col>
 			<v-col cols="6"/>			
 		</v-row>
-	</v-container>
+	</v-card>
 </template>
 
 <script>
@@ -50,7 +70,7 @@ export default {
 			this.$router.push(url);
 		},
 		async getEmployees() {            
-            axios.get(`${LOOKUP_URL}/employees`)
+            return axios.get(`${LOOKUP_URL}/employees`)
             .then(resp => {
                 this.$store.commit("recoveries/SET_EMPLOYEES", resp.data);          
             })
@@ -60,7 +80,7 @@ export default {
         },
 
         async getDepartmentBranch() {
-            axios.get(`${LOOKUP_URL}/department-branch`)
+            return axios.get(`${LOOKUP_URL}/department-branch`)
             .then(resp => {
                 this.$store.commit("recoveries/SET_DEPARTMENT_BRANCH", resp.data);
             })

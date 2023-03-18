@@ -67,7 +67,7 @@ import { mapActions } from "vuex";
 import axios from "axios";
 // import { secureGet } from "@/store/jwt";
 export default {
-	name: "usersgrid",
+	name: "UserManagement",
 	components: {
 		Breadcrumbs
 	},
@@ -100,7 +100,13 @@ export default {
 		departmentList: [],
 		branchList: [],
 		employeeList: [],
-		roleList: ['Branch User', 'Branch Technician', 'ICT Finance', 'Departmental Finance', 'System Admin'],
+		roleList: [
+			{ text: "Branch User", 			value: "BranchUser"},
+			{ text: "Branch Technician", 	value: "BranchTechnician"},
+			{ text: "ICT Finance", 			value: "IctFinance"},
+			{ text: "Departmental Finance",	value: "DepartmentalFinance"},
+			{ text: "System Admin", 		value: "SystemAdmin"}			
+		],
 		userDialog: false,
 		action: 'Add'
 	}),
@@ -116,12 +122,7 @@ export default {
         this.loadingData = false;		
 	},
 	methods: {
-		...mapActions("users", ["loadUsers"]),
-
-		handleClick(value) {
-			//Redirects the user to the edit user form
-			this.$router.push(`/administration/users/edit/${value.id}`);
-		},
+		...mapActions("users", ["loadUsers"]),//TODO		
 
         async getUsers(){
             axios.get(`${USERS_URL}`)
@@ -209,29 +210,6 @@ export default {
 			const userInfo = this.employeeList.filter(emp => emp.fullName == $event)[0];
 			this.userDept = userInfo.department;
 		}
-
-
-	},
-	computed: {
-		// filteredData() {
-		// 	if (this.selectedFilter.length == 0) return this.users;
-
-		// 	let data = [];
-		// 	for (let usr of this.users) {
-		// 		if (this.selectedFilter.indexOf("Active") >= 0) {
-		// 		if (usr.status == "Active") data.push(usr);
-		// 		}
-		// 	}
-		// 	return data;
-		// }
 	}
 };
 </script>
-
-<style scoped>
-	.hoverclicklink:hover {
-		color: #0097a9;
-		text-decoration: underline;
-		cursor: pointer;
-	}
-</style>

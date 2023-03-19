@@ -66,7 +66,7 @@
             <v-btn text color="primary" v-bind="attrs" v-on="on"> {{routeTitle}}<v-icon>mdi-menu-down</v-icon> </v-btn>
           </template>
           <v-list dense style="min-width: 200px">
-            <v-list-item @click="routeTitle='Recovery List'" to="/recovery">
+            <v-list-item @click="routeTitle='Recovery List'" to="/recoveries">
               <v-list-item-title>Recovery List</v-list-item-title>
             </v-list-item>
           </v-list>

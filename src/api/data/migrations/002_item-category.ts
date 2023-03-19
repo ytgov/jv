@@ -1,26 +1,17 @@
 import * as knex from 'knex';
 
-// Create Table Recoveries.ItemCategory(
-//     ItemCatID smallint identity(1,1) not null primary key,
-//     Category varchar (60), --examples desktop, monitor, printer, SLA
-//     Branch varchar (10), -- from API (default to ynet logined users branch)
-//     RecoveryType varchar(10) -- option Full only or Partial this defines if you can spit the recovery in pieces or if you need to recover the whole thing
-//     CreateDate date,
-//     CreateUser varchar (10),
-//     ModDate date,
-//     ModUser varchar(10),
-//     )
-
 export const up = function (knex: knex.Knex, Promise: any) {
 	return knex.schema.createTable('ItemCategory', function (t) {
-		t.increments('ItemCatID').notNullable().primary();
-		t.string('Category', 60).notNullable();
-		t.string('Branch', 10);
-		t.string('RecoveryType', 10);
-		t.date('CreateDate').nullable().defaultTo(knex.fn.now());
-		t.string('CreateUser', 10).nullable();
-		t.date('ModDate').nullable().defaultTo(knex.fn.now());
-		t.string('ModUser', 10).nullable();
+		t.increments('itemCatID').notNullable().primary();
+		t.string('category', 60).notNullable();
+		t.string('branch', 100);
+		t.string('unit', 20);		
+		t.float("price");
+		t.date('createDate').notNullable().defaultTo(knex.fn.now());
+		t.string('createUser', 20);
+		t.date('modDate').notNullable().defaultTo(knex.fn.now());
+		t.string('modUser', 20);
+		t.boolean('active').notNullable().defaultTo(true);
 	});
 };
 

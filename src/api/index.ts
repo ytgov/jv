@@ -8,6 +8,8 @@ import { configureAuthentication } from './routes/auth';
 import { CreateMigrationRoutes } from './data';
 import { recoveriesRouter, recoveryRouter, lookupRouter, userRouter, dataRouter } from './routes';
 
+var fileupload = require("express-fileupload");
+
 const app = express();
 
 app.use(express.json()); // for parsing application/json
@@ -46,6 +48,9 @@ CreateMigrationRoutes(app);
 app.get('/api/healthCheck', (req: Request, res: Response) => {
 	doHealthCheck(res);
 });
+
+// accepts FormData
+app.use(fileupload());
 
 app.use('/api/user', userRouter);
 app.use('/api/data', dataRouter);

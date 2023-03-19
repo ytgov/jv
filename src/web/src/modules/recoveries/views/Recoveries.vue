@@ -17,17 +17,12 @@
         <v-tabs-items v-if="!loadingData" v-model="tabs">
             <v-tab-item>
                 <v-card flat>
-                    <recovery-table />
-                    <!-- <preapproved-requests :travelRequests="travelRequests" @updateTable="getPreapprovedTravel()" /> -->
+                    <recovery-table :recoveries="recoveries" @updateTable="getRecoveries"/>                    
                 </v-card>
             </v-tab-item>
             <v-tab-item>
                 <v-card flat>
-                    <!-- <submissions
-                        :travelSubmissions="travelSubmissions"
-                        :travelRequests="travelRequests"
-                        @updateTable="getPreapprovedTravel()"
-                    /> -->
+                    
                 </v-card>
             </v-tab-item>
         </v-tabs-items>
@@ -36,7 +31,6 @@
 
 <script>
 import RecoveryTable from "./RecoveryComponents/RecoveryTable.vue";
-// import Submissions from "./Submissions/Submissions.vue";
 import { LOOKUP_URL , RECOVERIES_URL} from "../../../urls";
 import axios from "axios";
 // import { secureGet } from "../../../store/jwt";
@@ -45,16 +39,13 @@ export default {
     name: "Recoveries",
     components: {
         RecoveryTable
-        // PreapprovedRequests,
-        // Submissions
     },
     data() {
         return {
-        tabs: null,
-        travelRequests: [],
-        loadingData: false,
-        travelSubmissions: [],
-        alertMsg: ""
+            tabs: null,
+            loadingData: false,
+            recoveries: [],
+            alertMsg: ""
         };
     },
 
@@ -62,15 +53,15 @@ export default {
         this.loadingData = true;
         await this.getEmployees();
         await this.getDepartmentBranch();
-        await this.getItemCategoryList();
-        this.loadingData = false;
+        await this.getItemCategoryList(); 
+        await this.getRecoveries();
     },
 
     methods: {
         async getEmployees() {            
-            axios.get(`${LOOKUP_URL}/employees`)
+            return axios.get(`${LOOKUP_URL}/employees`)
             .then(resp => {
-                this.$store.commit("recoveries/SET_EMPLOYEES", resp.data);          
+                this.$store.commit("recoveries/SET_EMPLOYEES", resp.data);        
             })
             .catch(e => {
                 console.log(e);
@@ -78,7 +69,7 @@ export default {
         },
 
         async getDepartmentBranch() {
-            axios.get(`${LOOKUP_URL}/department-branch`)
+            return axios.get(`${LOOKUP_URL}/department-branch`)
             .then(resp => {
                 this.$store.commit("recoveries/SET_DEPARTMENT_BRANCH", resp.data);
             })
@@ -88,7 +79,7 @@ export default {
         },
 
         async getItemCategoryList(){
-            axios.get(`${RECOVERIES_URL}/item-categories`)
+            return axios.get(`${RECOVERIES_URL}/item-categories`)
             .then(resp => {          
                 this.$store.commit("recoveries/SET_ITEM_CATEGORY_LIST", resp.data);              
             })
@@ -97,6 +88,18 @@ export default {
             });
         },
 
+        async getRecoveries(){
+            this.loadingData = true;
+            return axios.get(`${RECOVERIES_URL}/`)
+            .then(resp => {
+                this.recoveries=resp.data
+                this.loadingData = false;
+            })
+            .catch(e => {
+                this.loadingData = false;
+                console.log(e);
+            });
+        },
        
         // determineDepartment() {
         //   this.alertMsg = "";

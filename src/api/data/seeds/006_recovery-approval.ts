@@ -12,8 +12,8 @@ import * as knex from 'knex';
 //     -- )
 
 export const up = function (knex: knex.Knex, Promise: any) {
-	return knex.schema.createTable('RecApproval', function (t) {
-		t.increments('recappid').notNullable().primary();
+	return knex.schema.createTable('RecoveryApproval', function (t) {
+		t.increments('recAppID').notNullable().primary();
 		t.integer('recid').notNullable();
 		t.string('status', 20).notNullable();
 		t.string('approveuser', 10).nullable();
@@ -26,5 +26,5 @@ export const up = function (knex: knex.Knex, Promise: any) {
 };
 
 export const down = function (knex: knex.Knex, Promise: any) {
-	return knex.schema.dropTable('RecApproval');
+	return knex.schema.dropTable('RecoveryApproval');
 };

@@ -42,14 +42,14 @@
 						@change="loadDepartmentData"						
 						outlined/>						
 
-					<v-select label="Name" v-model="financialContact" :items="departmentEmployeeList" class="mt-2"
+					<v-select label="Financial Contact" v-model="financialContact" :items="departmentEmployeeList" class="mt-2"
 						@change="loadEmailData"
 						item-text="fullName"
 						outlined/>
 
-					<v-text-field label="Email" v-model="email" class="mt-2" outlined/>
+					<v-text-field label="Financial Contact Email" v-model="email" class="mt-2" outlined/>
 
-					<v-text-field label="Coding" v-model="glCode" class="mt-2" outlined/>					
+					<v-text-field @keyup="codeFormat" label="Coding" v-model="glCode" class="mt-2" outlined/>					
 
 				</v-card-text>
 
@@ -101,7 +101,7 @@ export default {
 		employeeList: [],		
 		departmentEmployeeList: [],
 		departmentDialog: false,
-		action: 'Add'
+		action: 'Add'		
 	}),
 	async mounted() {
 		this.loadingData = true;	
@@ -198,6 +198,27 @@ export default {
 
 		loadDepartmentData($event){
 			this.departmentEmployeeList = this.employeeList.filter(emp => emp.department == $event);
+		},
+
+		codeFormat() {
+			
+			const code = this.glCode;
+			// if(isNaN(Number(code.slice(-1))) && code.slice(-1) != '-'){
+			// 	this.glCode = code.slice(0,-1)
+
+			// } 
+			if(code.length==4 && code.slice(-1)!='-' ){
+				this.glCode = code.slice(0,3)+'-'+code.slice(-1);
+			} else if(code.length==11 && code.slice(-1)!='-' ){
+				this.glCode = code.slice(0,10)+'-'+code.slice(-1);
+			} else if(code.length==16 && code.slice(-1)!='-' ){
+				this.glCode = code.slice(0,15)+'-'+code.slice(-1);
+			} else if(code.length==21 && code.slice(-1)!='-' ){
+				this.glCode = code.slice(0,20)+'-'+code.slice(-1);
+			} else if(code.length>=26){
+				this.glCode = code.slice(0,26);
+			} 			
+			
 		}
 
 	}

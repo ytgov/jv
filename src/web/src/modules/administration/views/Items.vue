@@ -51,7 +51,7 @@
 
 					<v-text-field label="Item Name" v-model="itemName" class="mt-5" outlined/>
 
-					<v-text-field label="Default Cost" v-model="cost" class="mt-1" outlined/>		
+					<v-text-field label="Default Cost" v-model="cost" class="mt-1" outlined prefix="$"/>		
 					
 					<v-row>
 						<v-col v-for="(branchOption, branchInx) in branchOptions" :key="branchInx">							

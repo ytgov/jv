@@ -66,6 +66,15 @@
             <v-btn text color="primary" v-bind="attrs" v-on="on"> {{routeTitle}}<v-icon>mdi-menu-down</v-icon> </v-btn>
           </template>
           <v-list dense style="min-width: 200px">
+            <v-list-item @click="routeTitle='Dashboard (User)'" to="/recovery-dashboard-user">
+              <v-list-item-title>Dashboard (User)</v-list-item-title>
+            </v-list-item>
+            <v-list-item @click="routeTitle='Dashboard (Tech)'" to="/recovery-dashboard-tech">
+              <v-list-item-title>Dashboard (Tech)</v-list-item-title>
+            </v-list-item>
+            <v-list-item @click="routeTitle='Dashboard (Finance)'" to="/recovery-dashboard-finance">
+              <v-list-item-title>Dashboard (Finance)</v-list-item-title>
+            </v-list-item>
             <v-list-item @click="routeTitle='Recovery List'" to="/recoveries">
               <v-list-item-title>Recovery List</v-list-item-title>
             </v-list-item>            
@@ -172,6 +181,9 @@ export default {
       else this.hasSidebar = config.hasSidebar;
     }
   },
+  mounted () {
+    this.getDropdownTitle()
+  },
   methods: {
     nav: function(location) {
       router.push(location);
@@ -186,6 +198,13 @@ export default {
     signOut: function() {
       store.dispatch("signOut");
       router.push("/");
+    },
+    getDropdownTitle(){
+      const path = this.$route.path
+      if(path.includes('/recovery-dashboard-user')) this.routeTitle='Dashboard (User)'
+      else if(path.includes('/recovery-dashboard-tech')) this.routeTitle='Dashboard (Tech)'
+      else if(path.includes('/recovery-dashboard-finance')) this.routeTitle='Dashboard (Finance)'
+      else if(path.includes('/recoveries')) this.routeTitle='Recovery List'
     }
   }
 };

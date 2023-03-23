@@ -1,5 +1,5 @@
 import knex, { Knex } from 'knex';
-import { DB_CONFIG } from '../config';
+import { DB_CONFIG, DB_SCHEMA } from '../config';
 import _, { map } from 'lodash';
 import axios from 'axios';
 import { timeStamp } from 'console';
@@ -18,7 +18,7 @@ export class UserService {
 		is_active: string
 	): Promise<any> {
 		let existing = await this.db('user')
-			.withSchema('travel')
+			.withSchema(DB_SCHEMA)
 			.where({ email })
 			.count('email as cnt');
 
@@ -33,49 +33,74 @@ export class UserService {
 			create_date: new Date(),
 		};
 
-		return await this.db('user').withSchema('travel').insert(user);
+		return await this.db('user').withSchema(DB_SCHEMA).insert(user);
 	}
 
 	async update(email: string, item: any) {
-		return this.db('user').withSchema('travel').where({ email }).update(item);
+		return this.db('user').withSchema(DB_SCHEMA).where({ email }).update(item);
+	}
+
+	async createOrUpdate(user_info: any): Promise<any> {
+		const email = user_info.email;
+		const existing = await this.db('user')
+			.withSchema(DB_SCHEMA)
+			.where({ email })
+			.count('email as cnt');
+
+		
+		delete	user_info.email_verified	
+
+		if (existing[0].cnt > 1) return undefined;
+		else if (existing[0].cnt == 1){
+			delete user_info.display_name
+			delete user_info.last_name
+			delete user_info.first_name
+			delete user_info.status
+			delete user_info.roles 
+			return await this.db('user').withSchema(DB_SCHEMA).where({ email }).update(user_info);
+		}else{			
+			user_info.roles=user_info.roles.join(',')
+			user_info.create_date= new Date()
+			return await this.db('user').withSchema(DB_SCHEMA).insert(user_info);
+		}
 	}
 
 	async getAll() {
-		return this.db('user').withSchema('travel');
+		return this.db('user').withSchema(DB_SCHEMA);
 	}
 
 	async getByEmail(email: string): Promise<any | undefined> {
-		return this.db('user').withSchema('travel').where({ email }).first();
+		return await this.db('user').withSchema(DB_SCHEMA).where({ email }).first();
 	}
 
 	async getById(id: string): Promise<any | undefined> {
-		return this.db('user').withSchema('travel').where({ id }).first();
+		return this.db('user').withSchema(DB_SCHEMA).where({ id }).first();
 	}
 
 	async getAccessFor(email: string): Promise<string[]> {
 		return this.db('user')
-			.withSchema('travel')
+			.withSchema(DB_SCHEMA)
 			.where({ email })
 			.select('roles');
 	}
 
 	async setAccess(email: string, access: string[]) {
 		return this.db('user')
-			.withSchema('travel')
+			.withSchema(DB_SCHEMA)
 			.where({ email })
 			.update({ roles: access });
 	}
 
 	async getDepartmentAccess(id: string): Promise<number[]> {
 		return this.db('departmentassignments')
-			.withSchema('travel')
+			.withSchema(DB_SCHEMA)
 			.where('userid', '=', id)
 			.select('*');
 	}
 
 	async saveDepartmentAccess(id: string, access: number[]) {
 		await this.db('departmentassignments')
-			.withSchema('travel')
+			.withSchema(DB_SCHEMA)
 			.where('userid', '=', id)
 			.del();
 		if (access) {
@@ -84,21 +109,21 @@ export class UserService {
 				objectid: entry,
 			}));
 			return this.db('departmentassignments')
-				.withSchema('travel')
+				.withSchema(DB_SCHEMA)
 				.insert(fieldsToInsert);
 		}
 	}
 
 	async getRoleAccess(id: string): Promise<number[]> {
 		return this.db('roleassignments')
-			.withSchema('travel')
+			.withSchema(DB_SCHEMA)
 			.where('userid', '=', id)
 			.select('*');
 	}
 
 	async saveRoleAccess(id: string, access: number[]) {
 		await this.db('roleassignments')
-			.withSchema('travel')
+			.withSchema(DB_SCHEMA)
 			.where('userid', '=', id)
 			.del();
 		if (access) {
@@ -107,7 +132,7 @@ export class UserService {
 				roleid: entry,
 			}));
 			return this.db('roleassignments')
-				.withSchema('travel')
+				.withSchema(DB_SCHEMA)
 				.insert(fieldsToInsert);
 		}
 	}

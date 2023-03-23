@@ -11,7 +11,7 @@
 
 							<v-list-item @click="goTo('/administration/users')">
 								<v-list-item-icon>
-									<v-icon v-text="'mdi-account-group'"></v-icon>
+									<v-icon>mdi-account-group</v-icon>
 								</v-list-item-icon>
 								<v-list-item-content>
 									<v-list-item-title>User Management</v-list-item-title>
@@ -20,7 +20,7 @@
 
 							<v-list-item @click="goTo('/administration/departments')">
 								<v-list-item-icon>
-									<v-icon v-text="'mdi-code-array'"></v-icon>
+									<v-icon>mdi-code-array</v-icon>
 								</v-list-item-icon>
 								<v-list-item-content>
 									<v-list-item-title>Departments</v-list-item-title>
@@ -29,7 +29,7 @@
 
 							<v-list-item @click="goTo('/administration/items')">
 								<v-list-item-icon>
-									<v-icon v-text="'mdi-package'"></v-icon>
+									<v-icon>mdi-package</v-icon>
 								</v-list-item-icon>
 								<v-list-item-content>
 									<v-list-item-title>Items</v-list-item-title>

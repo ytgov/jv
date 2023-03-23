@@ -8,9 +8,9 @@ export const up = function (knex: knex.Knex, Promise: any) {
 		t.string('unit', 20);		
 		t.float("price");
 		t.date('createDate').notNullable().defaultTo(knex.fn.now());
-		t.string('createUser', 20);
+		t.string('createUser', 100);
 		t.date('modDate').notNullable().defaultTo(knex.fn.now());
-		t.string('modUser', 20);
+		t.string('modUser', 100);
 		t.boolean('active').notNullable().defaultTo(true);
 	});
 };

@@ -5,16 +5,18 @@
                 <v-btn
                     :elevation="type == 'Add New' ? '5' : '0'"
                     style="min-width: 0"                    
-                    :color="type == 'Add New' ? 'primary' : 'transparent'"
+                    :color="type == 'Add New' || type == 'Approve'? 'primary' : 'transparent'"
                     @click="initForm()"
                     v-bind="attrs"
                     v-on="on">
                     <div v-if="type == 'Add New'">Create New Recovery</div>
+                    <div v-else-if="type == 'Approve'">Approve</div>
+                    <div v-else-if="type == 'Complete' && btnTxt" class="primary--text">{{btnTxt}}</div>
                     <v-icon v-else dense color="primary">mdi-pencil</v-icon>
                 </v-btn>
             </template>
 
-        <v-card>
+        <v-card :loading="loadingData" :disabled="loadingData">
             <v-card-title class="primary" style="border-bottom: 1px solid black">
                 <div class="text-h5">
                     {{title}} Recovery
@@ -240,13 +242,18 @@
                         Route For Approval                        
                     </v-btn>
 
-                    <v-btn v-if="revertBtn" class="ml-auto mr-5 my-auto" color="primary" elevation="5" @click="saveNewRecovery('Re-Draft')">
+                    <v-btn v-if="revertBtn" class="ml-auto mr-5 my-0" color="primary" elevation="5" @click="saveNewRecovery('Re-Draft')">
                         Revert to Draft                        
                     </v-btn>
 
-                    <v-btn v-if="approveBtn" :class="(revertBtn?'ml-2 ':'ml-auto ')+'mr-5 my-auto'" color="primary" elevation="5" @click="saveNewRecovery('Purchase Approved')">
-                        Approve Purchase                        
-                    </v-btn>
+                    <div v-if="approveBtn" :class="(revertBtn?'ml-2 ':'ml-auto ')+'mr-5 my-auto'" style="width:20%">
+                        <v-btn color="primary" elevation="5" @click="saveNewRecovery('Purchase Approved')">
+                            Approve Purchase                        
+                        </v-btn>
+                        <div class="mt-1 mb-n15">
+                            By selecting Approve you have been proided approval by those individuals with Section 24 (commitment authority) 
+                        </div>
+                    </div>
 
                     <v-btn v-if="saveBtn" class="ml-auto mr-5 my-auto" color="primary" elevation="5" @click="saveNewRecovery(completeBtn?'Fullfilled':'Partially Fullfilled')">
                         Save Changes                        
@@ -284,7 +291,7 @@
                 >Save
             </v-btn>
             <v-btn 
-                v-if="saveBtn && completeBtn" 
+                v-if="saveBtn && completeBtn && supervisor" 
                 class="ml-auto mr-5 px-5 white--text" color="#005a65" 
                 @click="saveNewRecovery('Complete')"
                 > Complete Recoverable                        
@@ -311,7 +318,8 @@ export default {
         type: { type: String },
         title: { type: String},
         recovery: {},
-        maxWidth: {}
+        maxWidth: {},
+        btnTxt: { type: String, required:false },
     },
     data() {
         return {
@@ -338,6 +346,7 @@ export default {
             employeeList: [],
             itemCategoryList: [],
             
+            loadingData: false,
             savingData: false,
             readonly: false,         
             tmpId: 0,
@@ -347,6 +356,7 @@ export default {
             saveBtn: false,
             uploadBtn: false,
             completeBtn: false,
+            supervisor: false,
 
             total: 0,
 
@@ -369,15 +379,20 @@ export default {
 
     methods: {
 
-        initForm() {
-            this.admin = Vue.filter("isAdmin")();  
+        async initForm() {
+            this.loadingData= true
+            this.admin = Vue.filter("isAdmin")();
+            this.supervisor = false //TODO admin role
             this.readonly = this.type != "Add New" && this.type != "Edit";
             this.approveBtn = this.type == "Approve";
-            this.revertBtn = this.type == "Approve" && this.admin;
+            this.revertBtn = this.type == "Approve" && !this.admin;//TODO admin role
             this.saveBtn = this.type == "Fill";
             this.uploadBtn = this.type != "Approve" && this.type != "Complete"
-
             this.alert=false;
+
+            if(this.type == "Complete")
+                await this.loadRecovery()
+
             this.initItemHeader();
             this.initStates();
             this.initEmployees();
@@ -403,6 +418,7 @@ export default {
                 this.recoveryItems.forEach(item => {if(!item.quantity) item.orderFilled=true;})
             }
             this.checkOrderCompleted()
+            this.loadingData= false
             this.update++;
         },
 
@@ -418,6 +434,7 @@ export default {
             const change= { text: "Client Change",value: "clientChange", class: "blue-grey lighten-4", cellClass: "px-1 py-1", sortable: false};
             const remove= { text: "",             value: "remove",       class: "blue-grey lighten-4", cellClass: "px-1 py-1", sortable: false};
             
+            this.itemHeaders = []
             if(this.type=='Add New' || this.type=='Edit'){
                 this.itemHeadersWidth=[19,40,10,13,15,3];
                 this.itemHeaders.push(item,desc,qnt,price,cost,remove);
@@ -453,7 +470,7 @@ export default {
 
         initItemCategory() {
             this.itemCategoryList = this.$store.state.recoveries.itemCategoryList.map(item => {
-                return { text: item.category,  value:item.itemCatID, price:item.price}
+                return { text: item.category,  value:item.itemCatID, price:item.price, branch:item.branch}
             })
         },
 
@@ -517,7 +534,7 @@ export default {
         
         fillOrderChanged(item){
             if(item.orderFilled){
-                item.filledBy = this.$store.state.auth.user?.data?.display_name
+                item.filledBy = this.$store.state.auth.user?.display_name
             }
             this.checkOrderCompleted()
         },
@@ -571,23 +588,28 @@ export default {
                 this.alert = false;
                 this.savingData = true;
                 const name = this.employeeName.split('.')
-                let body = {}
+                let body = {
+                    recoveryItems: this.recoveryItems,
+                    status: status,
+                    action: this.getActionType(status),
+                    totalPrice: this.total
+                }
                 if(status == 'Draft' ||  status == 'Routed For Approval'){
-                    body = {
+                    body = { ...body,
                         firstName: name[0],
                         lastName: name[1],
                         department: this.department,
-                        branch: '',
-                        refNum: this.refNum,
-                        recoveryItems: this.recoveryItems,
-                        status: status,
-                        action: this.getActionType(status)          
+                        branch: this.getItemsBranch(),
+                        refNum: this.refNum,                                
                     };
-                }else{
-                    body = {
-                        recoveryItems: this.recoveryItems,
-                        status: status,
-                        action: this.getActionType(status)          
+                }else if (status == 'Complete'){
+                    body = { ...body,
+                        completeDate: new Date(),
+                        completeUser: this.$store.state.auth.user?.data?.display_name		                
+                    };
+                }else if (status == 'Purchase Approved'){
+                    body = { ...body,
+                        submissionDate: new Date(),               		                
                     };
                 }
                 // console.log(body);
@@ -690,6 +712,36 @@ export default {
                     this.savingData = false;
                     console.log(e);
                 });            
+        },
+
+        async loadRecovery(){
+            return axios.get(`${RECOVERIES_URL}/${this.recovery.recoveryID}`)
+                .then(res => {
+                    const recovery = res.data
+                    // console.log(this.recovery)
+                    // console.log(recovery)
+                    this.recovery.docName=recovery.docName
+                    this.recovery.recoveryAudits=recovery.recoveryAudits
+                    this.recovery.recoveryItems=recovery.recoveryItems
+                })
+                .catch(e => {                    
+                    console.log(e);
+                });            
+        },
+
+        getItemsBranch(){
+            const itemCatIds = this.recoveryItems.map(item => item.itemCatID)
+            const branches = []
+            this.itemCategoryList.forEach(item => {
+                if(itemCatIds.includes(item.value)){
+                    const itembranchs = item.branch.split('/')
+                    for(const branch of itembranchs){
+                        if(!branches.includes(branch)) branches.push(branch)
+                    }
+                }
+            })
+            // console.log(branches)
+            return branches.join('/')
         },
 
         getActionType(status){

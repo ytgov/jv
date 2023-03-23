@@ -6,7 +6,7 @@ import * as config from './config';
 import { doHealthCheck } from './utils/healthCheck';
 import { configureAuthentication } from './routes/auth';
 import { CreateMigrationRoutes } from './data';
-import { recoveriesRouter, recoveryRouter, lookupRouter, userRouter, dataRouter } from './routes';
+import { recoveriesRouter, recoveryRouter, lookupRouter, userRouter, dataRouter, adminRouter } from './routes';
 
 var fileupload = require("express-fileupload");
 
@@ -53,6 +53,7 @@ app.get('/api/healthCheck', (req: Request, res: Response) => {
 app.use(fileupload());
 
 app.use('/api/user', userRouter);
+app.use('/api/admin', adminRouter);
 app.use('/api/data', dataRouter);
 app.use('/api/recovery', recoveryRouter);
 app.use("/api/lookup", lookupRouter);

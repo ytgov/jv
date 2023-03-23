@@ -11,7 +11,7 @@
             />
         </v-row>
 
-        <v-data-table :headers="headers" :items="recoveries" :items-per-page="5" class="elevation-1">
+        <v-data-table :headers="headers" :items="recoveries" :items-per-page="10" class="elevation-1">
             <!-- eslint-disable-next-line vue/no-unused-vars -->
             <template v-slot:[`item.submissionDate`]="{ item }">
                 <!-- eslint-disable-next-line vue/no-parsing-error -->
@@ -25,8 +25,16 @@
             <template v-slot:[`item.recoveryItems`]="{ item }">
                 {{getRecoveryItems(item)}}
             </template>
+
+            <template v-slot:[`item.totalPrice`]="{ item }">
+                ${{item.totalPrice.toFixed(2)|currency}}
+            </template>
+
+            <template v-slot:[`item.jvNum`]="{ item }">
+                <div v-if="item.journal && item.journal.jvNum">{{item.journal.jvNum}}</div>
+            </template>
             
-            <template v-slot:[`item.edit`]="{ item }">
+            <!-- <template v-slot:[`item.edit`]="{ item }">
                 <v-row>
                     <div style="width: 4.5rem">
                         <new-recovery
@@ -63,7 +71,7 @@
                         />
                     </div>
                 </v-row>
-            </template>
+            </template> -->
         </v-data-table>
     </div>
 </template>
@@ -86,15 +94,15 @@ export default {
             headers: [
                 { text: "Recovery Branch", value: "branch", class: "blue-grey lighten-4" },
                 { text: "Reference", value: "refNum", class: "blue-grey lighten-4" },
-                { text: "Technician", value: "technician", class: "blue-grey lighten-4" },
+                { text: "Technician", value: "createUser", class: "blue-grey lighten-4" },
                 { text: "Requestor", value: "requestor", class: "blue-grey lighten-4" },
                 { text: "Department", value: "department", class: "blue-grey lighten-4" },
                 { text: "Items", value: "recoveryItems", class: "blue-grey lighten-4" },
-                { text: "Quantity", value: "quantity", class: "blue-grey lighten-4" },
-                { text: "Cost", value: "cost", class: "blue-grey lighten-4" },
+                // { text: "Quantity", value: "quantity", class: "blue-grey lighten-4" },
+                { text: "Cost", value: "totalPrice", class: "blue-grey lighten-4" },
                 { text: "DateSubmitted", value: "submissionDate", class: "blue-grey lighten-4" },
                 { text: "Status", value: "status", class: "blue-grey lighten-4" },
-                { text: "JV #", value: "jvNumber", class: "blue-grey lighten-4" },                
+                { text: "JV #", value: "jvNum", class: "blue-grey lighten-4" },                
                 { text: "", sortable: false, value: "edit", class: "blue-grey lighten-4", width: "1rem" }
             ],
             admin: false,

@@ -1,189 +1,207 @@
 <template>
-	<v-container>		
+    <v-container>		
 
-		<h1>Items</h1>
+        <h1>Items</h1>
 
-		<Breadcrumbs />
-		<div class="mt-2">
-			<v-row class="mx-1">
-				<v-btn		
-					class="my-4 ml-auto"					
-					color="primary"
-					@click="addItem()">
-					<div>Add Item</div>
-					<v-icon class="mx-0 px-0" color="white">mdi-plus</v-icon>
-				</v-btn>
-			</v-row>
-			<v-card class="default px-3 py-3">
-				<v-card-text>
-					<v-data-table
-						:items="items"
-						:headers="headers"
-						:loading="loadingData"						
-						@click:row="editItem"
-						:footer-props="{
-							'items-per-page-options': [10, 30, 100]
-						}"
-						class="clickable-row">
+        <breadcrumbs />
+        <div class="mt-2">
+            <v-row class="mx-1">
+                <v-btn		
+                    class="my-4 ml-auto"					
+                    color="primary"
+                    @click="addItem()">
+                    <div>Add Item</div>
+                    <v-icon class="mx-0 px-0" color="white">mdi-plus</v-icon>
+                </v-btn>
+            </v-row>
+            <v-card class="default px-3 py-3">
+                <v-card-text>
+                    <v-data-table
+                        :items="items"
+                        :headers="headers"
+                        :loading="loadingData"						
+                        @click:row="editItem"
+                        :footer-props="{
+                            'items-per-page-options': [10, 30, 100]
+                        }"
+                        class="clickable-row">
 
-						<template v-slot:[`item.branch`]="{ item }">
-							{{ item.branch.replace(',', '/') }}
-						</template>
+                        <template v-slot:[`item.branch`]="{ item }">
+                            {{ item.branch.replace(',', '/') }}
+                        </template>
 
-						<template v-slot:[`item.cost`]="{ item }">				
-							<span v-if="item.cost?.length>0">${{ item.cost }}</span>
-						</template>
+                        <template v-slot:[`item.price`]="{ item }">				
+                            <span v-if="item.price">$ {{ Number(item.price).toFixed(2) | currency }}</span>
+                        </template>
+
+                        <template v-slot:[`item.edit`]>
+                            <v-icon class="primary--text" style="cursor: pointer;">mdi-pencil</v-icon>
+                        </template>
 
 
+                    </v-data-table>
+                </v-card-text>
+            </v-card>
+        </div>
 
-					</v-data-table>
-				</v-card-text>
-			</v-card>
-		</div>
+        <v-dialog v-model="itemDialog" persistent max-width="800px">
+            <v-card>
+                <v-card-title class="primary" style="border-bottom: 1px solid black">
+                    <div class="text-h5">{{ action }} Item</div>
+                </v-card-title>
 
-		<v-dialog v-model="itemDialog" persistent max-width="800px">
-			<v-card>
-				<v-card-title class="primary" style="border-bottom: 1px solid black">
-					<div class="text-h5">{{ action }} Item</div>
-				</v-card-title>
+                <v-card-text>
 
-				<v-card-text>
+                    <v-text-field 
+                        label="Item Name" 
+                        v-model="category" 
+                        class="mt-5"
+                        :error="categoryErr"
+                        @input="categoryErr = false" 
+                        outlined/>
 
-					<v-text-field label="Item Name" v-model="itemName" class="mt-5" outlined/>
+                    <v-text-field 
+                        label="Default Cost" 
+                        v-model="price" 
+                        class="mt-1"						
+                        outlined prefix="$"/>		
+                    
+                    <v-row :style="{border:(branchErr? '1px solid red' : '0px solid')}">
+                        <v-col v-for="(branchOption, branchInx) in branchOptions" :key="branchInx">							
+                            <v-checkbox								
+                                multiple
+                                @change="branchErr=false"
+                                dense								
+                                v-model="branch" 
+                                :value="branchOption"
+                                :label="branchOption"/>
+                        </v-col>
+                    </v-row>
 
-					<v-text-field label="Default Cost" v-model="cost" class="mt-1" outlined prefix="$"/>		
-					
-					<v-row>
-						<v-col v-for="(branchOption, branchInx) in branchOptions" :key="branchInx">							
-							<v-checkbox 
-								multiple
-								dense								
-								v-model="branch" 
-								:value="branchOption"
-								:label="branchOption"/>
-						</v-col>
-					</v-row>
+                </v-card-text>
 
-				</v-card-text>
+                <v-card-actions>
+                    <v-btn color="grey darken-5" @click="itemDialog = false"> Cancel </v-btn>
+                    <v-btn class="ml-auto" color="green darken-1" @click="saveItem"> Save </v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
 
-				<v-card-actions>
-					<v-btn color="grey darken-5" @click="itemDialog = false"> Cancel </v-btn>
-					<v-btn class="ml-auto" color="green darken-1" @click="saveItem"> Save </v-btn>
-				</v-card-actions>
-			</v-card>
-		</v-dialog>
-
-	</v-container>
+    </v-container>
 </template>
 
 <script>
 import Breadcrumbs from "../../../components/Breadcrumbs.vue";
-import { ITEMS_URL } from "../../../urls";
-import { mapActions } from "vuex";
+import { ADMIN_URL } from "../../../urls";
 import axios from "axios";
 // import { secureGet } from "@/store/jwt";
 export default {
-	name: "Items",
-	components: {
-		Breadcrumbs
-	},
-	data: () => ({
-		loadingData: false,
-		items:[],
-		branch: [],		
-		itemName: '',
-		cost: '',		
-		totalLength: 0,
-		headers: [
-			{ text: "Item Name", 			value: "itemName"},			
-			{ text: "Branch",				value: "branch"},
-			{ text: "Default Cost", 		value: "cost"}
-		],
-		branchOptions: ['ITCS', 'CIM', 'SIS', 'eServices', 'DAS'],
-		page: 1,
-		pageCount: 0,
-		iteamsPerPage: 10,		
-		// departmentList: [],		
-		// employeeList: [],		
-		// departmentEmployeeList: [],
-		itemDialog: false,
-		action: 'Add'
-	}),
-	async mounted() {
-		this.loadingData = true;	
+    name: "Items",
+    components: {
+        Breadcrumbs
+    },
+    data: () => ({
+        loadingData: false,
+        items:[],
+        branch: [],
+        branchErr: false,
+        categoryErr: false,				
+        category: '',
+        price: '',
+        currentItem: {},
+        totalLength: 0,
+        headers: [
+            { text: "Item Name", 	 value: "category"},			
+            { text: "Branch",		 value: "branch"},
+            { text: "Default Cost",  value: "price"},
+            { text: "", 			 value: "edit", width:'1rem'},
+        ],
+        branchOptions: ['ITCS', 'CIM', 'SIS', 'eServices', 'DAS'],
+        page: 1,
+        pageCount: 0,
+        iteamsPerPage: 10,		
+        itemDialog: false,
+        action: 'Add'
+    }),
+    async mounted() {
+        await this.updateTable()
+    },
+    methods: {
+
+        async updateTable(){
+            this.loadingData = true;
+            this.branchErr = false;
+            this.categoryErr = false;
+            await this.getItems();
+            this.loadingData = false;
+        },
         
-        await this.getItems();	
-
-        this.loadingData = false;		
-	},
-	methods: {
-		...mapActions("items", ["loadItems"]),//TODO
-
         async getItems(){
-            axios.get(`${ITEMS_URL}`)
+            return axios.get(`${ADMIN_URL}/item-categories`)
             .then(resp => {  
-				console.log(resp.data)       
-				this.items = [
-					{						
-						itemName: "Desktop Comupter",
-						branch: "ITCS",
-						cost: ""
-					},
-					{						
-						itemName: "Laptop Comupter",
-						branch: "ITCS",
-						cost: ""
-					},
-					{						
-						itemName: "Mouse",
-						branch: "ITCS",
-						cost: "21.10"
-					},
-					{						
-						itemName: "Functional Analyst (1FTE)",
-						branch: "ITCS,SIS",
-						cost: "100000"
-					}
-				]
-                // this.items = resp.data;              
+                // console.log(resp.data)				
+                this.items = resp.data;              
             })
             .catch(e => {
                 console.log(e);
             });
         },
 
-		clearItemData(){		
-			this.branch = [];		
-			this.itemName = "";
-			this.cost = "";
-		},
+        clearItemData(){
+            this.currentItem = {};            		
+            this.branch = [];		
+            this.category = "";
+            this.price = "";
+        },
 
-		addItem() {
-			this.clearItemData();
-			this.action = 'Add';
-			this.itemDialog = true;
-		},
+        addItem() {
+            this.clearItemData();
+            this.action = 'Add';
+            this.branchErr = false;
+            this.categoryErr = false;
+            this.itemDialog = true;
+        },
 
-		editItem(value) {	
-			
-			this.branch = value.branch.split(',');		
-			this.itemName = value.itemName;
-			this.cost = value.cost;	
-			this.action = 'Edit';
-			this.itemDialog = true;
-		},
+        editItem(value) {
+            this.currentItem = value
+            this.branch = value.branch.split('/');		
+            this.category = value.category;
+            this.price = value.price;	
+            this.action = 'Edit';
+            this.branchErr = false;
+            this.categoryErr = false;
+            this.itemDialog = true;
+        },
 
-		saveItem(){		
+        checkFields(){
+            this.branchErr = this.branch.length>0 ? false : true
+            this.categoryErr = this.category? false: true
+            if(this.branchErr || this.categoryErr)
+                return false
+            else
+                return true
+        },
 
-			//TODO: save the item and load data into table
-			console.log(this.branch)
-			console.log(this.itemName)
-			console.log(this.cost)
-			this.itemDialog = false;
-			this.getItems();
-		}
-		
+        async saveItem(){
+            if(this.checkFields()){
+                this.itemDialog = false;
+                const body = {
+                    category: this.category,
+                    branch: this.branch.join('/'),				
+                    price: this.price,
+                };                
+                const id = this.currentItem?.itemCatID? this.currentItem.itemCatID: 0;
+                return axios.post(`${ADMIN_URL}/item-categories/${id}`, body)
+                .then(async () => {
+                    await this.updateTable()              
+                })
+                .catch(e => {
+                    console.log(e);
+                });
+            }
+        }
+        
 
-	}
+    }
 };
 </script>

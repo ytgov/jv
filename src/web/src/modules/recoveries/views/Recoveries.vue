@@ -17,12 +17,17 @@
         <v-tabs-items v-if="!loadingData" v-model="tabs">
             <v-tab-item>
                 <v-card flat>
-                    <recovery-table :recoveries="recoveries" @updateTable="getRecoveries"/>                    
+                    <recovery-table :recoveries="recoveries" @updateTable="updateTable(0)"/>                    
                 </v-card>
             </v-tab-item>
             <v-tab-item>
                 <v-card flat>
-                    
+                    <recovery-to-jv-table :recoveries="completedRecoveries" @updateTable="updateTable(1)"/>
+                </v-card>
+            </v-tab-item>
+             <v-tab-item>
+                <v-card flat>
+                    <journal-table :journals="journals" @updateTable="updateTable(2)"/>
                 </v-card>
             </v-tab-item>
         </v-tabs-items>
@@ -30,21 +35,28 @@
 </template>
 
 <script>
+import Vue from "vue";
 import RecoveryTable from "./RecoveryComponents/RecoveryTable.vue";
-import { LOOKUP_URL , RECOVERIES_URL} from "../../../urls";
+import RecoveryToJvTable from "./RecoveryToJV/RecoveryToJvTable.vue"
+import JournalTable from "./JournalComponents/JournalTable.vue"
+import { LOOKUP_URL , RECOVERIES_URL, ADMIN_URL} from "../../../urls";
 import axios from "axios";
 // import { secureGet } from "../../../store/jwt";
 
 export default {
     name: "Recoveries",
     components: {
-        RecoveryTable
+        RecoveryTable,
+        RecoveryToJvTable,
+        JournalTable
     },
     data() {
         return {
             tabs: null,
             loadingData: false,
             recoveries: [],
+            completedRecoveries: [],
+            journals: [],
             alertMsg: ""
         };
     },
@@ -55,6 +67,8 @@ export default {
         await this.getDepartmentBranch();
         await this.getItemCategoryList(); 
         await this.getRecoveries();
+        await this.getJournals();
+        this.loadingData = false;
     },
 
     methods: {
@@ -79,7 +93,7 @@ export default {
         },
 
         async getItemCategoryList(){
-            return axios.get(`${RECOVERIES_URL}/item-categories`)
+            return axios.get(`${ADMIN_URL}/item-categories`)
             .then(resp => {          
                 this.$store.commit("recoveries/SET_ITEM_CATEGORY_LIST", resp.data);              
             })
@@ -93,14 +107,31 @@ export default {
             return axios.get(`${RECOVERIES_URL}/`)
             .then(resp => {
                 this.recoveries=resp.data
-                this.loadingData = false;
+                this.completedRecoveries = resp.data.filter(recovery => recovery.status=='Complete' && !recovery.journalID)
             })
             .catch(e => {
-                this.loadingData = false;
+                console.log(e);
+            });
+        },
+
+        async getJournals(){
+            this.loadingData = true;
+            return axios.get(`${RECOVERIES_URL}/journals/`)
+            .then(resp => {
+                this.journals=resp.data
+            })
+            .catch(e => {
                 console.log(e);
             });
         },
        
+        async updateTable(tab){
+            this.loadingData = true;
+            await this.getRecoveries();
+            await this.getJournals();
+            this.loadingData = false;
+            Vue.nextTick(()=> this.tabs=tab)
+        }
         // determineDepartment() {
         //   this.alertMsg = "";
         //   if (!this.$store.state.auth.department) {

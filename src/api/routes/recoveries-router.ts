@@ -27,8 +27,8 @@ recoveriesRouter.get("/backup-documents/:recoveryID/:docName", RequiresAuthentic
 
 recoveriesRouter.post("/backup-documents/:recoveryID", RequiresAuthentication, ReturnValidationErrors, async function (req: Request, res: Response) {
   
-  const file = req.body.file;
-  const buffer = db.raw(`CAST('${file}' AS VARBINARY(MAX))`);
+  const files = req.body.files;
+  
   const recoveryID = Number(req.params.recoveryID);
   let user = req.user.display_name  
   const data = JSON.parse(req.body.data);  
@@ -40,28 +40,34 @@ recoveriesRouter.post("/backup-documents/:recoveryID", RequiresAuthentication, R
 
     await db.transaction(async trx => {
       
-      const backupDoc = await db("BackUpDocs")
-        .select("documentID")
-        .where("recoveryID", recoveryID)
-        .where("docName", data.docName)        
-        .first();
-      if (backupDoc) {
-        await db("BackUpDocs")
-          .update({ 
+      for(const inx in  data.docNames){
+        const file = files[inx]
+        const docName = data.docNames[inx]
+
+        const buffer = db.raw(`CAST('${file}' AS VARBINARY(MAX))`);
+        const backupDoc = await db("BackUpDocs")
+          .select("documentID")
+          .where("recoveryID", recoveryID)
+          .where("docName", docName)        
+          .first();
+        if (backupDoc) {
+          await db("BackUpDocs")
+            .update({ 
+              document: buffer
+            })
+            .where("recoveryID", recoveryID);
+        } 
+        else {
+          const newDocument = {
+            recoveryID: recoveryID,
+            docName: docName,
             document: buffer
-          })
-          .where("recoveryID", recoveryID);
-      } 
-      else {
-        const newDocument = {
-          recoveryID: recoveryID,
-          docName: data.docName,
-          document: buffer
-        };
-        await db("BackUpDocs").insert(newDocument, "documentID");
+          };
+          await db("BackUpDocs").insert(newDocument, "documentID");
+        }
       }
 
-      const action = 'Added File: '+data.docName
+      const action = 'Added File(s): '+data.docNames.join(', ')
       
       await addRecoveryAudit(recoveryID, user, action)
 
@@ -269,6 +275,7 @@ recoveriesRouter.post("/:recoveryID", RequiresAuthentication, ReturnValidationEr
   
   let recoveryID = Number(req.params.recoveryID)
   let user = req.user.display_name
+  const userEmail = req.user.email
  
 
   try {
@@ -287,11 +294,11 @@ recoveriesRouter.post("/:recoveryID", RequiresAuthentication, ReturnValidationEr
       var id = [];
       const newRecovery = req.body;
       if (recoveryID > 0) {
-        if(newRecovery.status !='Purchase Approved' && newRecovery.status !='Re-Draft') newRecovery.modUser=user
+        if(newRecovery.status !='Purchase Approved' && newRecovery.status !='Re-Draft') newRecovery.modUser=userEmail
         id = await db("Recovery").update(newRecovery, "recoveryID").where("recoveryID", recoveryID);
       } else {
-        newRecovery.createUser=user
-        newRecovery.modUser=user
+        newRecovery.createUser=userEmail
+        newRecovery.modUser=userEmail
         id = await db("Recovery").insert(newRecovery, "recoveryID");
       }
       recoveryID = id[0].recoveryID

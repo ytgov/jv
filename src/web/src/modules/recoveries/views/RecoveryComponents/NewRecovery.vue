@@ -209,36 +209,45 @@
                 <v-row class="mt-10 ml-3">
                     <v-col cols="5">
                         <v-row class="mx-0">
-                            <title-card class="mr-6" titleWidth="4.5rem" style="width:50%;">
+                            <title-card class="mr-6" titleWidth="4.5rem">
                                 <template #title>
                                     <div>Back-up</div>
                                 </template>
                                 <template #body>
-                                    <div style="width:10rem;min-height:2rem;" :key="update" class=" mx-4 blue--text text-h7 text-decoration-underline">
-                                        <a v-if="reader.result" :href="reader.result" download="UploadedFile.pdf" target="_blank">
-                                            {{ quoteFileName }}
-                                        </a>
+                                    <div style="width:15rem; min-height:2rem;" :key="update" class=" mx-4 blue--text text-h7 text-decoration-underline">
+                                        <div v-if="allUploadingDocuments.length>0">
+                                            <div v-for="doc,inx in allUploadingDocuments" :key="inx" class="my-1"> 
+                                                <a :href="doc.file" :download="doc.name" target="_blank" style="color:#643f5d;">
+                                                    {{ doc.name }}
+                                                </a>
+                                            </div>
+                                        </div>
                                         <div v-if="recovery" >
-                                            <div v-for="doc,inx in recovery.docName" :key="inx" class="my-2">
+                                            <div v-for="doc,inx in recovery.docName" :key="inx" class="my-1">
                                                 <a color="transparent" class="my-3" @click="downloadDocument(doc.docName)">                                    
-                                                    {{ doc.docName }}                                    
+                                                    <b>{{ doc.docName }}</b>                                    
                                                 </a> 
                                             </div>
                                         </div>       
                                     </div>
                                 </template>
                             </title-card>
-                            <v-btn v-if="uploadBtn" style="width:40%;" class="mx-0 my-auto" color="primary" elevation="5" @click="uploadDocument">
-                                Upload Back-up
-                                <input
-                                    id="inputfile"
-                                    type="file"
-                                    style="display: none"
-                                    accept="application/pdf,image/x-png,image/jpeg"
-                                    @change="handleSelectedFile"
-                                    onclick="this.value=null;"
-                                />
-                            </v-btn>
+                            <v-col >
+                                <v-btn v-if="uploadBtn"  class="mx-0 my-0" color="primary" elevation="5" @click="uploadDocument">
+                                    Upload Back-up
+                                    <input
+                                        id="inputfile"
+                                        type="file"
+                                        style="display: none"
+                                        accept="application/pdf"
+                                        @change="handleSelectedFile"
+                                        onclick="this.value=null;"
+                                    />
+                                </v-btn>
+                                <v-btn v-if="uploadBtn && allUploadingDocuments.length>0" class="mx-0 mt-5 cyan--text text--darken-2" color="secondary"  @click="allUploadingDocuments=[]">
+                                    Clear Uploaded File(s)
+                                </v-btn>
+                            </v-col>
                         </v-row>
                     </v-col>
                     <v-col cols="7" class="mx-0">
@@ -352,6 +361,8 @@ export default {
             departmentList: [],
             employeeList: [],
             itemCategoryList: [],
+
+            allUploadingDocuments: [],
             
             loadingData: false,
             savingData: false,
@@ -368,8 +379,8 @@ export default {
             total: 0,
 
             reader: new FileReader(),
-            quoteFileName: "",
-            quoteFileType: "",
+            // quoteFileName: "",
+            // quoteFileType: "",
             update: 0,
             alert:false,
             alertMsg:'',
@@ -426,6 +437,7 @@ export default {
             }
             this.checkOrderCompleted()
             this.loadingData= false
+            this.allUploadingDocuments = []
             this.update++;
         },
 
@@ -562,10 +574,14 @@ export default {
         },
 
         checkFields() {
-            if (this.reader.result && this.quoteFileType != "application/pdf") {
-                this.alertMsg = "Please upload the Quote PDF file.";
-                this.alert=true;
-                return false;
+            if (this.allUploadingDocuments.length>0) {
+                for(const doc of this.allUploadingDocuments){
+                    if(doc.type != 'application/pdf'){
+                        this.alertMsg = "Please upload the Quote PDF file.";
+                        this.alert=true;
+                        return false;
+                    }
+                }                
             }
 
             if(this.type=='Add New' || this.type=='Edit'){
@@ -643,11 +659,17 @@ export default {
         
         async saveBackUPFile(recoveryID) {
             this.alert = false;
-            const data = {
-                docName: this.quoteFileName,            
-            };
+            const docNames = []
             const bodyFormData = new FormData();
-            bodyFormData.append("file", this.reader.result);
+
+            for(const doc of this.allUploadingDocuments){
+                bodyFormData.append("files", doc.file);
+                docNames.push(doc.name)
+            }
+
+            const data = {
+                docNames: docNames,  
+            };
             bodyFormData.append("data", JSON.stringify(data));
 
             const header = {
@@ -689,10 +711,11 @@ export default {
             if (event.target.files && event.target.files[0]) {
                 const file = event.target.files[0];
 
-                this.quoteFileType = file.type;
-                this.quoteFileName = file.name;
+                // this.quoteFileType = file.type;
+                // this.quoteFileName = file.name;
 
                 this.reader.onload = () => {
+                    this.allUploadingDocuments.push({file: this.reader.result, name: file.name, type: file.type})                    
                     this.update++;
                 };
                 this.reader.readAsDataURL(file);
@@ -716,7 +739,7 @@ export default {
                     const link = document.createElement("a");
                     link.href = res.data;
                     document.body.appendChild(link);
-                    link.download = this.quoteFileName ? this.quoteFileName : "doc.pdf";
+                    link.download = docName;
                     link.click();
                     setTimeout(() => URL.revokeObjectURL(link.href), 1000);
                 })

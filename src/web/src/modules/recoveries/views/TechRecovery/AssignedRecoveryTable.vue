@@ -5,7 +5,7 @@
                 class="ml-auto mb-5 mr-4 mt-n10"  
                 type="Add New"
                 title="Create"
-                maxWidth="55%"
+                maxWidth="80%"
                 :recovery="{}" 
                 @updateTable="updateTable"
             />
@@ -40,7 +40,7 @@
                         <new-recovery                            
                             :type="isFillPhase(item)? 'Fill':'Edit'"
                             :title="isFillPhase(item)? 'Fill':'Edit'"
-                            :maxWidth="isFillPhase(item)?'85%' : '55%'"
+                            :maxWidth="isFillPhase(item)?'85%' : '80%'"
                             :recovery="item"
                             @updateTable="updateTable"                                              
                         />                       

@@ -4,9 +4,9 @@
       
       <div v-if="loadingData" class="text-center my-15"> Loading... </div>
       <h1 v-if="!loadingData" >{{ title }}</h1>
-      <p  v-if="!loadingData">
+      <!-- <p  v-if="!loadingData">
         This is a template that can be used for many different types of applications
-      </p>
+      </p> -->
       <!-- <p>
         It is probably best if you
         <router-link to="/sign-in">sign in</router-link> to see more things.

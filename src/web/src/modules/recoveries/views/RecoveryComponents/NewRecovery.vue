@@ -207,57 +207,64 @@
                 </v-row>
 
                 <v-row class="mt-10 ml-3">
-                    <title-card class="mr-6" titleWidth="4.5rem">
-                        <template #title>
-                            <div>Back-up</div>
-                        </template>
-                        <template #body>
-                            <div style="width:10rem;min-height:2rem;" :key="update" class=" mx-4 blue--text text-h7 text-decoration-underline">
-                                <a v-if="reader.result" :href="reader.result" download="UploadedFile.pdf" target="_blank">
-                                    {{ quoteFileName }}
-                                </a>
-                                <div v-if="recovery" >
-                                    <div v-for="doc,inx in recovery.docName" :key="inx" class="my-2">
-                                        <a color="transparent" class="my-3" @click="downloadDocument(doc.docName)">                                    
-                                            {{ doc.docName }}                                    
-                                        </a> 
+                    <v-col cols="5">
+                        <v-row class="mx-0">
+                            <title-card class="mr-6" titleWidth="4.5rem" style="width:50%;">
+                                <template #title>
+                                    <div>Back-up</div>
+                                </template>
+                                <template #body>
+                                    <div style="width:10rem;min-height:2rem;" :key="update" class=" mx-4 blue--text text-h7 text-decoration-underline">
+                                        <a v-if="reader.result" :href="reader.result" download="UploadedFile.pdf" target="_blank">
+                                            {{ quoteFileName }}
+                                        </a>
+                                        <div v-if="recovery" >
+                                            <div v-for="doc,inx in recovery.docName" :key="inx" class="my-2">
+                                                <a color="transparent" class="my-3" @click="downloadDocument(doc.docName)">                                    
+                                                    {{ doc.docName }}                                    
+                                                </a> 
+                                            </div>
+                                        </div>       
                                     </div>
-                                </div>       
-                            </div>
-                        </template>
-                    </title-card>
-                    <v-btn v-if="uploadBtn" class="mx-0 my-auto" color="primary" elevation="5" @click="uploadDocument">
-                        Upload Back-up
-                        <input
-                            id="inputfile"
-                            type="file"
-                            style="display: none"
-                            accept="application/pdf,image/x-png,image/jpeg"
-                            @change="handleSelectedFile"
-                            onclick="this.value=null;"
-                        />
-                    </v-btn>
-
-                    <v-btn v-if="!readonly" class="ml-auto mr-5 my-auto" color="primary" elevation="5" @click="saveNewRecovery('Routed For Approval')">
-                        Route For Approval                        
-                    </v-btn>
-
-                    <v-btn v-if="revertBtn" class="ml-auto mr-5 my-0" color="primary" elevation="5" @click="saveNewRecovery('Re-Draft')">
-                        Revert to Draft                        
-                    </v-btn>
-
-                    <div v-if="approveBtn" :class="(revertBtn?'ml-2 ':'ml-auto ')+'mr-5 my-auto'" style="width:20%">
-                        <v-btn color="primary" elevation="5" @click="saveNewRecovery('Purchase Approved')">
-                            Approve Purchase                        
+                                </template>
+                            </title-card>
+                            <v-btn v-if="uploadBtn" style="width:40%;" class="mx-0 my-auto" color="primary" elevation="5" @click="uploadDocument">
+                                Upload Back-up
+                                <input
+                                    id="inputfile"
+                                    type="file"
+                                    style="display: none"
+                                    accept="application/pdf,image/x-png,image/jpeg"
+                                    @change="handleSelectedFile"
+                                    onclick="this.value=null;"
+                                />
+                            </v-btn>
+                        </v-row>
+                    </v-col>
+                    <v-col cols="7" class="mx-0">
+                        <v-row class="mx-0">
+                        <v-btn v-if="!readonly" class="ml-auto mr-5 my-auto" color="primary" elevation="5" @click="saveNewRecovery('Routed For Approval')">
+                            Route For Approval                        
                         </v-btn>
-                        <div class="mt-1 mb-n15">
-                            By selecting Approve you have been proided approval by those individuals with Section 24 (commitment authority) 
-                        </div>
-                    </div>
 
-                    <v-btn v-if="saveBtn" class="ml-auto mr-5 my-auto" color="primary" elevation="5" @click="saveNewRecovery(completeBtn?'Fullfilled':'Partially Fullfilled')">
-                        Save Changes                        
-                    </v-btn>
+                        <v-btn v-if="revertBtn" class="ml-auto mr-5 my-0" color="primary" elevation="5" @click="saveNewRecovery('Re-Draft')">
+                            Revert to Draft                        
+                        </v-btn>
+
+                        <div v-if="approveBtn" :class="(revertBtn?'ml-2 ':'ml-auto ')+'mr-5 my-auto'" style="width:30%">
+                            <v-btn color="primary" elevation="5" @click="saveNewRecovery('Purchase Approved')">
+                                Approve Purchase                        
+                            </v-btn>
+                            <div class="mt-1 mb-n15">
+                                By selecting Approve you have been proided approval by those individuals with Section 24 (commitment authority) 
+                            </div>
+                        </div>
+
+                        <v-btn v-if="saveBtn" class="ml-auto mr-5 my-auto" color="primary" elevation="5" @click="saveNewRecovery(completeBtn?'Fullfilled':'Partially Fullfilled')">
+                            Save Changes                        
+                        </v-btn>
+                        </v-row>
+                    </v-col>
                     
                 </v-row>
 
@@ -381,11 +388,11 @@ export default {
 
         async initForm() {
             this.loadingData= true
-            this.admin = Vue.filter("isAdmin")();
-            this.supervisor = false //TODO admin role
+            this.admin = Vue.filter("isSystemAdmin")();
+            this.supervisor = Vue.filter("isBranchAdmin")();
             this.readonly = this.type != "Add New" && this.type != "Edit";
             this.approveBtn = this.type == "Approve";
-            this.revertBtn = this.type == "Approve" && !this.admin;//TODO admin role
+            this.revertBtn = this.type == "Approve" && this.admin;
             this.saveBtn = this.type == "Fill";
             this.uploadBtn = this.type != "Approve" && this.type != "Complete"
             this.alert=false;
@@ -469,9 +476,14 @@ export default {
         },
 
         initItemCategory() {
-            this.itemCategoryList = this.$store.state.recoveries.itemCategoryList.map(item => {
+            const itemCategoryList = this.$store.state.recoveries.itemCategoryList.map(item => {
                 return { text: item.category,  value:item.itemCatID, price:item.price, branch:item.branch}
             })
+            const usrBranch = this.$store.state.auth.user.branch
+            if(this.admin) 
+                this.itemCategoryList = itemCategoryList
+            else
+                this.itemCategoryList = itemCategoryList.filter(cat => cat.branch.includes(usrBranch))
         },
 
         initDepartments() {

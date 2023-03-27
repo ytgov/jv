@@ -4,6 +4,8 @@
             <template v-slot:activator="{ on, attrs }">
                 <v-btn                    
                     color="transparent"
+                    class="px-1"
+                    style="min-width: 0"
                     @click="initForm()"
                     v-bind="attrs"
                     v-on="on"
@@ -14,7 +16,7 @@
         <v-card>
             <v-card-title class="primary" style="border-bottom: 1px solid black">
                 <div class="text-h5">
-                    JV {{journal.jvNum}}
+                    JV {{journal.jvNum}} ({{journal.status}})
                 </div>
             </v-card-title>           
 
@@ -23,7 +25,7 @@
                 <v-row class="mt-5 mx-0">
                     <v-col cols="7">
                         <v-select
-                            :readonly="readonly"
+                            readonly
                             :error="state.departmentErr"
                             @change="state.departmentErr=false;"
                             v-model="journal.department"
@@ -58,15 +60,24 @@
                         />
                     </v-col>
                 </v-row>
-
-                <v-row class="mt-5 mx-3" >
-                    <recoverable-table :recoveries="recoveries" />
+                <v-row v-if="journal.status=='Draft' && !loadingData" >
+                    <edit-recoverable-table 
+                        class="ml-auto" 
+                        :recoveries="allDeptRecoveries" 
+                        :journalID="journal.journalID" 
+                        @updateTable="updateTable()"/>
+                </v-row>
+                <v-row class="mt-5 mx-3" v-if="!loadingData" >
+                    <recoverable-table
+                        :recoveries="recoveries" 
+                        :status="journal.status" 
+                        :journalID="journal.journalID"
+                        @updateTable="updateTable()"/>
                 </v-row>
 
                 <v-row class="mt-10 mb-3 mx-0">
                     <v-btn color="white" class="ml-5 cyan--text text--darken-4" @click="closeDialog">
-                        <div v-if="readonly" class="px-3">Close</div>
-                        <div v-else>Cancel</div>
+                        <div class="px-3">Close</div>
                     </v-btn>            
                     <v-btn
                         v-if="!readonly"
@@ -119,17 +130,19 @@ import { RECOVERIES_URL} from "@/urls";
 import axios from "axios";
 import AuditTable from './AuditTable.vue';
 import RecoverableTable from './RecoverableTable.vue'
-
+import EditRecoverableTable from "./EditRecoverableTable.vue"
 
 export default { 
     components: {  
         AuditTable,
-        RecoverableTable
+        RecoverableTable,
+        EditRecoverableTable
     },
     name: "EditJournal",
     props: {
         readonly: { type: Boolean},
         journal: {},
+        allRecoveries: {},
     },
     data() {
         return {
@@ -141,9 +154,10 @@ export default {
             departmentList: [],
             audits: [],
             recoveries: [],
-
+            allDeptRecoveries :[],
             savingData: false,
-                 
+            loadingData: false,
+
             tmpId: 0,
             alert:false,
             alertMsg:'',
@@ -160,16 +174,16 @@ export default {
     methods: {
 
         initForm() {            
-            this.admin = Vue.filter("isAdmin")();  
+            this.admin = Vue.filter("isSystemAdmin")();  
                       
             this.alert=false;
             this.initDepartments()     
             this.initStates();
             this.audits=this.journal.journalAudits
             this.recoveries=this.journal.recoveries
-
-            this.savingData = false            
-            this.update++;
+            this.allDeptRecoveries=this.allRecoveries.filter(rec => rec.department==this.journal.department)
+            this.savingData = false
+            this.loadingData = false            
         },
 
         
@@ -187,6 +201,37 @@ export default {
             }
         },
 
+        async updateTable(){
+            this.loadingData = true
+            this.getJournal()
+            this.getRecoveries()
+            this.loadingData = false
+        },
+
+        async getJournal() {             
+            const id = this.journal.journalID;
+            return axios.get(`${RECOVERIES_URL}/journal/${id}`)
+            .then((resp) => {                    
+                this.journal.journalAudits = resp.data.journalAudits;
+                this.journal.recoveries = resp.data.recoveries;
+                this.journal.jvAmount = resp.data.jvAmount
+                this.recoveries=this.journal.recoveries                           
+            })
+            .catch(e => {                
+                console.log(e);
+                this.loadingData = false                 
+            });
+        },
+
+        async getRecoveries(){
+            return axios.get(`${RECOVERIES_URL}/`)
+            .then(resp => {                
+                this.allDeptRecoveries = resp.data.filter(recovery => recovery.status=='Complete' && !recovery.journalID && recovery.department==this.journal.department)
+            })
+            .catch(e => {
+                console.log(e);
+            });
+        },
 
 
         checkFields() {          
@@ -218,8 +263,8 @@ export default {
                 const id = this.journal.journalID;
                 axios.post(`${RECOVERIES_URL}/journals/${id}`, body)
                 .then(async () => {                    
-                    this.savingData = false;                    
-                    this.closeDialog()
+                    this.savingData = false; 
+                    this.$emit("updateTable");                                       
                 })
                 .catch(e => {
                     this.savingData = false;

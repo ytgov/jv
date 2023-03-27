@@ -1,17 +1,49 @@
 import Vue from "vue";
 import store from "../store";
 
-Vue.filter("isAdmin", function () {
-  const userDept = store.state.auth.department;
-  const userRoles = store.state.auth.user.roles;
+Vue.filter("isDepartmentalFinance", function () {  
+  const userRoles = store.state.auth.user.roles.split(',');
   const admin = userRoles?.includes("Admin");
-  const patAdmin = userRoles?.includes("PatAdmin") && Boolean(userDept);
-  const hasAdminRole = admin || patAdmin;
-  return hasAdminRole;
+  const role = userRoles?.includes("DeptFinance");
+  const hasRequiredRoles = admin || role;
+  return hasRequiredRoles;
+});
+
+Vue.filter("isICTFinance", function () {  
+  const userRoles = store.state.auth.user.roles.split(',');
+  const admin = userRoles?.includes("Admin");
+  const role = userRoles?.includes("IctFinance");
+  const hasRequiredRoles = admin || role;
+  return hasRequiredRoles;
+});
+    
+Vue.filter("isBranchAdmin", function () {  
+  const userRoles = store.state.auth.user.roles.split(',');
+  const admin = userRoles?.includes("Admin");  
+  const role = userRoles?.includes("BranchAdmin");
+  const hasRequiredRoles = admin || role;
+  return hasRequiredRoles;
+});
+    
+Vue.filter("isBranchTech", function () {  
+  const userRoles = store.state.auth.user.roles.split(',');
+  const admin = userRoles?.includes("Admin");
+  const role1 = userRoles?.includes("BranchTech");
+  const role2 = userRoles?.includes("BranchAdmin");
+  const hasRequiredRoles = admin || role1 || role2;
+  return hasRequiredRoles;
+});
+
+Vue.filter("isBranchUser", function () {  
+  const userRoles = store.state.auth.user.roles.split(',');
+  const admin = userRoles?.includes("Admin");
+  const role = userRoles?.includes("BranchUser");
+  const hasRequiredRoles = admin || role;
+  return hasRequiredRoles;
 });
 
 Vue.filter("isSystemAdmin", function () {
-  const userRoles = store.state.auth.user.roles;
+  const userRoles = store.state.auth.user.roles.split(',');
   const admin = userRoles.includes("Admin");
   return admin;
 });
@@ -52,6 +84,7 @@ Vue.filter("getDate", function (date) {
 });
 
 Vue.filter("capitalize", function (text) {
+  if(!text) return ''
   return text.charAt(0).toUpperCase() + text.slice(1);
 });
 

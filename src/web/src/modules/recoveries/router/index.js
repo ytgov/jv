@@ -1,4 +1,35 @@
 
+import Vue from "vue";
+
+async function isICTFinance(to, from, next) {
+  if (Vue.filter("isICTFinance")())
+    next();
+  else
+    next({ path: '/' });
+}
+
+async function isBranchUser(to, from, next) {
+  if (Vue.filter("isBranchUser")())
+    next();
+  else
+    next({ path: '/' });
+}
+
+async function isBranchTech(to, from, next) {
+  if (Vue.filter("isBranchTech")())
+    next();
+  else
+    next({ path: '/' });
+}
+
+async function isDepartmentalFinance(to, from, next) {
+  if (Vue.filter("isDepartmentalFinance")())
+    next();
+  else
+    next({ path: '/' });
+}
+
+
 const routes = [
     {
       path: "/recoveries",
@@ -8,6 +39,7 @@ const routes = [
           name: "RecoveryHome",
           path: "",
           meta: { requiresAuth: true },
+          beforeEnter: isICTFinance,
           component: () => import("../views/Recoveries.vue"),
         },       
       ]
@@ -20,6 +52,7 @@ const routes = [
           name: "TechDashboard",
           path: "",
           meta: { requiresAuth: true },
+          beforeEnter: isBranchTech,
           component: () => import("../views/TechRecoveryDashboard.vue"),
         },       
       ]
@@ -32,6 +65,7 @@ const routes = [
           name: "UserDashboard",
           path: "",
           meta: { requiresAuth: true },
+          beforeEnter: isBranchUser,
           component: () => import("../views/UserRecoveryDashboard.vue"),
         },       
       ]
@@ -44,6 +78,7 @@ const routes = [
           name: "FinanceDashboard",
           path: "",
           meta: { requiresAuth: true },
+          beforeEnter: isDepartmentalFinance,
           component: () => import("../views/FinanceUserDashboard.vue"),
         },       
       ]

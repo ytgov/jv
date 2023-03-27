@@ -9,6 +9,7 @@ export const up = function (knex: knex.Knex, Promise: any) {
 		t.string('display_name', 200);
 		t.dateTime('create_date').notNullable();
 		t.string('preferredBuilding', 200);
+		t.string('department', 200);
 		t.string('branch', 200);
 		t.string('roles', 1000);
 		t.string('status', 20).notNullable().defaultTo("Inactive");

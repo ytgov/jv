@@ -25,12 +25,12 @@ const actions = {
             }).catch(err => {
                 console.error(err);
             });
-    }
+    },   
 };
 const mutations = {
     setUser(state, user) {
         state.user = user;
-        state.fullName = user.displayName;
+        state.fullName = user.display_name;
     },
     clearUser(state) {
         state.user = null;

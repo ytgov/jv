@@ -1,7 +1,7 @@
 
 export const applicationName = "Recoveries App";
 export const applicationIcon = "mdi-cash-register";
-export const hasSidebar = true;
+export const hasSidebar = false;
 export const hasSidebarClosable = false;
 
 export const sections = [

@@ -64,3 +64,15 @@ lookupRouter.get("/employees", RequiresAuthentication, ReturnValidationErrors, a
 });
 
 
+lookupRouter.get("/roles", RequiresAuthentication, ReturnValidationErrors, async function (req: Request, res: Response) {
+  
+  try {
+    const roles = await db("Role").select("*");
+    res.status(200).json(roles);
+  } catch (error: any) {
+    console.log(error);
+    res.status(500).json("Internal Server Error");
+  }
+});
+
+

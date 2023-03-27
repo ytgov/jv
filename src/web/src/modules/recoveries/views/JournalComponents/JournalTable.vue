@@ -21,23 +21,51 @@
             </template>
 
             <template v-slot:[`item.edit`]="{ item }">
-                <v-row>
-                    <div style="width: 4.5rem">
-                        <edit-journal
-                            :journal="item"
-                            @updateTable="updateTable"                                              
-                        />
-                    </div>
+                <v-row class="mx-0">                                        
+                    <edit-journal
+                        :allRecoveries="recoveries"
+                        :journal="item"
+                        @updateTable="updateTable"                                              
+                        />                                      
+                    <v-btn
+                        v-if="item.status=='Draft'"                                    
+                        @click="removeItem(item)"
+                        style="min-width: 0"
+                        color="transparent"
+                        class="px-0 my-auto ml-2"
+                        small>
+                        <v-icon class="" color="red">mdi-delete</v-icon>
+                    </v-btn>
+                                
                 </v-row>
-             </template>
-            
+             </template>            
         </v-data-table>
+
+        <v-dialog v-model="deleteJournalDialog" persistent max-width="450px">
+            <v-card>
+                <v-card-title class="orange lighten-4" style="border-bottom: 1px solid black">
+                    <div class="text-h4">Delete Journal</div>
+                </v-card-title>
+
+                <v-card-text>
+                    <div class="my-5 text-h6">
+                        Are you sure you like to delete Journal?                
+                    </div>
+                </v-card-text>
+
+                <v-card-actions>
+                    <v-btn color="grey darken-5" @click="deleteJournalDialog = false"> Cancel </v-btn>
+                    <v-btn class="ml-auto" :loading="savingData" color="red darken-1 white--text" @click="confirmedRemoveItem()"> Confirm </v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
     </div>
 </template>
 
 <script>
 import EditJournal from './EditJournal.vue'
-
+import { RECOVERIES_URL} from "@/urls";
+import axios from "axios";
 
 export default {
     components: {
@@ -45,7 +73,8 @@ export default {
     },
     name: "JournalTable",
     props: {
-        journals: {}
+        journals: {},
+        recoveries: {}
     },
     data() {
         return {
@@ -57,9 +86,12 @@ export default {
                 { text: "Affiliated Recoveries", value: "refRecoveries", class: "blue-grey lighten-4" },
                 { text: "Amount", value: "jvAmount", class: "blue-grey lighten-4" },                
                 { text: "Status", value: "status", class: "blue-grey lighten-4" },
-                { text: "", sortable: false, value: "edit", class: "blue-grey lighten-4", width: "1rem" }                             
+                { text: "", sortable: false, value: "edit", class: "blue-grey lighten-4", width: "6rem" }                             
             ],
-            admin: false,       
+            admin: false,
+            deleteJournalDialog: false,
+            currentItem: {},
+            savingData: false
         };
     },
     mounted() {
@@ -73,6 +105,28 @@ export default {
         getRefs(item){
             const refs = item.recoveries.map(recovery => recovery.refNum)
             return refs.join('/')
+        },
+        removeItem(item){
+            this.currentItem = item
+            this.deleteJournalDialog=true
+        },
+        confirmedRemoveItem(){
+            this.savingData = true;
+
+            const id= this.currentItem.journalID
+            axios.delete(`${RECOVERIES_URL}/journals/${id}`)
+                .then(() => {                    
+                    this.savingData = false;                    
+                    this.deleteJournalDialog=false
+                    this.$emit("updateTable");
+                })
+                .catch(e => {
+                    this.savingData = false;
+                    console.log(e);
+                    // this.alertMsg = e.response.data;
+                    // this.alert = true;
+                });
+            
         }
     }
 };

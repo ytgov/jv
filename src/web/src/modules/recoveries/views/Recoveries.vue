@@ -1,9 +1,9 @@
 <template>
-    <v-card :loading="loadingData" :disabled="loadingData" en class="px-5 pb-15">
+    <v-card :loading="loadingData" :disabled="loadingData" en class="px-5 pb-15"  style="border:0px solid white !important;">
         <div v-if="loadingData" class="mt-10" style="text-align: center">loading ...</div>
         <v-alert v-if="alertMsg" class="mt-5" type="warning">{{ alertMsg }}</v-alert>
         <v-toolbar v-if="!loadingData" class="" height="100px" flat>
-            <v-toolbar-title>Recoveries</v-toolbar-title>
+            <v-toolbar-title class="my-10 text-h4">Recoveries</v-toolbar-title>
 
             <template v-slot:extension>
                 <v-tabs v-model="tabs" active-class="primary--text teal lighten-5">
@@ -27,7 +27,7 @@
             </v-tab-item>
              <v-tab-item>
                 <v-card flat>
-                    <journal-table :journals="journals" @updateTable="updateTable(2)"/>
+                    <journal-table :journals="journals" :recoveries="completedRecoveries" @updateTable="updateTable(2)"/>
                 </v-card>
             </v-tab-item>
         </v-tabs-items>
@@ -39,7 +39,8 @@ import Vue from "vue";
 import RecoveryTable from "./RecoveryComponents/RecoveryTable.vue";
 import RecoveryToJvTable from "./RecoveryToJV/RecoveryToJvTable.vue"
 import JournalTable from "./JournalComponents/JournalTable.vue"
-import { LOOKUP_URL , RECOVERIES_URL, ADMIN_URL} from "../../../urls";
+import { mapActions } from "vuex";
+import { RECOVERIES_URL, ADMIN_URL } from "../../../urls";
 import axios from "axios";
 // import { secureGet } from "../../../store/jwt";
 
@@ -66,36 +67,30 @@ export default {
         await this.getEmployees();
         await this.getDepartmentBranch();
         await this.getItemCategoryList(); 
+        await this.getDepartments();
         await this.getRecoveries();
         await this.getJournals();
         this.loadingData = false;
     },
 
     methods: {
-        async getEmployees() {            
-            return axios.get(`${LOOKUP_URL}/employees`)
-            .then(resp => {
-                this.$store.commit("recoveries/SET_EMPLOYEES", resp.data);        
-            })
-            .catch(e => {
-                console.log(e);
-            });
-        },
-
-        async getDepartmentBranch() {
-            return axios.get(`${LOOKUP_URL}/department-branch`)
-            .then(resp => {
-                this.$store.commit("recoveries/SET_DEPARTMENT_BRANCH", resp.data);
-            })
-            .catch(e => {
-                console.log(e);
-            });
-        },
+        ...mapActions("recoveries", ["getEmployees", "getDepartmentBranch"]),
 
         async getItemCategoryList(){
             return axios.get(`${ADMIN_URL}/item-categories`)
             .then(resp => {          
                 this.$store.commit("recoveries/SET_ITEM_CATEGORY_LIST", resp.data);              
+            })
+            .catch(e => {
+                console.log(e);
+            });
+        },
+
+        async getDepartments(){
+            return axios.get(`${ADMIN_URL}/department-info`)
+            .then(resp => {  
+                //console.log(resp.data)       
+                this.$store.commit("recoveries/SET_DEPARTMENTS_INFO", resp.data);
             })
             .catch(e => {
                 console.log(e);

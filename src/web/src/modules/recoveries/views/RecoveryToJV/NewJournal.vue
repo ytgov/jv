@@ -26,7 +26,7 @@
                         <b class="mr-5">Department:</b> {{department}}
                     </v-row>
                     <v-row class="mt-5 mx-3">
-                        <b class="mr-5">GL:</b> 
+                        <b class="mr-5">GL:</b> {{departmentGlCode}}
                     </v-row>
                     <v-row class="mt-5 mb-4 mx-3">
                         <b class="mr-5">Amount:</b> $ {{amount}}
@@ -117,6 +117,7 @@ export default {
             period: "",
             amount:0,
             department:'',
+            departmentGlCode: '',
             periodList: [1,2,3,4,5,6,7,8,9,10,11,12,14],
             
             savingData: false,
@@ -136,7 +137,7 @@ export default {
     methods: {
 
         initForm() {
-            this.admin = Vue.filter("isAdmin")();  
+            this.admin = Vue.filter("isSystemAdmin")();  
                       
             this.alert=false;           
             this.initStates(); 
@@ -144,6 +145,7 @@ export default {
             this.period = ""
             this.amount = this.getTotalAmount()
             this.department = this.recoveries[0].department
+            this.departmentGlCode = this.getGlCode(this.department)
             this.savingData = false            
             this.update++;
         },
@@ -201,6 +203,11 @@ export default {
                     this.alert = true;
                 });
             }
+        },
+
+        getGlCode(department) {
+            const departmentInfo = this.$store.state.recoveries.departmentsInfo.filter(info => info.department==department)
+            return (departmentInfo[0]? departmentInfo[0].glCode : '')
         },
                
 

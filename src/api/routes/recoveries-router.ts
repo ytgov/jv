@@ -1,6 +1,6 @@
 import express, { Request, Response } from "express";
 import { ReturnValidationErrors , RequiresAuthentication } from "../middleware";
-import { DB_CONFIG } from "../config";
+import { DB_SCHEMA, DB_CONFIG } from "../config";
 import knex from "knex";
 import moment from "moment";
 import { UserService } from "../services";
@@ -77,6 +77,24 @@ recoveriesRouter.post("/backup-documents/:recoveryID", RequiresAuthentication, R
 
 
 //____JOURNALS___
+recoveriesRouter.get("/journal/:journalID", RequiresAuthentication, ReturnValidationErrors, async function (req: Request, res: Response) {
+  const journalID = Number(req.params.journalID)
+  
+  const journal = await db("JournalVoucher").select("*").where("journalID", journalID).first();
+    
+  const recoveries = await db("Recovery").select("*").where("journalID", journalID);
+  for(const recovery of recoveries){
+    const recoveryItems =  await db("RecoveryItem").select("*").where("recoveryID", recovery.recoveryID);      
+    recovery.recoveryItems = recoveryItems;     
+  }
+  journal.recoveries = recoveries
+
+  const journalAudits = await db("JournalAudit").select("*").where("journalID", journal.journalID);
+  journal.journalAudits = journalAudits    
+ 
+  res.status(200).json(journal);
+});
+
 recoveriesRouter.get("/journals/", RequiresAuthentication, ReturnValidationErrors, async function (req: Request, res: Response) {
   
   const journals = await db("JournalVoucher").select("*");
@@ -124,13 +142,57 @@ recoveriesRouter.post("/journals/:journalID", RequiresAuthentication, ReturnVali
         await db("Recovery").update({journalID: journalID}).whereIn("recoveryID", recoveryIDs);
       }
 
-      addJournalAudit(journalID, user, req.body.status)
+      await addJournalAudit(journalID, user, req.body.status)
 
     });
     res.status(200).json({journalID: journalID});
   } catch (error: any) {
     console.log(error);
     res.status(500).json("Insert failed");
+  }
+});
+
+recoveriesRouter.delete("/journals/:journalID", RequiresAuthentication, ReturnValidationErrors, async function (req: Request, res: Response) {
+  const journalID = Number(req.params.journalID)  
+  
+  try {        
+    await db.transaction(async trx => {      
+      await db("JournalVoucher").delete().where("journalID", journalID);      
+    });  
+    res.status(200).json('successful');
+  } catch (error: any) {
+    console.log(error);
+    res.status(500).json("Delete failed");
+  }
+});
+
+//____RECOVERABLES___
+recoveriesRouter.post("/recoverable/:journalID", RequiresAuthentication, ReturnValidationErrors, async function (req: Request, res: Response) {
+  const journalID = Number(req.params.journalID)
+  let user = req.user.display_name
+
+  try {        
+    await db.transaction(async trx => {
+      await userService.getByEmail(req.user.email).then(resp =>{
+        user = resp.display_name
+      })
+
+      const recoveryIDs = req.body.recoveryIDs;
+      const jvAmount = req.body.jvAmount
+
+      if(recoveryIDs){
+        await db("Recovery").update({journalID: null}).where("journalID", journalID).whereNotIn("recoveryID", recoveryIDs);
+        await db("Recovery").update({journalID: journalID}).whereIn("recoveryID", recoveryIDs);
+                
+        await db("JournalVoucher").update({jvAmount: Number(jvAmount)}).where("journalID", journalID);
+        
+        await addJournalAudit(journalID, user, "Modified Recoverables")
+      }         
+    });  
+    res.status(200).json('successful');
+  } catch (error: any) {
+    console.log(error);
+    res.status(500).json("Remove failed");
   }
 });
 
@@ -288,7 +350,7 @@ async function addJournalAudit(journalID: number, user: string, action: string){
 //________
 //__UTIL__
 async function insertIntoTable(table: string, data: any) {
-  const schema='dbo'
+  const schema= DB_SCHEMA
   const { bindings, sql } = db
     .withSchema(schema)
     .insert(data)

@@ -46,9 +46,7 @@
 
 <script>
 import Breadcrumbs from "../../components/Breadcrumbs.vue";
-import { LOOKUP_URL } from "../../urls";
-// import { mapActions } from "vuex";
-import axios from "axios";
+import { mapActions } from "vuex";
 
 export default {
 	components: {
@@ -65,29 +63,13 @@ export default {
         this.loadingData = false;
     },
 	methods: {
+		...mapActions("recoveries", ["getEmployees", "getDepartmentBranch"]),
+
 		goTo(url) {
 			if (url == "") return;
 			this.$router.push(url);
 		},
-		async getEmployees() {            
-            return axios.get(`${LOOKUP_URL}/employees`)
-            .then(resp => {
-                this.$store.commit("recoveries/SET_EMPLOYEES", resp.data);          
-            })
-            .catch(e => {
-                console.log(e);
-            });
-        },
-
-        async getDepartmentBranch() {
-            return axios.get(`${LOOKUP_URL}/department-branch`)
-            .then(resp => {
-                this.$store.commit("recoveries/SET_DEPARTMENT_BRANCH", resp.data);
-            })
-            .catch(e => {
-                console.log(e);
-            });
-        },
+		
 	}
 };
 </script>

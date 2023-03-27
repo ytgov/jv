@@ -1,7 +1,7 @@
 import { Express, Request, Response } from "express";
 import { sqldb } from "./index";
 import { join } from "path";
-import { seedUp } from "./seeds"
+import { rolesUp, seedUp } from "./seeds"
 
 export async function migrateUp() {
     console.log("-------- MIGRATE UP ---------")
@@ -15,7 +15,9 @@ export async function migrateDown() {
 
 export async function migrateLatest() {
     console.log("-------- MIGRATE LATEST ---------")
-    return await sqldb.migrate.latest({ directory: join(__dirname, "migrations") });
+    const latestMigration = await sqldb.migrate.latest({ directory: join(__dirname, "migrations") });
+    await rolesUp()
+    return latestMigration
 }
 
 export async function CreateMigrationRoutes(app: Express) {

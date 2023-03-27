@@ -1,6 +1,6 @@
 <template>
     <div class="mt-15 mx-10 mb-5">
-        <v-row>
+        <!-- <v-row>
             <new-recovery 
                 class="ml-auto mb-5 mr-4 mt-n10"  
                 type="Add New"
@@ -9,7 +9,7 @@
                 :recovery="{}" 
                 @updateTable="updateTable"
             />
-        </v-row>
+        </v-row> -->
 
         <v-data-table :headers="headers" :items="recoveries" :items-per-page="10" class="elevation-1">
             <!-- eslint-disable-next-line vue/no-unused-vars -->
@@ -78,12 +78,12 @@
 
 <script>
     // import Vue from "vue";
-import NewRecovery from './NewRecovery.vue'
+// import NewRecovery from './NewRecovery.vue'
 
 
 export default {
     components: {
-        NewRecovery
+        // NewRecovery
     },
     name: "RecoveryTable",
     props: {

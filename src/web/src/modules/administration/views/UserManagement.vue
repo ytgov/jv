@@ -25,6 +25,14 @@
 							'items-per-page-options': [10, 30, 100]
 						}"
 						class="clickable-row">
+						<template v-slot:[`item.roles`]="{ item }">
+                            <div v-for="role,inx in item.roles.split(',')" :key="role+inx">
+								{{getRoleName(role)}}
+							</div>
+                        </template>
+						<template v-slot:[`item.edit`]>
+                            <v-icon class="primary--text" style="cursor: pointer;">mdi-pencil</v-icon>
+                        </template>
 					</v-data-table>
 				</v-card-text>
 			</v-card>
@@ -37,20 +45,67 @@
 				</v-card-title>
 
 				<v-card-text>
-					<v-select label="Name" v-model="userName" :items="employeeList" class="mt-5"
-						@change="loadUserData"
-						item-text="fullName"
-						outlined/>
-					<v-select label="Department" v-model="userDept" :items="Object.keys(departmentList)"
-						@change="loadBranches"						
-						outlined/>					
-					<v-select label="Branch" v-model="userBranch" :items="branchList" outlined/>				
-					<v-select label="Role" v-model="userRole" :items="roleList" outlined/>					
-					<v-checkbox v-model="userStatus" label="Active?" dense/>
+					
+					<v-row class="mt-5">
+						<v-col cols="5">
+							<v-autocomplete label="Search Name"
+								:disabled="action!='Add'" 
+								v-model="userName" 
+								:items="employeeList"								
+								return-object
+								item-text="fullName"
+								clearable
+								outlined/>
+						</v-col>
+						<v-col cols="7">
+							<v-autocomplete label="Department" v-model="userName.department" :items="Object.keys(departmentList)" outlined/>					
+						</v-col>
+					</v-row>
+					<v-row>
+						<v-col cols="6">
+							<v-text-field v-model="userName.firstName" label="First Name" outlined/>
+						</v-col>
+						<v-col cols="6">
+							<v-text-field v-model="userName.lastName" label="Last Name" outlined/>
+						</v-col>
+					</v-row>
+					<v-row>
+						<v-col cols="8">
+							<v-text-field v-model="userName.email" label="Email" :error="emailErr" :rules="[rules.email]" outlined/>
+						</v-col>
+						<v-col cols="4">
+							<v-select label="Branch" v-model="userBranch" :items="branchList" outlined/>
+						</v-col>
+					</v-row>
+					<v-row>
+						
+						<v-col cols="12">
+							<v-select 
+								label="Roles" 
+								v-model="userRoles" 
+								:items="roleList"
+								item-text="name"
+								item-value="role"								
+								chips
+								multiple
+								clearable
+								outlined/>
+						</v-col>
+					</v-row>
+					<v-row>
+						<v-col cols="4">
+							<v-select 
+								label="Status" 
+								v-model="userStatus" 
+								:items="statusList"
+								chips												
+								outlined/>
+						</v-col>
+					</v-row>
 
 				</v-card-text>
 
-				<v-card-actions>
+				<v-card-actions class="mb-3">
 					<v-btn color="grey darken-5" @click="userDialog = false"> Cancel </v-btn>
 					<v-btn class="ml-auto" color="green darken-1" @click="saveUser"> Save </v-btn>
 				</v-card-actions>
@@ -61,9 +116,9 @@
 </template>
 
 <script>
+import Vue from "vue";
 import Breadcrumbs from "../../../components/Breadcrumbs.vue";
-import { USERS_URL } from "../../../urls";
-import { mapActions } from "vuex";
+import { USERS_URL, LOOKUP_URL } from "../../../urls";
 import axios from "axios";
 // import { secureGet } from "@/store/jwt";
 export default {
@@ -81,78 +136,66 @@ export default {
 			fullName: "", 
 			email: ""
 		},
-		userDept: '',
+		currentItem: {},
 		userBranch: '',
-		userRole: '',
+		userRoles: [],
 		userStatus: '',
-		totalLength: 0,
-		headers: [
-			{ text: "YNET ID", 		value: "ynetId"},
-			{ text: "Name", 		value: "name"},
-			{ text: "Department", 	value: "dept"},
+		emailErr: false,
+
+		rules: {					       
+			email: value => {
+				const pattern = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+				return pattern.test(value) || 'Invalid e-mail.'
+			},						
+		},
+
+		headers: [						
+			{ text: "Name", 	    value: "display_name"},
+			{ text: "Email", 		value: "email"},			
+			{ text: "Department", 	value: "department"},
 			{ text: "Branch", 		value: "branch"},
-			{ text: "Role", 		value: "role"},
-			{ text: "Status", 		value: "status"}
+			{ text: "Roles", 		value: "roles"},
+			{ text: "Status", 		value: "status"},
+			{ text: "", 			value: "edit", width:'1rem'},
 		],
-		page: 1,
-		pageCount: 0,
-		iteamsPerPage: 10,		
+		
 		departmentList: [],
-		branchList: [],
+		branchList: ['ITCS', 'CIM', 'SIS', 'eServices', 'DAS'],
+		statusList: ['Active', 'Inactive'],
 		employeeList: [],
-		roleList: [
-			{ text: "Branch User", 			value: "BranchUser"},
-			{ text: "Branch Technician", 	value: "BranchTechnician"},
-			{ text: "ICT Finance", 			value: "IctFinance"},
-			{ text: "Departmental Finance",	value: "DepartmentalFinance"},
-			{ text: "System Admin", 		value: "SystemAdmin"}			
-		],
+		roleList: [],
 		userDialog: false,
 		action: 'Add'
 	}),
+
+
 	async mounted() {
-		this.loadingData = true;	
-        
+		this.loadingData = true;	        
         await this.getUsers();
+		await this.getRoles();
 		this.departmentList = this.$store.state.recoveries.departmentBranch;		
 		this.employeeList = this.$store.state.recoveries.employees;
-		console.log(this.departmentList)
-		console.log(this.employeeList)
-
         this.loadingData = false;		
 	},
-	methods: {
-		...mapActions("users", ["loadUsers"]),//TODO		
+
+	methods: {	
 
         async getUsers(){
-            axios.get(`${USERS_URL}`)
+            return axios.get(`${USERS_URL}/all-users`)
             .then(resp => {  
-				console.log(resp.data)       
-				this.users = [
-					{
-						name: "Renee.Francoeur",
-						dept: "Cabinet Office",
-						branch: "",
-						role: "Branch Technician",
-						status: "Active"
-					},
-					{
-						name: "Moira.Lassen",
-						dept: "Environment",
-						branch: "Client, Business and Technology Solutions",
-						role: "Branch User",
-						status: "Active"
-					},
-					{
-						name: "Aurora.Bicudo",
-						dept: "Education",
-						branch: "Finance ",
-						role: "Departmental Finance",
-						status: "Active"
-					}
+				// console.log(resp.data)       				
+                this.users = resp.data;              
+            })
+            .catch(e => {
+                console.log(e);
+            });
+        },
 
-				]
-                // this.users = resp.data;              
+		async getRoles(){ 
+			return axios.get(`${LOOKUP_URL}/roles`)
+            .then(resp => {  
+				// console.log(resp.data)       				
+                this.roleList = resp.data;              
             })
             .catch(e => {
                 console.log(e);
@@ -167,10 +210,11 @@ export default {
 				fullName: "", 
 				email: ""
 			};
-			this.userDept = "";
 			this.userBranch = "";
-			this.userRole = "";
+			this.userRoles = [];
 			this.userStatus = "";
+			this.emailErr = false;
+			this.currentItem ={}
 		},
 
 		addUser() {
@@ -179,37 +223,68 @@ export default {
 			this.userDialog = true;
 		},
 
-		editUser(value) {			
+		editUser(value) {
+			this.currentItem = value
 			this.userName = {
-				firstName: "", 
-				lastName: "", 
-				department: "", 
-				fullName: value.name, 
-				email: ""
-			};
-			this.userDept = value.dept;
+				firstName: Vue.filter("capitalize")(value.first_name), 
+				lastName: Vue.filter("capitalize")(value.last_name), 
+				department: value.department, 
+				fullName: value.display_name, 
+				email: value.email
+			};			
 			this.userBranch = value.branch;
-			this.userRole = value.role;
+			this.userRoles = value.roles.split(',');
 			this.userStatus = value.status;
+			this.emailErr = false;
 			this.action = 'Edit';
 			this.userDialog = true;
 		},
 
 		saveUser(){		
-
-			//TODO: save the user
-
+			
+			console.log(this.userName)
+			console.log(this.userRoles)
+			if(this.rules.email(this.userName.email) != true) return
+			
 			this.userDialog = false;
-			this.getUsers();
-		},
-		loadBranches(){
-			this.branchList = this.departmentList[this.userDept].branches;
+			const body = {
+				email: this.userName.email, 
+				first_name: this.userName.firstName,
+				last_name: this.userName.lastName, 
+				display_name: this.getDisplayName(),
+				department: this.userName.department,
+				branch: this.userBranch, 
+				roles: this.userRoles.join(','), 
+				status: this.userStatus? this.userStatus : 'Inactive'				
+			};                
+			const id = this.currentItem?.id? this.currentItem.id: 0;
+			return axios.post(`${USERS_URL}/${id}`, body)
+			.then(async () => {
+				await this.getUsers();             
+			})
+			.catch(e => {
+				console.log(e);
+			});
+			
 		},
 
-		loadUserData($event){			
-			const userInfo = this.employeeList.filter(emp => emp.fullName == $event)[0];
-			this.userDept = userInfo.department;
-		}
+		getDisplayName(){
+			if(	this.userName.firstName && 
+				this.userName.firstName.length>1 &&
+				this.userName.lastName &&
+				this.userName.lastName.length>1)
+				return Vue.filter("capitalize")(this.userName.firstName)+'.'+Vue.filter("capitalize")(this.userName.lastName)
+			else if(this.userName.fullName && this.userName.fullName.length>1)
+				return this.userName.fullName
+			else 
+				return this.userName.email
+		},
+
+		getRoleName(roleValue){
+			const role = this.roleList.filter(role => role.role==roleValue)
+			return (role[0]? role[0].name : '')
+		},
+
 	}
 };
 </script>

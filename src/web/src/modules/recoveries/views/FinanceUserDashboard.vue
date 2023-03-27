@@ -1,5 +1,5 @@
 <template>
-    <v-card :loading="loadingData" :disabled="loadingData" en class="px-5 pb-15" flat>
+    <v-card :loading="loadingData" :disabled="loadingData" en class="px-5 pb-15"  style="border:0px solid white !important;">
         <div v-if="loadingData" class="mt-10" style="text-align: center">loading ...</div>
         <v-alert v-if="alertMsg" class="mt-5" type="warning">{{ alertMsg }}</v-alert>
 
@@ -21,7 +21,8 @@
 <script>
 // import Vue from "vue";
 import FinanceJournalTable from "./FinanceUserComponents/FinanceJournalTable.vue"
-import { LOOKUP_URL , RECOVERIES_URL, ADMIN_URL} from "../../../urls";
+import { RECOVERIES_URL, ADMIN_URL} from "../../../urls";
+import { mapActions } from "vuex";
 import axios from "axios";
 import TitleCard from './Common/TitleCard.vue';
 // import { secureGet } from "../../../store/jwt";
@@ -35,8 +36,7 @@ export default {
     data() {
         return {
             tabs: null,
-            loadingData: false,
-            
+            loadingData: false,            
             inprogressRecoveries: [],
             approvalRecoveries: [],
             journals: [],
@@ -54,26 +54,8 @@ export default {
     },
 
     methods: {
-        async getEmployees() {            
-            return axios.get(`${LOOKUP_URL}/employees`)
-            .then(resp => {
-                this.$store.commit("recoveries/SET_EMPLOYEES", resp.data);        
-            })
-            .catch(e => {
-                console.log(e);
-            });
-        },
-
-        async getDepartmentBranch() {
-            return axios.get(`${LOOKUP_URL}/department-branch`)
-            .then(resp => {
-                this.$store.commit("recoveries/SET_DEPARTMENT_BRANCH", resp.data);
-            })
-            .catch(e => {
-                console.log(e);
-            });
-        },
-
+        ...mapActions("recoveries", ["getEmployees", "getDepartmentBranch"]),
+       
         async getItemCategoryList(){
             return axios.get(`${ADMIN_URL}/item-categories`)
             .then(resp => {          

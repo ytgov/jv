@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <!-- <v-navigation-drawer
+    <v-navigation-drawer
       v-bind:app="hasSidebar"
       permanent
       :expand-on-hover="hasSidebarClosable"
@@ -25,7 +25,7 @@
           </v-list-item-content>
         </v-list-item>
       </v-list>
-    </v-navigation-drawer> -->
+    </v-navigation-drawer>
 
     <v-app-bar
       app
@@ -66,16 +66,19 @@
             <v-btn text color="primary" v-bind="attrs" v-on="on"> {{routeTitle}}<v-icon>mdi-menu-down</v-icon> </v-btn>
           </template>
           <v-list dense style="min-width: 200px">
-            <v-list-item @click="routeTitle='Dashboard (User)'" to="/recovery-dashboard-user">
+            <v-list-item  @click="routeTitle='Home'" to="/">
+              <v-list-item-title>Home</v-list-item-title>
+            </v-list-item>
+            <v-list-item v-if="isBranchUser" @click="routeTitle='Dashboard (User)'" to="/recovery-dashboard-user">
               <v-list-item-title>Dashboard (User)</v-list-item-title>
             </v-list-item>
-            <v-list-item @click="routeTitle='Dashboard (Tech)'" to="/recovery-dashboard-tech">
+            <v-list-item v-if="isBranchTech" @click="routeTitle='Dashboard (Tech)'" to="/recovery-dashboard-tech">
               <v-list-item-title>Dashboard (Tech)</v-list-item-title>
             </v-list-item>
-            <v-list-item @click="routeTitle='Dashboard (Finance)'" to="/recovery-dashboard-finance">
+            <v-list-item v-if="isDepartmentalFinance" @click="routeTitle='Dashboard (Finance)'" to="/recovery-dashboard-finance">
               <v-list-item-title>Dashboard (Finance)</v-list-item-title>
             </v-list-item>
-            <v-list-item @click="routeTitle='Recovery List'" to="/recoveries">
+            <v-list-item v-if="isICTFinance" @click="routeTitle='Recovery List'" to="/recoveries">
               <v-list-item-title>Recovery List</v-list-item-title>
             </v-list-item>            
           </v-list>
@@ -136,6 +139,7 @@
 </template>
 
 <script>
+import Vue from "vue";
 import router from "@/router";
 import store from "@/store";
 import * as config from "@/config";
@@ -151,7 +155,11 @@ export default {
     },
     isAuthenticated() {
       return store.getters.isAuthenticated;
-    }
+    },
+    isBranchUser() { return Vue.filter("isBranchUser")() },
+    isBranchTech() { return Vue.filter("isBranchTech")() },
+    isDepartmentalFinance() { return Vue.filter("isDepartmentalFinance")() },
+    isICTFinance() { return Vue.filter("isICTFinance")() },
   },
   data: () => ({
     dialog: false,
@@ -197,7 +205,7 @@ export default {
     },
     signOut: function() {
       store.dispatch("signOut");
-      router.push("/");
+      router.push("/sign-in");
     },
     getDropdownTitle(){
       const path = this.$route.path

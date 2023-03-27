@@ -9,7 +9,7 @@ export const up = function (knex: knex.Knex, Promise: any) {
 		
 		t.dateTime('date');
 		t.string('user', 50).notNullable();
-		t.string('action', 50).notNullable();
+		t.string('action').notNullable();
 	});
 };
 

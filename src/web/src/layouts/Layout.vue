@@ -60,6 +60,31 @@
       ></v-select> -->
 
       <div v-if="isAuthenticated">
+
+        <v-menu offset-y class="ml-0">
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn text color="primary" v-bind="attrs" v-on="on"> {{routeTitle}}<v-icon>mdi-menu-down</v-icon> </v-btn>
+          </template>
+          <v-list dense style="min-width: 200px">
+            <v-list-item  @click="routeTitle='Home'" to="/">
+              <v-list-item-title>Home</v-list-item-title>
+            </v-list-item>
+            <v-list-item v-if="isBranchUser" @click="routeTitle='Dashboard (User)'" to="/recovery-dashboard-user">
+              <v-list-item-title>Dashboard (User)</v-list-item-title>
+            </v-list-item>
+            <v-list-item v-if="isBranchTech" @click="routeTitle='Dashboard (Tech)'" to="/recovery-dashboard-tech">
+              <v-list-item-title>Dashboard (Tech)</v-list-item-title>
+            </v-list-item>
+            <v-list-item v-if="isDepartmentalFinance" @click="routeTitle='Dashboard (Finance)'" to="/recovery-dashboard-finance">
+              <v-list-item-title>Dashboard (Finance)</v-list-item-title>
+            </v-list-item>
+            <v-list-item v-if="isICTFinance" @click="routeTitle='Recovery List'" to="/recoveries">
+              <v-list-item-title>Recovery List</v-list-item-title>
+            </v-list-item>            
+          </v-list>
+        </v-menu>
+
+
         <span>{{ username }}</span>
         <v-menu bottom left class="ml-0">
           <template v-slot:activator="{ on, attrs }">
@@ -69,6 +94,14 @@
           </template>
 
           <v-list dense style="min-width: 200px">
+
+            <v-list-item to="/administration">
+              <v-list-item-icon>
+                <v-icon>mdi-table-edit</v-icon>
+              </v-list-item-icon>
+              <v-list-item-title>Administration</v-list-item-title>
+            </v-list-item>
+
             <v-list-item to="/profile">
               <v-list-item-icon>
                 <v-icon>mdi-account</v-icon>
@@ -106,6 +139,7 @@
 </template>
 
 <script>
+import Vue from "vue";
 import router from "@/router";
 import store from "@/store";
 import * as config from "@/config";
@@ -121,7 +155,11 @@ export default {
     },
     isAuthenticated() {
       return store.getters.isAuthenticated;
-    }
+    },
+    isBranchUser() { return Vue.filter("isBranchUser")() },
+    isBranchTech() { return Vue.filter("isBranchTech")() },
+    isDepartmentalFinance() { return Vue.filter("isDepartmentalFinance")() },
+    isICTFinance() { return Vue.filter("isICTFinance")() },
   },
   data: () => ({
     dialog: false,
@@ -129,6 +167,7 @@ export default {
     drawerRight: null,
     headerShow: false,
     menuShow: false,
+    routeTitle: 'Home',
     loadingClass: "d-none",
     applicationName: config.applicationName,
     applicationIcon: config.applicationIcon,
@@ -150,6 +189,9 @@ export default {
       else this.hasSidebar = config.hasSidebar;
     }
   },
+  mounted () {
+    this.getDropdownTitle()
+  },
   methods: {
     nav: function(location) {
       router.push(location);
@@ -163,7 +205,14 @@ export default {
     },
     signOut: function() {
       store.dispatch("signOut");
-      router.push("/");
+      router.push("/sign-in");
+    },
+    getDropdownTitle(){
+      const path = this.$route.path
+      if(path.includes('/recovery-dashboard-user')) this.routeTitle='Dashboard (User)'
+      else if(path.includes('/recovery-dashboard-tech')) this.routeTitle='Dashboard (Tech)'
+      else if(path.includes('/recovery-dashboard-finance')) this.routeTitle='Dashboard (Finance)'
+      else if(path.includes('/recoveries')) this.routeTitle='Recovery List'
     }
   }
 };

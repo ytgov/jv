@@ -1,5 +1,5 @@
 <template>
-  <div class="hello">
+  <div class="hello mx-10 my-5">
     <h1>{{ title }}</h1>
     <p>
       The authentication for this application is managed by our authentication

@@ -27,7 +27,7 @@ export function configureAuthentication(app: Express) {
         scope: "openid profile email"
       },
       routes: {
-        login: "/api/auth/login",
+        //login: "/api/auth/login",
         //logout: "/api/auth/logout",
         postLogoutRedirect: FRONTEND_URL
       }

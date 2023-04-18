@@ -1,5 +1,5 @@
 import { sqldb } from "..";
-import { DB_SCHEMA, DB_TYPE } from "../../config";
+import { DB_SCHEMA } from "../../config";
 
 export async function seedUp() {
   console.log("Seeding");
@@ -7,7 +7,7 @@ export async function seedUp() {
   await sqldb("user").delete().whereRaw("1=1");
   await sqldb("user").insert([
     {
-      email: "diedre.davidson@yukon.ca",
+      email: "Diedre.Davidson@yukon.ca",
       first_name: "Diedre",
       last_name: "Davidson",
       display_name: "Diedre.Davidson",
@@ -52,10 +52,7 @@ async function insertIntoTable(table: string, data: any) {
   const schema = DB_SCHEMA;
   const { bindings, sql } = sqldb.withSchema(schema).insert(data).into(table).toSQL();
 
-  if (DB_TYPE === "mssql") {
-    const newQuery = `SET IDENTITY_INSERT ${schema}.${table} ON; ${sql} SET IDENTITY_INSERT ${schema}.${table} OFF;`;
-    return await sqldb.raw(newQuery, bindings);
-  } else {
-    return await sqldb.raw(sql, bindings);
-  }
+  const newQuery = `SET IDENTITY_INSERT ${schema}.${table} ON; ${sql} SET IDENTITY_INSERT ${schema}.${table} OFF;`;
+
+  return await sqldb.raw(newQuery, bindings);
 }

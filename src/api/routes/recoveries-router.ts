@@ -1,6 +1,6 @@
 import express, { Request, Response } from "express";
 import { ReturnValidationErrors, RequiresAuthentication } from "../middleware";
-import { DB_SCHEMA, DB_CONFIG, DB_TYPE } from "../config";
+import { DB_SCHEMA, DB_CONFIG } from "../config";
 import knex from "knex";
 import moment from "moment";
 import { UserService } from "../services";
@@ -390,10 +390,7 @@ async function insertIntoTable(table: string, data: any) {
   const schema = DB_SCHEMA;
   const { bindings, sql } = db.withSchema(schema).insert(data).into(table).toSQL();
 
-  if (DB_TYPE == "mssql") {
-    const newQuery = `SET IDENTITY_INSERT ${schema}.${table} ON; ${sql} SET IDENTITY_INSERT ${schema}.${table} OFF;`;
-    return await db.raw(newQuery, bindings);
-  } else {
-    return await db.raw(sql, bindings);
-  }
+  const newQuery = `SET IDENTITY_INSERT ${schema}.${table} ON; ${sql} SET IDENTITY_INSERT ${schema}.${table} OFF;`;
+
+  return await db.raw(newQuery, bindings);
 }

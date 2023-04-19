@@ -41,7 +41,7 @@ recoveriesRouter.post("/backup-documents/:recoveryID", RequiresAuthentication, R
     await db.transaction(async trx => {
       
       for(const inx in  data.docNames){
-        const file = files[inx]
+        const file = data.docNames.length==1? files : files[inx]
         const docName = data.docNames[inx]
 
         const buffer = db.raw(`CAST('${file}' AS VARBINARY(MAX))`);

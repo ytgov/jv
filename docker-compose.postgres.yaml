@@ -1,0 +1,23 @@
+version: "3"
+services:
+  dbpostgres:
+    container_name: JV_db
+    image: "postgres:14.4"
+    restart: always
+    volumes:
+      - ./db/data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "itsallgood"
+      POSTGRES_DB: "postgres"
+  web:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      - dbpostgres
+    environment:
+      - "NODE_ENV=development"
+    env_file:
+      - .env
+    ports:
+      - "${HOST_PORT:-8088}:3000"

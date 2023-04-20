@@ -8,6 +8,8 @@
                     v-model="firstSelectionDept"
                     item-text="name" 
                     :items="departmentList"
+                    :error="searchErr"
+                    @input="searchErr = false"
                     clearable 
                     class="mt-n7"
                     @change="loadRecoveryData"						
@@ -51,6 +53,21 @@
             <!-- <template v-slot:[`item.jvNum`]="{ item }">
                 {{item.journal}}
             </template> -->
+
+            <template v-slot:[`item.edit`]="{ item }">
+                <v-row>
+                    <div style="width: 3.5rem">                        
+                        <new-recovery
+                            v-if="item.status=='Complete'"
+                            type="Complete"
+                            maxWidth="85%"
+                            title="Complete"
+                            :recovery="item"
+                            @updateTable="updateTable"                                              
+                        />
+                    </div>
+                </v-row>
+            </template>
             
         </v-data-table>
     </div>
@@ -59,10 +76,12 @@
 <script>
 import Vue from "vue";
 import NewJournal from './NewJournal.vue'
+import NewRecovery from '../RecoveryComponents/NewRecovery.vue'
 
 export default {
     components: {
-        NewJournal
+        NewJournal,
+        NewRecovery
     },
     name: "RecoveryToJvTable",
     props: {
@@ -80,18 +99,21 @@ export default {
                 { text: "Cost", value: "totalPrice", class: "blue-grey lighten-4" },
                 { text: "DateSubmitted", value: "submissionDate", class: "blue-grey lighten-4" },
                 { text: "Status", value: "status", class: "blue-grey lighten-4" },
-                // { text: "JV #", value: "jvNum", class: "blue-grey lighten-4" },                                
+                // { text: "JV #", value: "jvNum", class: "blue-grey lighten-4" }, 
+                { text: "", sortable: false, value: "edit", class: "blue-grey lighten-4", width: "3.5rem" },                               
             ],
             admin: false,
             selectedRecoveries: [],
             firstSelectionDept: "",
             itemCategoryList: {},
             department: "",
+            searchErr: false,
             departmentList: [],
             filteredRecoveries: []
         };
     },
     mounted() {
+        this.searchErr= false
         this.initItemCategory() 
         this.initDepartments() 
         this.loadRecoveryData()
@@ -127,6 +149,7 @@ export default {
             }
         },
         applySameDeptSelection(selection) {
+            this.searchErr= false
             Vue.nextTick(() => {
                 if (this.selectedRecoveries.length == 1) {
                     this.firstSelectionDept = this.selectedRecoveries[0].department;
@@ -141,8 +164,15 @@ export default {
             });
         },
         applyAllSameDeptSelection(selection) {
-            console.log(selection);
+            // console.log(selection);
+            const dept = this.filteredRecoveries[0]?.department
+            let sameDepartment = dept? true : false
+            this.filteredRecoveries.forEach(rec => {if(rec.department!=dept) sameDepartment = false;})
+            if(sameDepartment) this.firstSelectionDept = dept
+            
             Vue.nextTick(() => {
+                if (selection.value == true && !this.firstSelectionDept) this.searchErr = true;
+
                 if (selection.value == true && this.firstSelectionDept) {
                     this.selectedRecoveries = this.selectedRecoveries.filter(req => req.department == this.firstSelectionDept);
                 } else {

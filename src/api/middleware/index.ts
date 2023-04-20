@@ -42,6 +42,39 @@ export function RequiresRoleAdmin(
 	next();
 }
 
+export function RequiresRoleAdminOrIctFinance(
+	req: Request,
+	res: Response,
+	next: NextFunction
+) {
+	if ((req.user?.roles?.indexOf('Admin')>=0) || (req?.user?.roles?.indexOf("IctFinance")>=0)) {
+		next();
+	}else 
+		return res.status(401).send('You are not an authorized person!');	
+}
+
+export function RequiresRoleAdminOrFinance(
+	req: Request,
+	res: Response,
+	next: NextFunction
+) {
+	if ((req.user?.roles?.indexOf('Admin')>=0) || (req?.user?.roles?.indexOf("IctFinance")>=0) || (req?.user?.roles?.indexOf("DeptFinance")>=0)) {
+		next();
+	}else 
+		return res.status(401).send('You are not an authorized person!');	
+}
+
+export function RequiresRoleAdminOrTech(
+	req: Request,
+	res: Response,
+	next: NextFunction
+) {
+	if ((req.user?.roles?.indexOf('Admin')>=0) || (req?.user?.roles?.indexOf("BranchAdmin")>=0) || (req?.user?.roles?.indexOf("BranchTech")>=0)) {
+		next();
+	}else 
+		return res.status(401).send('You are not an authorized person!');	
+}
+
 export async function doHealthCheck(req: Request, res: Response) {
 	//let dbConnected = await data.isConnected();
 

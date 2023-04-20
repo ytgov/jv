@@ -49,7 +49,8 @@
                     <v-btn color="white" class="ml-5 cyan--text text--darken-4" @click="addNewRecoverableDialog=false">                    
                         <div>Cancel</div>
                     </v-btn>            
-                    <v-btn                    
+                    <v-btn
+                        :disabled="selectedRecoveries.length==0"                    
                         class="ml-auto mr-5 px-5 white--text"
                         color="#005a65"
                         @click="modifyJournal()"
@@ -72,7 +73,8 @@ export default {
     name: "EditRecoverableTable",
     props: {
         recoveries: {},
-        journalID: {} 
+        journalID: {},
+        existingRecoveries: {}, 
     },
     data() {
         return {
@@ -97,7 +99,9 @@ export default {
     },
     methods: {
         initForm(){
-            //
+            this.savingData = false
+            this.selectedRecoveries = []
+            // console.log(this.existingRecoveries)
         },        
 
         updateTable() {
@@ -117,13 +121,14 @@ export default {
         },
 
         modifyJournal(){ 
-            this.savingData = true           
-            const recoveryIDs = this.selectedRecoveries.map(rec => rec.recoveryID)          
+            this.savingData = true
+            const allRecoveries = [...this.existingRecoveries, ...this.selectedRecoveries]
+            const recoveryIDs = allRecoveries.map(rec => rec.recoveryID) 
             let recoveryCost = 0
-            this.selectedRecoveries.forEach(rec => recoveryCost += Number(rec.totalPrice) )
+            allRecoveries.forEach(rec => recoveryCost += Number(rec.totalPrice) )
             const body = {
                 recoveryIDs: recoveryIDs,
-                jvAmount: recoveryCost
+                jvAmount: Number(recoveryCost.toFixed(2))
             }
             axios.post(`${RECOVERIES_URL}/recoverable/${this.journalID}`, body)
                 .then(() => { 

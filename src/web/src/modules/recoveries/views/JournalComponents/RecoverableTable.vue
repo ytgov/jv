@@ -6,7 +6,7 @@
                     type="Complete"
                     maxWidth="85%"
                     title="Complete"
-                    :btnTxt="item.refNum"
+                    :btnTxt="item.refNum? item.refNum :'View Recovery'"
                     :recovery="item"                    
                 />
             </template>
@@ -19,7 +19,7 @@
             <template v-slot:[`item.edit`]="{ item }">
                 <v-row class="mx-0">                                                                                         
                     <v-btn
-                        v-if="status=='Draft'"                                    
+                        v-if="status=='Draft' && !readonly"                                    
                         @click="removeItem(item)"
                         style="min-width: 0"
                         color="transparent"
@@ -48,7 +48,8 @@ export default {
     props: {        
         recoveries: {},
         status: {type:String},
-        journalID: {}      
+        journalID: {},
+        readonly: {type: Boolean}      
     },
     data() {
         return {

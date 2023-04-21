@@ -40,6 +40,7 @@
                             :readonly="readonly"
                             :error="state.amountErr"
                             @input="state.amountErr = false"
+                            @change="fixJvAmount"
                             v-model="journal.jvAmount"
                             label="Amount"
                             prefix="$"
@@ -60,15 +61,17 @@
                         />
                     </v-col>
                 </v-row>
-                <v-row v-if="journal.status=='Draft' && !loadingData" >
+                <v-row v-if="journal.status=='Draft' && !loadingData && !readonly" >
                     <edit-recoverable-table 
-                        class="ml-auto" 
+                        class="ml-auto"
+                        :existingRecoveries="recoveries" 
                         :recoveries="allDeptRecoveries" 
                         :journalID="journal.journalID" 
                         @updateTable="updateTable()"/>
                 </v-row>
                 <v-row class="mt-5 mx-3" v-if="!loadingData" >
                     <recoverable-table
+                        :readonly="readonly"
                         :recoveries="recoveries" 
                         :status="journal.status" 
                         :journalID="journal.journalID"
@@ -182,6 +185,7 @@ export default {
             this.audits=this.journal.journalAudits
             this.recoveries=this.journal.recoveries
             this.allDeptRecoveries=this.allRecoveries.filter(rec => rec.department==this.journal.department)
+            this.fixJvAmount()
             this.savingData = false
             this.loadingData = false            
         },
@@ -203,8 +207,8 @@ export default {
 
         async updateTable(){
             this.loadingData = true
-            this.getJournal()
-            this.getRecoveries()
+            await this.getJournal()
+            await this.getRecoveries()
             this.loadingData = false
         },
 
@@ -214,8 +218,10 @@ export default {
             .then((resp) => {                    
                 this.journal.journalAudits = resp.data.journalAudits;
                 this.journal.recoveries = resp.data.recoveries;
-                this.journal.jvAmount = resp.data.jvAmount
-                this.recoveries=this.journal.recoveries                           
+                this.journal.jvAmount = resp.data.jvAmount;
+                this.fixJvAmount()
+                this.recoveries=this.journal.recoveries
+                //console.log(this.recoveries)                           
             })
             .catch(e => {                
                 console.log(e);
@@ -233,6 +239,9 @@ export default {
             });
         },
 
+        fixJvAmount(){
+            this.journal.jvAmount=this.journal.jvAmount? Number(this.journal.jvAmount).toFixed(2) : '0.00'
+        },
 
         checkFields() {          
             this.state.departmentErr = this.journal.department? false : true;          

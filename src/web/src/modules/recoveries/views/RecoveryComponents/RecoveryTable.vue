@@ -34,10 +34,10 @@
                 <div v-if="item.journal && item.journal.jvNum">{{item.journal.jvNum}}</div>
             </template>
             
-            <!-- <template v-slot:[`item.edit`]="{ item }">
+            <template v-slot:[`item.edit`]="{ item }">
                 <v-row>
                     <div style="width: 4.5rem">
-                        <new-recovery
+                        <!-- <new-recovery
                             v-if="item.status"
                             type="Edit"
                             title="Edit"
@@ -60,9 +60,9 @@
                             title="Fill"
                             :recovery="item"
                             @updateTable="updateTable"                                              
-                        />
+                        /> -->
                         <new-recovery
-                            v-if="item.status"
+                            v-if="item.status=='Complete'"
                             type="Complete"
                             maxWidth="85%"
                             title="Complete"
@@ -71,19 +71,19 @@
                         />
                     </div>
                 </v-row>
-            </template> -->
+            </template>
         </v-data-table>
     </div>
 </template>
 
 <script>
     // import Vue from "vue";
-// import NewRecovery from './NewRecovery.vue'
+import NewRecovery from './NewRecovery.vue'
 
 
 export default {
     components: {
-        // NewRecovery
+        NewRecovery
     },
     name: "RecoveryTable",
     props: {

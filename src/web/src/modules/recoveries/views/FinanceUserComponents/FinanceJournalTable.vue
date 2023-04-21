@@ -1,8 +1,6 @@
 <template>
     <div class="mt-15 mx-10 mb-5">       
-        <!-- <v-btn @click="call">
-            CLK
-        </v-btn> -->
+
         <v-data-table 
             :headers="headers" 
             :items="journals" 
@@ -26,8 +24,9 @@
                 <v-row>
                     <div style="width: 4.5rem">
                         <edit-journal
-                            :journal="item"
-                            @updateTable="updateTable"                                              
+                            :allRecoveries="[]"
+                            :readonly="true"
+                            :journal="item"                                                                          
                         />
                     </div>
                 </v-row>
@@ -38,13 +37,11 @@
 </template>
 
 <script>
-// import EditJournal from './EditJournal.vue'
-// import { AUTH_URL} from "../../../../urls";
-// import axios from "axios";
+import EditJournal from '../JournalComponents/EditJournal.vue'
 
 export default {
     components: {
-        // EditJournal
+        EditJournal
     },
     name: "FinanceJournalTable",
     props: {
@@ -60,7 +57,7 @@ export default {
                 { text: "Affiliated Recoveries", value: "refRecoveries", class: "blue-grey lighten-4" },
                 { text: "Amount", value: "jvAmount", class: "blue-grey lighten-4" },                
                 { text: "Status", value: "status", class: "blue-grey lighten-4" },
-                // { text: "", sortable: false, value: "edit", class: "blue-grey lighten-4", width: "1rem" }                             
+                { text: "", sortable: false, value: "edit", class: "blue-grey lighten-4", width: "1rem" }                             
             ],
             admin: false,       
         };
@@ -69,23 +66,12 @@ export default {
        
     },
     methods: {
-        updateTable() {
-            this.$emit("updateTable");
-        },
-
+       
         getRefs(item){
             const refs = item.recoveries.map(recovery => recovery.refNum)
             return refs.join('/')
         },
-        // async call(){
-        //     return axios.get(`${AUTH_URL}/user_info`)
-        //     .then(resp => {          
-        //         console.log(resp.data)
-        //     })
-        //     .catch(e => {
-        //         console.log(e);
-        //     });
-        // }
+       
     }
 };
 </script>

@@ -121,7 +121,8 @@
                                     dense
                                     hide-details
                                     :error="item.state.unitPriceErr"
-                                    @input="item.state.unitPriceErr=false; calculateTotalPrice();"
+                                    @input="item.state.unitPriceErr=false; calculateTotalPrice(true);"
+                                    @change="item.state.unitPriceErr=false; calculateTotalPrice();"
                                     :readonly="readonly"
                                     v-model="item.unitPrice"
                                     prefix="$"
@@ -153,7 +154,9 @@
                             <template v-slot:[`item.clientChange`]="{ item }">
                                 <v-text-field
                                     dense                                    
-                                    hide-details  
+                                    hide-details
+                                    :error="item.state.clientChangeErr"
+                                    @input="item.state.clientChangeErr=false;"
                                     :readonly="type !='Approve'"                                  
                                     v-model="item.clientChange"
                                     solo
@@ -207,7 +210,7 @@
                 </v-row>
 
                 <v-row class="mt-10 ml-3">
-                    <v-col cols="5">
+                    <v-col cols="7">
                         <v-row class="mx-0">
                             <title-card class="mr-6" titleWidth="4.5rem">
                                 <template #title>
@@ -233,45 +236,54 @@
                                 </template>
                             </title-card>
                             <v-col >
-                                <v-btn v-if="uploadBtn"  class="mx-0 my-0" color="primary" elevation="5" @click="uploadDocument">
-                                    Upload Back-up
-                                    <input
-                                        id="inputfile"
-                                        type="file"
-                                        style="display: none"
-                                        accept="application/pdf"
-                                        @change="handleSelectedFile"
-                                        onclick="this.value=null;"
-                                    />
-                                </v-btn>
-                                <v-btn v-if="uploadBtn && allUploadingDocuments.length>0" class="mx-0 mt-5 cyan--text text--darken-2" color="secondary"  @click="allUploadingDocuments=[]">
-                                    Clear Uploaded File(s)
-                                </v-btn>
+                                <div>
+                                    <v-btn v-if="uploadBtn"  class="mx-0 my-0" color="primary" elevation="5" @click="uploadDocument">
+                                        Upload Back-up
+                                        <input
+                                            id="inputfile"
+                                            type="file"
+                                            style="display: none"
+                                            accept="application/pdf"
+                                            @change="handleSelectedFile"
+                                            onclick="this.value=null;"
+                                        />
+                                    </v-btn>
+                                </div>
+                                <div>
+                                    <v-btn v-if="uploadBtn && allUploadingDocuments.length>0" class="mx-0 mt-5 cyan--text text--darken-2" color="secondary"  @click="allUploadingDocuments=[]">
+                                        Clear Uploaded File(s)
+                                    </v-btn>
+                                </div>
                             </v-col>
                         </v-row>
                     </v-col>
-                    <v-col cols="7" class="mx-0">
+                    <v-col cols="5" class="mx-0">
                         <v-row class="mx-0">
-                        <v-btn v-if="!readonly" class="ml-auto mr-5 my-auto" color="primary" elevation="5" @click="saveNewRecovery('Routed For Approval')">
-                            Route For Approval                        
-                        </v-btn>
-
-                        <v-btn v-if="revertBtn" class="ml-auto mr-5 my-0" color="primary" elevation="5" @click="saveNewRecovery('Re-Draft')">
-                            Revert to Draft                        
-                        </v-btn>
-
-                        <div v-if="approveBtn" :class="(revertBtn?'ml-2 ':'ml-auto ')+'mr-5 my-auto'" style="width:30%">
-                            <v-btn color="primary" elevation="5" @click="saveNewRecovery('Purchase Approved')">
-                                Approve Purchase                        
+                            <v-btn v-if="!readonly" class="ml-auto mr-5 my-auto" color="primary" elevation="5" @click="saveNewRecovery('Routed For Approval')">
+                                Route For Approval                        
                             </v-btn>
-                            <div class="mt-1 mb-n15">
-                                By selecting Approve you have been proided approval by those individuals with Section 24 (commitment authority) 
-                            </div>
-                        </div>
+                            
+                            <v-row v-if="revertBtn || approveBtn" class="mx-0">
+                                <v-col cols="4">
+                                    <v-btn v-if="revertBtn" class="float-right my-0" color="primary" elevation="5" @click="saveNewRecovery('Re-Draft')">
+                                        Revert to Draft                        
+                                    </v-btn>
+                                </v-col>
+                                <v-col cols="8">
+                                    <div v-if="approveBtn" class="float-right my-auto" style="width:80%">
+                                        <v-btn color="primary" elevation="5" @click="saveNewRecovery('Purchase Approved')">
+                                            Approve Purchase                        
+                                        </v-btn>
+                                        <div class="mt-1 mb-n15">
+                                            By selecting Approve you have been provided approval by those individuals with Section 24 (commitment authority) 
+                                        </div>
+                                    </div>
+                                </v-col>
+                            </v-row>
 
-                        <v-btn v-if="saveBtn" class="ml-auto mr-5 my-auto" color="primary" elevation="5" @click="saveNewRecovery(completeBtn?'Fullfilled':'Partially Fullfilled')">
-                            Save Changes                        
-                        </v-btn>
+                            <v-btn v-if="saveBtn" class="ml-auto mr-5 my-auto" color="primary" elevation="5" @click="saveNewRecovery(completeBtn?'Fullfilled':'Partially Fullfilled')">
+                                Save Changes                        
+                            </v-btn>
                         </v-row>
                     </v-col>
                     
@@ -361,6 +373,7 @@ export default {
             departmentList: [],
             employeeList: [],
             itemCategoryList: [],
+            itemCategoryListAll: [],
 
             allUploadingDocuments: [],
             
@@ -435,6 +448,12 @@ export default {
             if(this.type=="Fill"){
                 this.recoveryItems.forEach(item => {if(!item.quantity) item.orderFilled=true;})
             }
+            if(this.type=="Approve"){                
+                this.recoveryItems.forEach(item => {
+                    item.category=this.itemCategoryListAll.filter(cat=>cat.value==item.itemCatID)[0].text
+                    item.originalQuantity=item.quantity;
+                })
+            }
             this.checkOrderCompleted()
             this.loadingData= false
             this.allUploadingDocuments = []
@@ -491,6 +510,7 @@ export default {
             const itemCategoryList = this.$store.state.recoveries.itemCategoryList.map(item => {
                 return { text: item.category,  value:item.itemCatID, price:item.price, branch:item.branch}
             })
+            this.itemCategoryListAll = itemCategoryList
             const usrBranch = this.$store.state.auth.user.branch
             if(this.admin) 
                 this.itemCategoryList = itemCategoryList
@@ -518,7 +538,8 @@ export default {
                     itemCategoryErr: false,
                     descriptionErr: false,
                     quantityErr: false,
-                    unitPriceErr: false
+                    unitPriceErr: false,
+                    clientChangeErr: false
                 }
             }
             this.tmpId++;
@@ -526,11 +547,11 @@ export default {
             this.state.recoveryItemsErr=false;
         },
 
-        calculateTotalPrice(){
+        calculateTotalPrice(fixUnitPrice){
             this.total = 0
             for(const item of this.recoveryItems){
                 const total = Number(item.unitPrice) * item.quantity
-                item.unitPrice = Number(item.unitPrice).toFixed(2)
+                if(!fixUnitPrice) item.unitPrice = Number(item.unitPrice).toFixed(2)
                 if(this.type=='Add New' || this.type=='Edit')
                     item.totalPrice = total.toFixed(2)//Vue.filter('currency')();
                 else{
@@ -584,20 +605,30 @@ export default {
                 }                
             }
 
+            if(this.type=='Approve'){
+                let itemErr=false
+                for(const item of this.recoveryItems){
+                    //console.log(item)
+                    item.state.clientChangeErr =(item.originalQuantity && !item.clientChange && Number(item.originalQuantity) != Number(item.quantity))? true:false
+                    if(item.state.clientChangeErr) itemErr=true
+                }
+                return !itemErr
+            }
+
             if(this.type=='Add New' || this.type=='Edit'){
                 this.state.employeeNameErr = this.employeeName? false : true;          
-                this.state.refNumErr = this.refNum? false : true;
+                // this.state.refNumErr = this.refNum? false : true;
                 this.state.departmentErr = this.department? false : true;
                 this.state.recoveryItemsErr = this.recoveryItems.length>0? false : true;
 
                 let itemErr=false
                 for(const item of this.recoveryItems){ 
                     item.state.itemCategoryErr = item.itemCatID? false : true;
-                    item.state.descriptionErr = item.description? false : true;
+                    // item.state.descriptionErr = item.description? false : true;
                     item.state.quantityErr = item.quantity? false : true;
                     item.state.unitPriceErr = item.unitPrice? false : true;
                     if(item.state.itemCategoryErr || 
-                        item.state.descriptionErr ||
+                        // item.state.descriptionErr ||
                         item.state.unitPriceErr   ||
                         item.state.quantityErr    
                     )itemErr=true

@@ -1,5 +1,5 @@
 import express, { Request, Response } from "express";
-import { ReturnValidationErrors, RequiresAuthentication } from "../middleware";
+import { ReturnValidationErrors, RequiresAuthentication, RequiresRoleAdminOrIctFinance, RequiresRoleAdminOrFinance, RequiresRoleAdminOrTech, } from "../middleware";
 import { DB_SCHEMA, DB_CONFIG } from "../config";
 import knex from "knex";
 import moment from "moment";
@@ -35,6 +35,7 @@ recoveriesRouter.get(
 recoveriesRouter.post(
   "/backup-documents/:recoveryID",
   RequiresAuthentication,
+  RequiresRoleAdminOrTech,
   ReturnValidationErrors,
   async function (req: Request, res: Response) {
     const files = req.body.files;
@@ -50,7 +51,7 @@ recoveriesRouter.post(
 
       await db.transaction(async trx => {
         for (const inx in data.docNames) {
-          const file = files[inx];
+          const file = data.docNames.length==1? files : files[inx];
           const docName = data.docNames[inx];
 
           const buffer = db.raw(`CAST('${file}' AS VARBINARY(MAX))`);
@@ -92,6 +93,7 @@ recoveriesRouter.post(
 recoveriesRouter.get(
   "/journal/:journalID",
   RequiresAuthentication,
+  RequiresRoleAdminOrFinance,
   ReturnValidationErrors,
   async function (req: Request, res: Response) {
     const journalID = Number(req.params.journalID);
@@ -115,9 +117,21 @@ recoveriesRouter.get(
 recoveriesRouter.get(
   "/journals/",
   RequiresAuthentication,
+  RequiresRoleAdminOrFinance,
   ReturnValidationErrors,
   async function (req: Request, res: Response) {
-    const journals = await db("JournalVoucher").select("*");
+    let user = req.user
+    await userService.getByEmail(req.user.email).then(resp => {
+      user = resp;
+    });
+
+    const adminQuery = function (queryBuilder: any) {
+      if (user.roles?.indexOf("Admin") >= 0) queryBuilder.select("*");
+      else if (user.roles?.indexOf("IctFinance") >= 0) queryBuilder.select("*");
+      else queryBuilder.where("department", user.department).select("*");
+    };
+
+    const journals = await db("JournalVoucher").modify(adminQuery);
     for (const journal of journals) {
       const recoveries = await db("Recovery").select("*").where("journalID", journal.journalID);
       for (const recovery of recoveries) {
@@ -137,6 +151,7 @@ recoveriesRouter.get(
 recoveriesRouter.post(
   "/journals/:journalID",
   RequiresAuthentication,
+  RequiresRoleAdminOrIctFinance,
   ReturnValidationErrors,
   async function (req: Request, res: Response) {
     let journalID = Number(req.params.journalID);
@@ -182,6 +197,7 @@ recoveriesRouter.post(
 recoveriesRouter.delete(
   "/journals/:journalID",
   RequiresAuthentication,
+  RequiresRoleAdminOrIctFinance,
   ReturnValidationErrors,
   async function (req: Request, res: Response) {
     const journalID = Number(req.params.journalID);
@@ -202,6 +218,7 @@ recoveriesRouter.delete(
 recoveriesRouter.post(
   "/recoverable/:journalID",
   RequiresAuthentication,
+  RequiresRoleAdminOrIctFinance,
   ReturnValidationErrors,
   async function (req: Request, res: Response) {
     const journalID = Number(req.params.journalID);
@@ -249,13 +266,18 @@ recoveriesRouter.get(
       itemCategoryErr: false,
       descriptionErr: false,
       quantityErr: false,
-      unitPriceErr: false
+      unitPriceErr: false,
+      clientChangeErr: false
     };
 
     const recoveryID = Number(req.params.recoveryID);
 
     let tmpId = 2000;
-    const recovery = await db("Recovery").select("*").where("recoveryID", recoveryID).first();
+
+    const adminQuery = recoveryRoleCheck(req)
+
+    const recovery = await db("Recovery").modify(adminQuery).where("recoveryID", recoveryID).first();
+    if(!recovery) return res.status(400).json('Recovery Not Found!');
 
     const recoveryItems = await db("RecoveryItem").select("*").where("recoveryID", recovery.recoveryID);
     for (const recoveryItem of recoveryItems) {
@@ -280,11 +302,15 @@ recoveriesRouter.get("/", RequiresAuthentication, ReturnValidationErrors, async 
     itemCategoryErr: false,
     descriptionErr: false,
     quantityErr: false,
-    unitPriceErr: false
+    unitPriceErr: false,
+    clientChangeErr: false
   };
 
   let tmpId = 1000;
-  const recoveries = await db("Recovery").select("*");
+
+  const adminQuery = recoveryRoleCheck(req)
+  
+  const recoveries = await db("Recovery").modify(adminQuery);
   for (const recovery of recoveries) {
     const recoveryItems = await db("RecoveryItem").select("*").where("recoveryID", recovery.recoveryID);
     for (const recoveryItem of recoveryItems) {
@@ -315,6 +341,19 @@ recoveriesRouter.post(
     let recoveryID = Number(req.params.recoveryID);
     let user = req.user.display_name;
     const userEmail = req.user.email;
+    
+    if (recoveryID > 0) {
+      const adminQuery = recoveryRoleCheck(req)
+      const recovery = await db("Recovery").modify(adminQuery).where("recoveryID", recoveryID).first();
+      if(!recovery) return res.status(400).json('Recovery Not Found!');
+    }else{
+      if(!req.user?.roles || (
+          (req.user?.roles?.indexOf("Admin") == -1) && 
+          (req.user?.roles?.indexOf("BranchAdmin") == -1) && 
+          (req.user?.roles?.indexOf("BranchTech") == -1))){      
+            return res.status(401).send('You are not an authorized person!');
+      }
+    }    
 
     try {
       await userService.getByEmail(req.user.email).then(resp => {
@@ -346,9 +385,14 @@ recoveriesRouter.post(
         await db("RecoveryItem").delete().where("recoveryID", recoveryID);
 
         for (const newRecoveryItem of newRecoveryItems) {
+          if(newRecoveryItem.originalQuantity && Number(newRecoveryItem.originalQuantity) != Number(newRecoveryItem.quantity)){
+            await addRecoveryAudit(recoveryID, user, `Changing Quantity of ${newRecoveryItem.category} from ${newRecoveryItem.originalQuantity} to ${newRecoveryItem.quantity}`);
+          }
           delete newRecoveryItem.state;
           delete newRecoveryItem.tmpId;
           delete newRecoveryItem.revisedCost;
+          delete newRecoveryItem.originalQuantity;
+          delete newRecoveryItem.category;
 
           newRecoveryItem.recoveryID = recoveryID;
           if (newRecoveryItem.itemID > 0) await insertIntoTable("RecoveryItem", newRecoveryItem);
@@ -393,4 +437,32 @@ async function insertIntoTable(table: string, data: any) {
   const newQuery = `SET IDENTITY_INSERT ${schema}.${table} ON; ${sql} SET IDENTITY_INSERT ${schema}.${table} OFF;`;
 
   return await db.raw(newQuery, bindings);
+}
+
+function recoveryRoleCheck(req: any){
+  // console.log(req.user)
+  let user = req.user
+  let userLastName = ""
+  let userFirstName = ""
+
+  if(user.first_name && user.last_name){
+    userFirstName = user.first_name
+    userLastName = user.last_name      
+  }else{
+    const fullname = user.display_name.split('@')
+    const names = fullname[0]?.split('.')
+    userFirstName = names[0]
+    userLastName = names[1]? names[1] : ''
+  } 
+
+  const adminQuery = function (queryBuilder: any) {
+    if (user.roles?.indexOf("Admin") >= 0) queryBuilder.select("*");
+    else if (user.roles?.indexOf("IctFinance") >= 0) queryBuilder.select("*");
+    else if (user.roles?.indexOf("BranchAdmin") >= 0) queryBuilder.whereLike("branch", `%${user.branch}%`).select("*");
+    else if (user.roles?.indexOf("BranchTech") >= 0) queryBuilder.whereLike("branch", `%${user.branch}%`).select("*");
+    else if (user.roles?.indexOf("DeptFinance") >= 0) queryBuilder.where("department", user.department).select("*");
+    else queryBuilder.where("lastName", userLastName).where("firstName", userFirstName).select("*");
+  };
+
+  return adminQuery
 }

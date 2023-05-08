@@ -12,6 +12,7 @@
                     <div v-if="type == 'Add New'">Create New Recovery</div>
                     <div v-else-if="type == 'Approve'">Approve</div>
                     <div v-else-if="type == 'Complete' && btnTxt" class="primary--text">{{btnTxt}}</div>
+                    <v-icon v-else-if="type == 'Complete' && !btnTxt" dense color="primary">mdi-magnify</v-icon>
                     <v-icon v-else dense color="primary">mdi-pencil</v-icon>
                 </v-btn>
             </template>
@@ -42,12 +43,38 @@
                         <v-select
                             :readonly="readonly"
                             :error="state.departmentErr"
-                            @change="state.departmentErr=false;"
+                            @change="state.departmentErr=false;departmentChanged();"
                             v-model="department"
                             :items="departmentList"
                             item-text="name"
                             label="Requestor Department"
                             outlined
+                        />
+                    </v-col>
+                </v-row>
+
+                <v-row class="mt-5 mx-0">
+                    <v-col cols="6">
+                        <v-select
+                            :readonly="readonly"
+                            :error="state.employeeBranchErr"
+                            @change="state.employeeBranchErr=false;"
+                            v-model="employeeBranch"
+                            :items="branchList"
+                            item-text="name"
+                            label="Requestor Branch"
+                            outlined
+                        />                      
+                    </v-col>
+                    <v-col cols="6">
+                        <v-text-field
+                            :readonly="readonly"
+                            :error="state.employeeMailCdErr"
+                            @input="state.employeeMailCdErr = false"
+                            v-model="employeeMailCd"
+                            label="Requestor Mail Code"                            
+                            outlined
+                            :clearable="!readonly"
                         />
                     </v-col>
                 </v-row>
@@ -61,7 +88,7 @@
                             v-model="refNum"
                             label="Reference"
                             persistent-hint
-                            hint="Footprints Incident #, Project #"
+                            hint="Incident #, Project #"
                             outlined
                             :clearable="!readonly"
                         />
@@ -275,7 +302,7 @@
                                             Approve Purchase                        
                                         </v-btn>
                                         <div class="mt-1 mb-n15">
-                                            By selecting Approve you have been provided approval by those individuals with Section 24 (commitment authority) 
+                                            By selecting Approve you have been provided approval by those individuals with Section 29 (commitment authority) 
                                         </div>
                                     </div>
                                 </v-col>
@@ -365,12 +392,15 @@ export default {
             
             department: "",
             employeeName: "",
+            employeeBranch: "",
+            employeeMailCd: "",
             refNum: '',
             recoveryItems: [],
 
             recoveryAudits: [],
 
             departmentList: [],
+            branchList: [],
             employeeList: [],
             itemCategoryList: [],
             itemCategoryListAll: [],
@@ -432,12 +462,16 @@ export default {
             if(this.type=="Add New"){
                 this.department = ""
                 this.employeeName = ""
+                this.employeeBranch = ""
+                this.employeeMailCd = ""
                 this.refNum = ''
                 this.recoveryItems = []
                 this.recoveryAudits = []
             }else{
                 this.department = this.recovery.department;                                
                 this.employeeName = this.recovery.firstName+'.'+this.recovery.lastName;
+                this.employeeBranch = this.recovery.employeeBranch;
+                this.employeeMailCd = this.recovery.employeeMailCd;
                 this.refNum = this.recovery.refNum;
                 this.recoveryItems = this.recovery.recoveryItems;
                 this.recoveryAudits = this.recovery.recoveryAudits.sort((a,b)=>{ return (a.date > b.date ? -1 :1) });
@@ -522,7 +556,7 @@ export default {
             this.departmentList = [];
             const depts = this.$store.state.recoveries.departmentBranch;
             for (const key of Object.keys(depts)) {
-                this.departmentList.push({ name: key });
+                this.departmentList.push({ name: key, branches: depts[key].branches });                
             }
         },
 
@@ -573,9 +607,19 @@ export default {
             if (this.employeeName) {                
                 const employee= this.employeeList.filter(employee => employee.fullName == this.employeeName)[0]
                 this.state.departmentErr = false
-                this.department =employee? employee.department :''                    
+                this.department =employee? employee.department :''
+                this.departmentChanged();                    
             }            
         }, 
+
+        departmentChanged() {
+            
+            if (this.department) { 
+                this.branchList =  this.departmentList.filter(department => department.name == this.department)[0].branches; 
+                this.state.employeeBranchErr = false
+                this.employeeBranch =''                                
+            }            
+        },
         
         fillOrderChanged(item){
             if(item.orderFilled){
@@ -619,6 +663,8 @@ export default {
                 this.state.employeeNameErr = this.employeeName? false : true;          
                 // this.state.refNumErr = this.refNum? false : true;
                 this.state.departmentErr = this.department? false : true;
+                // this.state.employeeBranchErr = this.employeeBranch? false : true;
+                this.state.employeeMailCdErr = this.employeeMailCd? false : true;
                 this.state.recoveryItemsErr = this.recoveryItems.length>0? false : true;
 
                 let itemErr=false
@@ -659,6 +705,8 @@ export default {
                         lastName: name[1],
                         department: this.department,
                         branch: this.getItemsBranch(),
+                        employeeBranch: this.employeeBranch,
+                        employeeMailCd: this.employeeMailCd,
                         refNum: this.refNum,                                
                     };
                 }else if (status == 'Complete'){

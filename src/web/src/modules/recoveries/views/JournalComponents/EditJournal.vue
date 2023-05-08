@@ -9,7 +9,7 @@
                     @click="initForm()"
                     v-bind="attrs"
                     v-on="on"
-                    ><v-icon dense color="primary">mdi-pencil</v-icon>                    
+                    ><v-icon dense color="primary">mdi-magnify</v-icon>                    
                 </v-btn>
             </template>
 
@@ -61,6 +61,113 @@
                         />
                     </v-col>
                 </v-row>
+
+                <v-row class="mt-0 mx-0">
+                    <v-col cols="5">
+                        <v-textarea
+                            :readonly="readonly"
+                            :error="state.descriptionErr"
+                            @change="state.descriptionErr=false;"
+                            v-model="journal.description"                           
+                            label="Description"
+                            outlined
+                        />
+                    </v-col>
+                    <v-col cols="5" >
+                        <v-date-picker 
+                            :readonly="readonly"
+                            :error="state.dateErr"
+                            @change="state.dateErr=false;"
+                            v-model="journal.date"
+                            label="Date"
+                            outlined/>
+                    </v-col>                            
+                    <v-col cols="2">
+                        <v-select
+                            :readonly="readonly"
+                            :error="state.fiscalYearErr"
+                            @change="state.fiscalYearErr=false;"
+                            v-model="journal.fiscalYear"
+                            :items="yearList()"                            
+                            label="Fiscal Year"
+                            hide-details
+                            outlined
+                        />
+                    </v-col>
+                </v-row>
+
+                <v-row class="mt-0 mx-0">
+                    <v-col cols="6">
+                        <v-select
+                            readonly
+                            :error="state.orgDepartmentErr"
+                            @change="state.orgDepartmentErr=false;"
+                            v-model="journal.orgDepartment"
+                            :items="departmentList"
+                            item-text="name"
+                            label="Originating Department"
+                            outlined
+                        />
+                    </v-col>
+                                                
+                    <v-col cols="6">
+                        <v-text-field
+                            :readonly="readonly"
+                            :error="state.oDCompletedByErr"
+                            @input="state.oDCompletedByErr = false"
+                            v-model="journal.oDCompletedBy"
+                            label="OD Completed By"
+                            outlined
+                            hide-details
+                        />
+                        
+                    </v-col>
+                </v-row>
+
+                <v-row class="mt-0 mx-0">
+
+                    <v-col cols="6">
+                        <v-select
+                            readonly
+                            :error="state.recDepartmentErr"
+                            @change="state.recDepartmentErr=false;"
+                            v-model="journal.recDepartment"
+                            :items="departmentList"
+                            item-text="name"
+                            label="Receiving Department"
+                            outlined
+                        />
+                    </v-col>
+
+                    <v-col cols="6">
+                        <v-text-field
+                            :readonly="readonly"
+                            :error="state.rDCompletedByErr"
+                            @input="state.rDCompletedByErr = false"
+                            v-model="journal.rDCompletedBy"
+                            label="RD Completed By"
+                            outlined
+                            hide-details
+                        />
+                        
+                    </v-col>
+
+                </v-row>
+
+                <v-row class="mt-5 mx-0">
+                    <v-col cols="6">
+                        <v-textarea
+                            :readonly="readonly"
+                            :error="state.explanationErr"
+                            @change="state.explanationErr=false;"
+                            v-model="journal.explanation"                           
+                            label="Journal Explanation"
+                            :rules="rules"
+                            outlined
+                        />
+                    </v-col>
+                </v-row>
+
                 <v-row v-if="journal.status=='Draft' && !loadingData && !readonly" >
                     <edit-recoverable-table 
                         class="ml-auto"
@@ -104,7 +211,7 @@
                         color="#005a65"
                         @click="saveNewJournal('Paid')"
                         :loading="savingData"
-                        >Paid
+                        >Cleared
                     </v-btn>          
                 </v-row>
 
@@ -131,6 +238,7 @@
 import Vue from "vue";
 import { RECOVERIES_URL} from "@/urls";
 import axios from "axios";
+import _ from "lodash";
 import AuditTable from './AuditTable.vue';
 import RecoverableTable from './RecoverableTable.vue'
 import EditRecoverableTable from "./EditRecoverableTable.vue"
@@ -164,11 +272,20 @@ export default {
             tmpId: 0,
             alert:false,
             alertMsg:'',
+            rules: [v => v.length <= 200 || 'Max 200 characters'],
 
             state: {
                 departmentErr: false,
                 amountErr: false,          
                 periodErr: false,
+                descriptionErr: false,
+                dateErr: false,
+                fiscalYearErr: false,
+                orgDepartmentErr: false,
+                oDCompletedByErr: false,
+                recDepartmentErr: false,
+                rDCompletedByErr: false,
+                explanationErr: false
             },
         };
     },
@@ -219,8 +336,16 @@ export default {
                 this.journal.journalAudits = resp.data.journalAudits;
                 this.journal.recoveries = resp.data.recoveries;
                 this.journal.jvAmount = resp.data.jvAmount;
-                this.fixJvAmount()
-                this.recoveries=this.journal.recoveries
+                this.journal.description = resp.data.description;
+                this.journal.date = resp.data.date;
+                this.journal.fiscalYear = resp.data.fiscalYear;
+                this.journal.orgDepartment = resp.data.orgDepartment;
+                this.journal.oDCompletedBy = resp.data.oDCompletedBy;
+                this.journal.recDepartment = resp.data.recDepartment;
+                this.journal.rDCompletedBy = resp.data.rDCompletedBy;
+                this.journal.explanation = resp.data.explanation;
+                this.fixJvAmount();
+                this.recoveries=this.journal.recoveries;
                 //console.log(this.recoveries)                           
             })
             .catch(e => {                
@@ -243,10 +368,24 @@ export default {
             this.journal.jvAmount=this.journal.jvAmount? Number(this.journal.jvAmount).toFixed(2) : '0.00'
         },
 
+        yearList(){
+            const d = new Date();
+            let year = d.getFullYear();
+            return _.range(year, 1900)
+        },
+
         checkFields() {          
             this.state.departmentErr = this.journal.department? false : true;          
             this.state.periodErr = this.journal.period? false : true;
             this.state.amountErr = this.journal.jvAmount? false : true;
+            this.state.descriptionErr = this.journal.description? false : true;
+            this.state.dateErr = this.journal.date? false : true;
+            this.state.fiscalYearErr = this.journal.fiscalYear? false : true;
+            this.state.orgDepartmentErr = this.journal.orgDepartment? false : true;
+            this.state.oDCompletedByErr = this.journal.oDCompletedBy? false : true;
+            this.state.recDepartmentErr = this.journal.recDepartment? false : true;
+            this.state.rDCompletedByErr = this.journal.rDCompletedBy? false : true;
+            this.state.explanationErr = this.journal.explanation? false : true;
             
             for (const key of Object.keys(this.state)) {
                 if (this.state[key]) return false;
@@ -266,6 +405,14 @@ export default {
                     period: this.journal.period,
                     department: this.journal.department,		
                     jvAmount: this.journal.jvAmount,
+                    descriptionErr: this.journal.description,
+                    dateErr: this.journal.date,
+                    fiscalYearErr: this.journal.fiscalYear,
+                    orgDepartmentErr: this.journal.orgDepartment,
+                    oDCompletedByErr: this.journal.oDCompletedBy,
+                    recDepartmentErr: this.journal.recDepartment,
+                    rDCompletedByErr: this.journal.rDCompletedBy,
+                    explanationErr: this.journal.explanation,
                     status: status,
                     // recoveryIDs: recoveryIDs     
                 };                

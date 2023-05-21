@@ -14,3 +14,5 @@ export const RECOVERIES_URL = `${config.apiBaseUrl}/api/recoveries`;
 export const USERS_URL = `${config.apiBaseUrl}/api/user`;
 export const ADMIN_URL = `${config.apiBaseUrl}/api/admin`;
 export const AUTH_URL = `${config.apiBaseUrl}/api/auth`;
+
+export const PDF_URL = `${config.apiBaseUrl}/api/pdf`;

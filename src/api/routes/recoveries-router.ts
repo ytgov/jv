@@ -104,6 +104,10 @@ recoveriesRouter.get(
     for (const recovery of recoveries) {
       const recoveryItems = await db("RecoveryItem").select("*").where("recoveryID", recovery.recoveryID);
       recovery.recoveryItems = recoveryItems;
+      const recoveryAudits = await db("RecoveryAudit").select("*").where("recoveryID", recovery.recoveryID);
+      recovery.recoveryAudits = recoveryAudits;
+      const recoveryDocument = await db("BackUpDocs").select("docName").where("recoveryID", recovery.recoveryID);
+      recovery.docName = recoveryDocument?.length > 0 ? recoveryDocument : "";
     }
     journal.recoveries = recoveries;
 

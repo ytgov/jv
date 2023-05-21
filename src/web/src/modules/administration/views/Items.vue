@@ -28,7 +28,7 @@
 
                         <template v-slot:[`item.active`]="{ item }">
                             <v-icon v-if="item.active" class="success--text">mdi-check</v-icon>
-                            <v-icon v-else color="red">mdi-alpha-x</v-icon>
+                            <v-icon v-else color="red">mdi-close</v-icon>
 
                         </template>
 
@@ -96,9 +96,9 @@
                     </v-row>
 
                     <v-row class="mt-10 ml-3">                      
-                        <title-card class="mr-6" titleWidth="4.5rem">
+                        <title-card class="mr-6" titleWidth="6.5rem">
                             <template #title>
-                                <div>Back-up</div>
+                                <div>Documents</div>
                             </template>
                             <template #body>
                                 <div style="width:15rem; min-height:2rem;" :key="update" class=" mx-4 blue--text text-h7 text-decoration-underline">
@@ -122,7 +122,7 @@
                         <v-col >
                             <div>
                                 <v-btn class="mx-0 my-0" color="primary" elevation="5" @click="uploadDocument">
-                                    Upload Back-up
+                                    Upload File
                                     <input
                                         id="inputfile"
                                         type="file"
@@ -141,9 +141,12 @@
                     </v-row>
 
                     <v-row class="mt-15 ml-3">
-                        <v-data-table dense :items-per-page="5" :headers="auditHeaders" :items="itemAudits" class="elevation-1">
+                        <v-data-table dense :page="page" :items-per-page="5" :headers="auditHeaders" :items="itemAudits" class="elevation-1">
                             <template v-slot:[`item.date`]="{ item }">
                                 {{item.date | getDate}}
+                            </template>
+                            <template v-slot:[`item.action`]="{ item }">
+                                <div style="white-space: pre;">{{item.action}}</div>
                             </template>
                         </v-data-table>
                     </v-row>
@@ -243,6 +246,8 @@ export default {
             this.price = "";
             this.active = true;
             this.itemAudits = [];
+            this.backupFiles = []; 
+            this.allUploadingDocuments = [];
         },
 
         addItem() {
@@ -254,13 +259,16 @@ export default {
         },
 
         editItem(value) {
+            this.page--;
             this.currentItem = value
             this.branch = value.branch.split('/');		
             this.category = value.category;
             this.active = value.active;
             this.price = value.price;	
             this.description = value.description;
-            this.itemAudits = value.itemAudits?value.itemAudits.sort((a,b)=>{ return (a.date > b.date ? -1 :1) }):[];
+            this.backupFiles = value.docName? value.docName: [];
+            this.allUploadingDocuments = [];
+            this.itemAudits = value.itemCategoryAudits?value.itemCategoryAudits.sort((a,b)=>{ return (a.date > b.date ? -1 :1) }):[];
             this.action = 'Edit';
             this.branchErr = false;
             this.categoryErr = false;
@@ -284,12 +292,13 @@ export default {
                     branch: this.branch.join('/'),				
                     price: this.price,
                     description: this.description,
-                    active: this.active
+                    active: this.active,
+                    action: this.getActionDescription()
                 };                
                 const id = this.currentItem?.itemCatID? this.currentItem.itemCatID: 0;
                 return axios.post(`${ADMIN_URL}/item-categories/${id}`, body)
-                .then(async () => {
-                    //TODO: add functionality to save the backup file
+                .then(async (resp) => {
+                    if (this.reader.result) await this.saveBackUPFile(resp.data.itemCatID)                    
                     await this.updateTable()              
                 })
                 .catch(e => {
@@ -298,7 +307,7 @@ export default {
             }
         },
 
-        async saveBackUPFile(itemID) {
+        async saveBackUPFile(itemCatID) {
             this.alert = false;
             const docNames = []
             const bodyFormData = new FormData();
@@ -320,7 +329,7 @@ export default {
                 }
             };
 
-            return await axios.post(`${ADMIN_URL}/backup-documents/${itemID}`, bodyFormData, header)
+            return await axios.post(`${ADMIN_URL}/item-category-documents/${itemCatID}`, bodyFormData, header)
                 .then(() => {
                     this.savingData = false;                    
                 })
@@ -357,7 +366,7 @@ export default {
         },
 
         downloadDocument(docName){
-            if(!this.recovery.recoveryID) return
+            if(!this.currentItem.itemCatID) return
 
             this.savingData = true;
             const header = {
@@ -367,7 +376,7 @@ export default {
                 }
             };
 
-            axios.get(`${ADMIN_URL}/backup-documents/${this.item.itemID}/${docName}`, header)
+            axios.get(`${ADMIN_URL}/item-category-documents/${this.currentItem.itemCatID}/${docName}`, header)
                 .then(res => {
                     this.savingData = false;
                     const link = document.createElement("a");
@@ -381,8 +390,31 @@ export default {
                     this.savingData = false;
                     console.log(e);
                 });            
-        }
-        
+        },
+
+        getActionDescription(){
+            if(this.action=='Add') 
+                return 'New item added.'
+            else{
+                let action="Item modified."
+                if(this.currentItem.category != this.category) 
+                    action += `\nChanging name from ${this.currentItem.category} to ${this.category};`
+                if(this.currentItem.price != this.price){
+                    const price = this.price? this.price : 0
+                    action += `\nChanging cost from ${this.currentItem.price} to ${price};`
+                }
+                if(this.currentItem.active != this.active){
+                    const status = this.active? 'Active': 'Inactive'
+                    action += `\nChanging status to ${status};`
+                }
+
+                const branch = this.currentItem.branch.split('/');
+                if(this.branch.length != branch.length)
+                    action += `\nChanging branches;`                
+                
+                return action  
+            }
+        },        
 
     }
 };

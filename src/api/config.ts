@@ -18,6 +18,7 @@ export const FRONTEND_URL = process.env.FRONTEND_URL || "";
 export const AUTH_REDIRECT = process.env.AUTH_REDIRECT || process.env.FRONTEND_URL || "";
 export const NODE_ENV = process.env.NODE_ENV;
 export const BASE_URL = process.env.BASE_URL || "http://localhost:3000";
+export const PDF_URL = process.env.PDF_URL || "http://localhost:5001/pdf";
 
 export const DB_NAME = process.env.DB_NAME || "postgres";
 export const DB_USER = process.env.DB_USER || "postgres";

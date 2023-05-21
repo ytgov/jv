@@ -40,6 +40,20 @@
                         />                        
                     </v-col>
                     <v-col cols="6">
+                        <v-text-field
+                            :readonly="readonly"
+                            :error="state.employeeMailCdErr"
+                            @input="state.employeeMailCdErr = false"
+                            v-model="employeeMailCd"
+                            label="Requestor Mail Code"                            
+                            outlined
+                            :clearable="!readonly"
+                        />
+                    </v-col>                                        
+                </v-row>
+
+                <v-row class="mt-0 mx-0">
+                    <v-col cols="6">
                         <v-select
                             :readonly="readonly"
                             :error="state.departmentErr"
@@ -51,9 +65,6 @@
                             outlined
                         />
                     </v-col>
-                </v-row>
-
-                <v-row class="mt-5 mx-0">
                     <v-col cols="6">
                         <v-select
                             :readonly="readonly"
@@ -65,22 +76,19 @@
                             label="Requestor Branch"
                             outlined
                         />                      
-                    </v-col>
-                    <v-col cols="6">
+                    </v-col>                   
+                </v-row>
+                
+                <v-row class="mt-0 mx-0">                    
+                    <v-col cols="3">
                         <v-text-field
-                            :readonly="readonly"
-                            :error="state.employeeMailCdErr"
-                            @input="state.employeeMailCdErr = false"
-                            v-model="employeeMailCd"
-                            label="Requestor Mail Code"                            
+                            readonly                                
+                            v-model="recoveryID"
+                            label="Recovery ID"                                
                             outlined
-                            :clearable="!readonly"
                         />
                     </v-col>
-                </v-row>
-
-                <v-row class="mt-0 mx-0">
-                    <v-col cols="6">
+                    <v-col cols="3">
                         <v-text-field
                             :readonly="readonly"
                             :error="state.refNumErr"
@@ -246,15 +254,22 @@
                                 <template #body>
                                     <div style="width:15rem; min-height:2rem;" :key="update" class=" mx-4 blue--text text-h7 text-decoration-underline">
                                         <div v-if="allUploadingDocuments.length>0">
-                                            <div v-for="doc,inx in allUploadingDocuments" :key="inx" class="my-1"> 
+                                            <div v-for="doc,inx in allUploadingDocuments" :key="'uploaded-'+inx" class="my-1"> 
                                                 <a :href="doc.file" :download="doc.name" target="_blank" style="color:#643f5d;">
                                                     {{ doc.name }}
                                                 </a>
                                             </div>
                                         </div>
                                         <div v-if="recovery" >
-                                            <div v-for="doc,inx in recovery.docName" :key="inx" class="my-1">
+                                            <div v-for="doc,inx in recovery.docName" :key="'recovery-'+inx" class="my-1">
                                                 <a color="transparent" class="my-3" @click="downloadDocument(doc.docName)">                                    
+                                                    <b>{{ doc.docName }}</b>                                    
+                                                </a> 
+                                            </div>
+                                        </div>
+                                        <div v-if="itemCategoryDocuments.length>0">
+                                            <div v-for="doc,inx in itemCategoryDocuments" :key="'item-category-'+inx" class="my-1">
+                                                <a color="transparent" class="my-3" @click="downloadDocument(doc.docName, doc.itemCatID)" style="color:#005a65;">                                    
                                                     <b>{{ doc.docName }}</b>                                    
                                                 </a> 
                                             </div>
@@ -360,7 +375,7 @@
 
 <script>
 import Vue from "vue";
-import { RECOVERIES_URL} from "@/urls";
+import { RECOVERIES_URL, ADMIN_URL} from "@/urls";
 import axios from "axios";
 import TitleCard from '../Common/TitleCard.vue';
 
@@ -395,6 +410,7 @@ export default {
             employeeBranch: "",
             employeeMailCd: "",
             refNum: '',
+            recoveryID: '',
             recoveryItems: [],
 
             recoveryAudits: [],
@@ -406,6 +422,8 @@ export default {
             itemCategoryListAll: [],
 
             allUploadingDocuments: [],
+
+            itemCategoryDocuments: [],
             
             loadingData: false,
             savingData: false,
@@ -465,14 +483,17 @@ export default {
                 this.employeeBranch = ""
                 this.employeeMailCd = ""
                 this.refNum = ''
+                this.recoveryID = ''
                 this.recoveryItems = []
                 this.recoveryAudits = []
             }else{
-                this.department = this.recovery.department;                                
+                this.department = this.recovery.department;
+                this.departmentChanged();                                
                 this.employeeName = this.recovery.firstName+'.'+this.recovery.lastName;
                 this.employeeBranch = this.recovery.employeeBranch;
-                this.employeeMailCd = this.recovery.employeeMailCd;
+                this.employeeMailCd = this.recovery.mailcode;
                 this.refNum = this.recovery.refNum;
+                this.recoveryID = this.recovery?.recoveryID ? this.recovery.recoveryID : '';
                 this.recoveryItems = this.recovery.recoveryItems;
                 this.recoveryAudits = this.recovery.recoveryAudits.sort((a,b)=>{ return (a.date > b.date ? -1 :1) });
                 this.calculateTotalPrice()
@@ -489,6 +510,7 @@ export default {
                 })
             }
             this.checkOrderCompleted()
+            this.extractItemCategoryDocuments()
             this.loadingData= false
             this.allUploadingDocuments = []
             this.update++;
@@ -541,8 +563,16 @@ export default {
         },
 
         initItemCategory() {
-            const itemCategoryList = this.$store.state.recoveries.itemCategoryList.map(item => {
-                return { text: item.category,  value:item.itemCatID, price:item.price, branch:item.branch}
+            const activeItemCategoryList = this.$store.state.recoveries.itemCategoryList.filter(item => item.active)
+            const itemCategoryList = activeItemCategoryList.map(item => {
+                return { 
+                    text: item.category,  
+                    value:item.itemCatID, 
+                    price:item.price, 
+                    branch:item.branch, 
+                    description:item.description,
+                    docName:item.docName
+                }
             })
             this.itemCategoryListAll = itemCategoryList
             const usrBranch = this.$store.state.auth.user.branch
@@ -599,8 +629,21 @@ export default {
 
         itemCategoryChanged(item){
             const category = this.itemCategoryList.filter(cat => cat.value==item.itemCatID)[0]
-            item.unitPrice = category? category.price : 0
+            item.unitPrice = category?.price? category.price : 0
+            item.description = category?.description? category.description: ""
             this.calculateTotalPrice()
+            this.extractItemCategoryDocuments()
+        },
+
+        extractItemCategoryDocuments(){
+            this.itemCategoryDocuments=[]
+            for(const item of this.recoveryItems){
+                if(item.itemCatID>0){
+                    const category = this.itemCategoryListAll.filter(cat => cat.value==item.itemCatID)[0]
+                    for(const doc of category.docName)
+                        this.itemCategoryDocuments.push({docName:doc.docName, itemCatID:item.itemCatID})
+                }
+            }
         },
 
         employeeChanged() {
@@ -664,7 +707,7 @@ export default {
                 // this.state.refNumErr = this.refNum? false : true;
                 this.state.departmentErr = this.department? false : true;
                 // this.state.employeeBranchErr = this.employeeBranch? false : true;
-                this.state.employeeMailCdErr = this.employeeMailCd? false : true;
+                // this.state.employeeMailCdErr = this.employeeMailCd? false : true;
                 this.state.recoveryItemsErr = this.recoveryItems.length>0? false : true;
 
                 let itemErr=false
@@ -706,7 +749,7 @@ export default {
                         department: this.department,
                         branch: this.getItemsBranch(),
                         employeeBranch: this.employeeBranch,
-                        employeeMailCd: this.employeeMailCd,
+                        mailcode: this.employeeMailCd,
                         refNum: this.refNum,                                
                     };
                 }else if (status == 'Complete'){
@@ -775,6 +818,7 @@ export default {
                 recoveryItem => !(recoveryItem.tmpId == item.tmpId)
             );
             this.calculateTotalPrice()
+            this.extractItemCategoryDocuments()
         },
 
         uploadDocument() { 
@@ -801,18 +845,22 @@ export default {
             }
         },
 
-        downloadDocument(docName){
-            if(!this.recovery.recoveryID) return
+        downloadDocument(docName, itemCatID){            
+            let url = `${RECOVERIES_URL}/backup-documents/${this.recovery.recoveryID}/${docName}`
+            if(!itemCatID && !this.recovery.recoveryID) return
+            if(itemCatID){
+                url = `${ADMIN_URL}/item-category-documents/${itemCatID}/${docName}`
+            }
 
             this.savingData = true;
             const header = {
                 responseType: "application/pdf",
                 headers: {
-                "Content-Type": "application/text"
+                    "Content-Type": "application/text"
                 }
             };
 
-            axios.get(`${RECOVERIES_URL}/backup-documents/${this.recovery.recoveryID}/${docName}`, header)
+            axios.get(url, header)
                 .then(res => {
                     this.savingData = false;
                     const link = document.createElement("a");

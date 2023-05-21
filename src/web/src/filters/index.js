@@ -1,5 +1,6 @@
 import Vue from "vue";
 import store from "../store";
+import {print} from "./print"
 
 Vue.filter("isDepartmentalFinance", function () {  
   const userRoles = store.state.auth.user.roles.split(',');
@@ -78,7 +79,9 @@ Vue.filter("beautifyDateTime", function (date) {
 Vue.filter("getDate", function (date) {
   if(date){
     const newdate = new Date(date)
-    return (newdate.getFullYear()+'-'+(newdate.getMonth()+1)+'-'+newdate.getDate())//.slice(0,10)
+    let month = (newdate.getMonth()+1)
+    let day = newdate.getDate()
+    return (newdate.getFullYear()+'-'+(month<10?('0'+month):month)+'-'+(day<10?('0'+day):day))//.slice(0,10)
   }else
     return ''
 });
@@ -91,3 +94,5 @@ Vue.filter("capitalize", function (text) {
 Vue.filter("currency", function (currency) {
   return currency.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 });
+
+Vue.filter('printPdf', print);

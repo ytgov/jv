@@ -12,13 +12,13 @@
         <router-link to="/sign-in">sign in</router-link> to see more things.
       </p> -->
       <div v-if="isAuthenticated && !loadingData">
-        <p>    
+        <!-- <p>    
           <router-link v-if="isBranchUser" to="/recovery-dashboard-user">
             Dashboard (User)
           </router-link>
         </p>
         <p>
-          <router-link v-if="isBranchTech" to="/recovery-dashboard-tech">
+          <router-link v-if="isBranchAgent" to="/recovery-dashboard-agent">
             Dashboard (Tech)
           </router-link>
         </p>
@@ -31,7 +31,17 @@
           <router-link v-if="isICTFinance" to="/recoveries">
             Recovery List
           </router-link>
-        </p>
+        </p> -->
+        <v-card class="px-10 py-15" elevation="3" style="width:60%;">
+          <div class="row d-flex justify-center">
+              <div class="col-md-3" v-for="route,inx in routes" :key="'dashboard-'+inx">
+                  <v-card color="#008392" class="white--text py-3 text-center" elevation="10" @click="goto(route.route)">
+                      <v-card-title> <div class="mx-auto text-h5">  <v-icon class="white--text text-h4">mdi-monitor</v-icon> {{route.title}}</div> </v-card-title>
+                      <v-card-text > <div class="text-center amber--text font-weight-bold font-italic">Role: {{route.role}} </div></v-card-text>
+                  </v-card>
+              </div>
+          </div>
+        </v-card>
 
       </div>
       
@@ -51,16 +61,17 @@ export default {
   data: () => ({
     title: `Welcome to ${config.applicationName}`,
     loadingData: false,
+    routes:[],
   }),
   computed: {
     ...mapState("home", ["departments"]),
     isAuthenticated() {
       return store.getters.isAuthenticated;
     },
-    isBranchUser() { return Vue.filter("isBranchUser")() },
-    isBranchTech() { return Vue.filter("isBranchTech")() },
-    isDepartmentalFinance() { return Vue.filter("isDepartmentalFinance")() },
-    isICTFinance() { return Vue.filter("isICTFinance")() },
+    // isBranchUser() { return Vue.filter("isBranchUser")() },
+    // isBranchAgent() { return Vue.filter("isBranchAgent")() },
+    // isDepartmentalFinance() { return Vue.filter("isDepartmentalFinance")() },
+    // isICTFinance() { return Vue.filter("isICTFinance")() },
   },
   async created() {
     await this.loadDepartments();
@@ -74,11 +85,32 @@ export default {
     this.loadingData = true;
     await this.getEmployees();
     await this.getDepartmentBranch();
+    this.getRoutes()
     this.loadingData = false;
   },
   methods: {
     ...mapActions("home", ["loadDepartments"]),
     ...mapActions("recoveries", ["getEmployees", "getDepartmentBranch"]),
+    
+    getRoutes(){
+      this.routes = []
+
+      if(Vue.filter("isBranchUser")())
+        this.routes.push({title:'Dashboard', role:'User', route:'/recovery-dashboard-user'})
+
+      if(Vue.filter("isBranchAgent")())
+        this.routes.push({title:'Dashboard', role:'Agent', route:'/recovery-dashboard-agent'})
+
+      if(Vue.filter("isDepartmentalFinance")())
+        this.routes.push({title:'Dashboard', role:'Dept. Finance', route:'/recovery-dashboard-finance'})
+
+      if(Vue.filter("isICTFinance")())
+        this.routes.push({title:'Recovery List', role:'ICT Finance', route:'/recoveries'})    
+    },
+    goto(route){
+      this.$router.push({path: route})
+    }
+
   },
 };
 </script>

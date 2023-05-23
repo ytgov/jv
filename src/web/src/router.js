@@ -7,7 +7,6 @@ import LoginComplete from "@/components/LoginComplete";
 import store from "@/store";
 
 import homeRoutes from "@/modules/home/router";
-import recoveryRoutes from "@/modules/recovery/router";
 import recoveriesRoutes from "@/modules/recoveries/router"
 
 import adminRoutes from "@/modules/admin/router";
@@ -28,7 +27,6 @@ const routes = [
     component: LoginComplete,
   },
   ...homeRoutes,
-  ...recoveryRoutes,
   ...recoveriesRoutes,
   ...adminRoutes,
   ...administrationRoutes,

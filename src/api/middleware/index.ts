@@ -69,7 +69,7 @@ export function RequiresRoleAdminOrTech(
 	res: Response,
 	next: NextFunction
 ) {
-	if ((req.user?.roles?.indexOf('Admin')>=0) || (req?.user?.roles?.indexOf("BranchAdmin")>=0) || (req?.user?.roles?.indexOf("BranchTech")>=0)) {
+	if ((req.user?.roles?.indexOf('Admin')>=0) || (req?.user?.roles?.indexOf("BranchAdmin")>=0) || (req?.user?.roles?.indexOf("BranchAgent")>=0)) {
 		next();
 	}else 
 		return res.status(401).send('You are not an authorized person!');	

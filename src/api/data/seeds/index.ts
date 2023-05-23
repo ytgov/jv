@@ -40,7 +40,7 @@ export async function rolesUp() {
     await insertIntoTable("Role", [
       { id: 1, name: "System Admin", role: "Admin" },
       { id: 2, name: "Branch User", role: "BranchUser" },
-      { id: 3, name: "Branch Technician", role: "BranchTech" },
+      { id: 3, name: "Branch Agent", role: "BranchAgent" },
       { id: 4, name: "Branch Supervisor", role: "BranchAdmin" },
       { id: 5, name: "ICT Finance", role: "IctFinance" },
       { id: 6, name: "Departmental Finance", role: "DeptFinance" }

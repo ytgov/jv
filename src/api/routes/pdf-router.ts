@@ -44,6 +44,8 @@ pdfRouter.get("/excel/:journalID", RequiresAuthentication, ReturnValidationError
     let totalDebit = 0;
     const itemCategoryList = await db("ItemCategory").select("*");
 
+    const departmentInfo = await db("DepartmentInfo").select("*").where("department", journal.department);
+
     for(const recovery of recoveries){
         
         const recoveryItems = await db("RecoveryItem").select("*").where("recoveryID", recovery.recoveryID);
@@ -54,12 +56,18 @@ pdfRouter.get("/excel/:journalID", RequiresAuthentication, ReturnValidationError
                 items += itemCategoryList[index].category+'#'+item.quantity+'@'+item.unitPrice+', '
         }
 
+        const glcodes = departmentInfo[0]?.glCode? departmentInfo[0].glCode.split('-') : ['','','','','']
+
         const explanation = `${recovery.firstName} ${recovery.lastName}; ${items.slice(0,-2)}`
         rowCounter++;
         if(rowCounter>26) {
             worksheet.duplicateRow(rowCounter-1,1,true);            
         }
         const row = worksheet.getRow(rowCounter);
+        row.getCell('B').value = glcodes[0]
+        row.getCell('C').value = glcodes[1]
+        row.getCell('D').value = glcodes[2]
+        row.getCell('E').value = glcodes[3]+glcodes[4]
         row.getCell('F').value = Number(recovery.totalPrice);
         row.getCell('G').value = explanation.slice(0,40);
         row.getCell('K').value = recovery.recoveryID;

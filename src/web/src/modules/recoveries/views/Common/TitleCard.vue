@@ -1,7 +1,7 @@
 <template>    
 	<v-card elevation="1" outlined :style="{border:border}">
         
-        <div :class="largeTitle?'custom-large-title-card':'custom-title-card'" :style="{width:titleWidth}">       
+        <div :class="largeTitle?'custom-large-title-card':(smallTitle?'custom-small-title-card':'custom-title-card')" :style="{width:titleWidth}">       
             <slot name="title"></slot>
         </div>
         
@@ -19,6 +19,10 @@
 				type: Boolean,
                 default: false
 			},
+            smallTitle: {
+				type: Boolean,
+                default: false
+			},
             border: {
 				type: String,
                 required: false,
@@ -32,6 +36,15 @@
         margin:-0.75rem 0 0 1rem;        
         font-size: 12pt;
         font-weight: 600;
+        background :white;
+        z-index: 99;
+    }
+
+    .custom-small-title-card{
+        margin:-0.75rem 0 0 1rem;        
+        font-size: 10pt;
+        font-weight: 300;
+        color: #5E5E5E;
         background :white;
         z-index: 99;
     }

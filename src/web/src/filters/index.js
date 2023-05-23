@@ -26,10 +26,10 @@ Vue.filter("isBranchAdmin", function () {
   return hasRequiredRoles;
 });
     
-Vue.filter("isBranchTech", function () {  
+Vue.filter("isBranchAgent", function () {  
   const userRoles = store.state.auth.user.roles.split(',');
   const admin = userRoles?.includes("Admin");
-  const role1 = userRoles?.includes("BranchTech");
+  const role1 = userRoles?.includes("BranchAgent");
   const role2 = userRoles?.includes("BranchAdmin");
   const hasRequiredRoles = admin || role1 || role2;
   return hasRequiredRoles;

@@ -196,7 +196,7 @@
                     <v-btn color="white" class="ml-5 cyan--text text--darken-4" @click="closeDialog">
                         <div class="px-3">Close</div>
                     </v-btn>
-                    <create-journal-export :journalID="journal.journalID" class="ml-auto mr-5"/>
+                    <create-journal-export v-if="!readonly" :journalID="journal.journalID" class="ml-auto mr-5"/>
                     <v-btn
                         v-if="!readonly"
                         class="ml-auto mr-5 px-5 white--text"
@@ -282,7 +282,7 @@ export default {
             tmpId: 0,
             alert:false,
             alertMsg:'',
-            rules: [v => v.length <= 200 || 'Max 200 characters'],
+            rules: [v => v?.length <= 200 || 'Max 200 characters'],
 
             state: {
                 departmentErr: false,
@@ -311,7 +311,7 @@ export default {
             this.initStates();
             this.audits=this.journal.journalAudits
             this.recoveries=this.journal.recoveries
-            this.journal.jvDate = this.journal.jvDate.slice(0,10)
+            this.journal.jvDate = this.journal?.jvDate?.slice(0,10)
             this.allDeptRecoveries=this.allRecoveries.filter(rec => rec.department==this.journal.department)
             this.fixJvAmount()
             this.savingData = false

@@ -29,9 +29,28 @@ export const up = function (knex: knex.Knex, Promise: any) {
 		t.string("mailcode");
 		t.string("manager");
 		t.string("username");
+	})
+	.alterTable("DepartmentInfo", function (t) {
+		t.string("recvDepartment");
+	})
+	.alterTable("RecoveryItem", function (t) {
+		t.boolean("changeQuantity");
+		t.float("approvedCost");
+		t.boolean("declineRequest");
+		t.string("reasonForDecline", 255);
 	});
 };
 
 export const down = function (knex: knex.Knex, Promise: any) {
-	return knex.schema.dropTable('Employees');
+	return knex.schema
+	.alterTable("RecoveryItem", function (t) {
+		t.dropColumn("changeQuantity");
+		t.dropColumn("approvedCost");
+		t.dropColumn("declineRequest");
+		t.dropColumn("reasonForDecline");
+	})
+	.alterTable("DepartmentInfo", function (t) {
+		t.dropColumn("recvDepartment");
+	})
+	.dropTable('Employees');
 };

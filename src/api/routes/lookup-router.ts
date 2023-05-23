@@ -51,7 +51,10 @@ lookupRouter.get("/employees", RequiresAuthentication, ReturnValidationErrors, a
         lastName: employee.last_name,
         department: employee.department,
         fullName: employee.full_name,
-        email: employee.email
+        email: employee.email,
+        branch: employee.branch,
+        unit: employee.unit,
+        mailcode: employee.mailcode,
       });
     }
     res.status(200).json(cleanList)
@@ -89,12 +92,13 @@ async function updateEmployees(){
       .get(`https://api.gov.yk.ca/directory/employees`, {
         headers: {
           "Ocp-Apim-Subscription-Key": AZURE_KEY
-        }
+        },
+        timeout: 10000
       })
       .then(async (resp: any) => {
         if(resp?.data?.employees)          
           await db.transaction(async trx => {
-            console.log("_____START______")
+            console.log("_____START_Updating_Employees_____")
             await db("Employees").del()
             await db.raw(`DBCC CHECKIDENT(Employees, RESEED, 0);`)
 
@@ -108,6 +112,9 @@ async function updateEmployees(){
                         
             console.log("_____FINISH______")
           });
+      }).catch(async () => {
+        console.log("_____err_____________")
+        await db("Employees").update({update_date: today})
       });
     
   } catch (error: any) {
@@ -123,12 +130,13 @@ async function updateDepartments(){
       .get(`https://api.gov.yk.ca/directory/divisions`, {
         headers: {
           "Ocp-Apim-Subscription-Key": AZURE_KEY
-        }
+        },
+        timeout: 5000
       })
       .then(async (resp: any) => {
         if(resp?.data?.divisions)          
           await db.transaction(async trx => {
-            console.log("_____START______")
+            console.log("_____START_Updating_Departments______")
             await db("Departments").del()
             await db.raw(`DBCC CHECKIDENT(Departments, RESEED, 0);`)
             
@@ -143,6 +151,9 @@ async function updateDepartments(){
                         
             console.log("_____FINISH______")
           });
+      }).catch(async () => {
+        console.log("_____err_____________")
+        await db("Departments").update({update_date: today})
       });
 
   } catch (error: any) {

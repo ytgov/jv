@@ -14,7 +14,8 @@ export const up = function (knex: knex.Knex, Promise: any) {
 		})
 		.alterTable("Recovery", function (t) {
 			t.string("mailcode", 50);
-			t.string("employeeBranch", 100);			
+			t.string("employeeBranch", 100);
+			t.string("description", 255);			
 		})
 		.alterTable("JournalVoucher", function (t) {
 			t.date("jvDate");
@@ -43,6 +44,7 @@ export const down = function (knex: knex.Knex, Promise: any) {
 		.alterTable("Recovery", function (t) {
 			t.dropColumn("employeeBranch");			
 			t.dropColumn("mailcode");
+			t.dropColumn("description");
 		})
 		.dropTable('ItemCategoryAudit');
 };

@@ -490,7 +490,7 @@ export default {
                 this.department = this.recovery.department;
                 this.departmentChanged();                                
                 this.employeeName = this.recovery.firstName+'.'+this.recovery.lastName;
-                this.employeeBranch = this.recovery.employeeBranch;
+                Vue.nextTick(() => this.employeeBranch = this.recovery.employeeBranch );
                 this.employeeMailCd = this.recovery.mailcode;
                 this.refNum = this.recovery.refNum;
                 this.recoveryID = this.recovery?.recoveryID ? this.recovery.recoveryID : '';
@@ -557,13 +557,15 @@ export default {
             this.employeeList = this.$store.state.recoveries.employees.map(item => {
                 return {
                     fullName: item.fullName,
-                    department: item.department
+                    department: item.department,
+                    branch: item.branch,
+                    mailcode: item.mailcode
                 };//.sort((a, b) => (a.fullName >= b.fullName ? 1 : -1));
             });
         },
 
         initItemCategory() {
-            const activeItemCategoryList = this.$store.state.recoveries.itemCategoryList.filter(item => item.active)
+            const activeItemCategoryList =this.readonly? this.$store.state.recoveries.itemCategoryList :this.$store.state.recoveries.itemCategoryList.filter(item => item.active)
             const itemCategoryList = activeItemCategoryList.map(item => {
                 return { 
                     text: item.category,  
@@ -640,8 +642,9 @@ export default {
             for(const item of this.recoveryItems){
                 if(item.itemCatID>0){
                     const category = this.itemCategoryListAll.filter(cat => cat.value==item.itemCatID)[0]
-                    for(const doc of category.docName)
-                        this.itemCategoryDocuments.push({docName:doc.docName, itemCatID:item.itemCatID})
+                    if(category)
+                        for(const doc of category.docName)
+                            this.itemCategoryDocuments.push({docName:doc.docName, itemCatID:item.itemCatID})
                 }
             }
         },
@@ -651,7 +654,11 @@ export default {
                 const employee= this.employeeList.filter(employee => employee.fullName == this.employeeName)[0]
                 this.state.departmentErr = false
                 this.department =employee? employee.department :''
-                this.departmentChanged();                    
+                this.departmentChanged();
+                Vue.nextTick(()=>{
+                    this.employeeBranch = employee? employee.branch :''
+                    this.employeeMailCd = employee? employee.mailcode :''
+                })                                    
             }            
         }, 
 
@@ -838,7 +845,8 @@ export default {
                 // this.quoteFileName = file.name;
 
                 this.reader.onload = () => {
-                    this.allUploadingDocuments.push({file: this.reader.result, name: file.name, type: file.type})                    
+                    if((String(file.type)).includes('pdf'))
+                        this.allUploadingDocuments.push({file: this.reader.result, name: file.name, type: file.type})                    
                     this.update++;
                 };
                 this.reader.readAsDataURL(file);

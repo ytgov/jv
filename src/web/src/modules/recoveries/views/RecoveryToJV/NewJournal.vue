@@ -263,18 +263,18 @@ export default {
             this.admin = Vue.filter("isSystemAdmin")();  
                       
             this.alert=false;           
-            this.initStates(); 
+            this.initStates();
+            this.department = this.recoveries[0].department
             this.journalNum = ""
             this.period = ""
             this.date = (new Date()).toISOString().slice(0,10)
             this.fiscalYear = this.getFiscalYear();            
             this.orgDepartment = "HPW-ICT W10"
             this.odCompletedBy = "HPW-ICT-Invoices@yukon.ca"
-            this.recvDepartment = ""
-            this.rdCompletedBy = ""
+            this.recvDepartment = this.getRD(this.department)
+            this.rdCompletedBy = this.getRdCompletedBy(this.department)
             this.explanation = ""
-            this.amount = this.getTotalAmount()
-            this.department = this.recoveries[0].department
+            this.amount = this.getTotalAmount()            
             this.departmentGlCode = this.getGlCode(this.department)
             this.getDescription()
             this.savingData = false            
@@ -369,7 +369,16 @@ export default {
             const departmentInfo = this.$store.state.recoveries.departmentsInfo.filter(info => info.department==department)
             return (departmentInfo[0]? departmentInfo[0].glCode : '')
         },
-               
+
+        getRD(department) {
+            const departmentInfo = this.$store.state.recoveries.departmentsInfo.filter(info => info.department==department)
+            return (departmentInfo[0]? departmentInfo[0].recvDepartment : '')
+        },
+         
+        getRdCompletedBy(department) {
+            const departmentInfo = this.$store.state.recoveries.departmentsInfo.filter(info => info.department==department)
+            return (departmentInfo[0]? departmentInfo[0].contactName : '')
+        },
 
         closeDialog(){
             this.addNewJournalDialog = false;

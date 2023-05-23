@@ -12,14 +12,24 @@ exports.up = function (knex: knex.Knex, Promise: any) {
 			t.binary('document');		
 		})
 		.alterTable("ItemCategory", function (t) {
-			t.string("description");			
+			t.string("description", 255);
+			t.boolean("changeQuantity");
+		})
+		.alterTable("user", function (t) {
+			t.string("unit", 100);
+			t.string("employeeBranch", 100);				
 		});
 };
 
 exports.down = function (knex: knex.Knex, Promise: any) {
 	return knex.schema
+		.alterTable("user", function (t) {
+			t.dropColumn("unit");
+			t.dropColumn("employeeBranch");
+		})
 		.alterTable("ItemCategory", function (t) {			
 			t.dropColumn("description");
+			t.dropColumn("changeQuantity");
 		})
 		.dropTable('ItemCategoryDocs');
 };

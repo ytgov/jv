@@ -72,8 +72,8 @@
             <v-list-item v-if="isBranchUser" @click="routeTitle='Dashboard (User)'" to="/recovery-dashboard-user">
               <v-list-item-title>Dashboard (User)</v-list-item-title>
             </v-list-item>
-            <v-list-item v-if="isBranchTech" @click="routeTitle='Dashboard (Tech)'" to="/recovery-dashboard-tech">
-              <v-list-item-title>Dashboard (Tech)</v-list-item-title>
+            <v-list-item v-if="isBranchAgent" @click="routeTitle='Dashboard (Agent)'" to="/recovery-dashboard-agent">
+              <v-list-item-title>Dashboard (Agent)</v-list-item-title>
             </v-list-item>
             <v-list-item v-if="isDepartmentalFinance" @click="routeTitle='Dashboard (Finance)'" to="/recovery-dashboard-finance">
               <v-list-item-title>Dashboard (Finance)</v-list-item-title>
@@ -144,6 +144,7 @@ import router from "@/router";
 import store from "@/store";
 import * as config from "@/config";
 import { mapState } from "vuex";
+import { LOGOUT_URL} from "../urls";
 
 export default {
   name: "App",
@@ -157,7 +158,7 @@ export default {
       return store.getters.isAuthenticated;
     },
     isBranchUser() { return Vue.filter("isBranchUser")() },
-    isBranchTech() { return Vue.filter("isBranchTech")() },
+    isBranchAgent() { return Vue.filter("isBranchAgent")() },
     isDepartmentalFinance() { return Vue.filter("isDepartmentalFinance")() },
     isICTFinance() { return Vue.filter("isICTFinance")() },
   },
@@ -187,6 +188,9 @@ export default {
     isAuthenticated: function(val) {
       if (!val) this.hasSidebar = false;
       else this.hasSidebar = config.hasSidebar;
+    },
+    $route: function() {
+      this.getDropdownTitle()
     }
   },
   mounted () {
@@ -205,12 +209,13 @@ export default {
     },
     signOut: function() {
       store.dispatch("signOut");
-      router.push("/sign-in");
+      // router.push("/sign-in");
+      window.location.replace(LOGOUT_URL)
     },
     getDropdownTitle(){
       const path = this.$route.path
       if(path.includes('/recovery-dashboard-user')) this.routeTitle='Dashboard (User)'
-      else if(path.includes('/recovery-dashboard-tech')) this.routeTitle='Dashboard (Tech)'
+      else if(path.includes('/recovery-dashboard-agent')) this.routeTitle='Dashboard (Agent)'
       else if(path.includes('/recovery-dashboard-finance')) this.routeTitle='Dashboard (Finance)'
       else if(path.includes('/recoveries')) this.routeTitle='Recovery List'
     }

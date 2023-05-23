@@ -4,6 +4,8 @@ import { DB_SCHEMA, DB_CONFIG } from "../config";
 import knex from "knex";
 import moment from "moment";
 import { UserService } from "../services";
+import { v4 as uuid } from "uuid";
+import { auth } from "express-openid-connect";
 
 const db = knex(DB_CONFIG);
 
@@ -104,6 +106,10 @@ recoveriesRouter.get(
     for (const recovery of recoveries) {
       const recoveryItems = await db("RecoveryItem").select("*").where("recoveryID", recovery.recoveryID);
       recovery.recoveryItems = recoveryItems;
+      const recoveryAudits = await db("RecoveryAudit").select("*").where("recoveryID", recovery.recoveryID);
+      recovery.recoveryAudits = recoveryAudits;
+      const recoveryDocument = await db("BackUpDocs").select("docName").where("recoveryID", recovery.recoveryID);
+      recovery.docName = recoveryDocument?.length > 0 ? recoveryDocument : "";
     }
     journal.recoveries = recoveries;
 
@@ -350,7 +356,7 @@ recoveriesRouter.post(
       if(!req.user?.roles || (
           (req.user?.roles?.indexOf("Admin") == -1) && 
           (req.user?.roles?.indexOf("BranchAdmin") == -1) && 
-          (req.user?.roles?.indexOf("BranchTech") == -1))){      
+          (req.user?.roles?.indexOf("BranchAgent") == -1))){      
             return res.status(401).send('You are not an authorized person!');
       }
     }    
@@ -459,7 +465,7 @@ function recoveryRoleCheck(req: any){
     if (user.roles?.indexOf("Admin") >= 0) queryBuilder.select("*");
     else if (user.roles?.indexOf("IctFinance") >= 0) queryBuilder.select("*");
     else if (user.roles?.indexOf("BranchAdmin") >= 0) queryBuilder.whereLike("branch", `%${user.branch}%`).select("*");
-    else if (user.roles?.indexOf("BranchTech") >= 0) queryBuilder.whereLike("branch", `%${user.branch}%`).select("*");
+    else if (user.roles?.indexOf("BranchAgent") >= 0) queryBuilder.whereLike("branch", `%${user.branch}%`).select("*");
     else if (user.roles?.indexOf("DeptFinance") >= 0) queryBuilder.where("department", user.department).select("*");
     else queryBuilder.where("lastName", userLastName).where("firstName", userFirstName).select("*");
   };

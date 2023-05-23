@@ -68,17 +68,67 @@
                         @input="contactEmailErr=false"
                         class="mt-2" 
                         outlined/>
-
-                    <v-text-field
-                        :key="updateGL" 
-                        @input="codeFormat"
-                        label="Coding" 
-                        v-model="glCode"
-                        :error="glCodeErr"                      
-                        :rules="[rules.glcode]"
-                        class="mt-2" 
-                        outlined/>					
-
+                    
+                    <v-text-field                                                 
+                        label="Receiving Department" 
+                        v-model="recvDepartment"
+                        :error="recvDeptErr"
+                        class="mt-2"
+                        outlined/>
+                    <title-card class="mx-0" titleWidth="3rem" :smallTitle="true">
+                        <template #title>
+                            <div>Coding</div>
+                        </template>
+                        <template #body>
+                            <v-row class="mx-0 mt-1" :key="updateGL">
+                                <v-col cols="2">
+                                    <v-text-field
+                                        id="gl1"                            
+                                        @input="codeFormat($event,1,3)"                                         
+                                        v-model="glCodes[0]"
+                                        :error="glCodesErr[0]"                      
+                                        :rules="[rules.glcode1]"                                 
+                                        outlined/>
+                                </v-col>
+                                <v-col cols="2">                            
+                                    <v-text-field
+                                        id="gl2"                         
+                                        @input="codeFormat($event,2,6)"                                 
+                                        v-model="glCodes[1]"
+                                        :error="glCodesErr[1]"                      
+                                        :rules="[rules.glcode2]"                                 
+                                        outlined/>
+                                </v-col>
+                                <v-col cols="2">
+                                    <v-text-field
+                                        id="gl3"                        
+                                        @input="codeFormat($event,3,4)"                                 
+                                        v-model="glCodes[2]"
+                                        :error="glCodesErr[2]"                      
+                                        :rules="[rules.glcode3]"                                 
+                                        outlined/>
+                                </v-col>
+                                <v-col cols="2">
+                                    <v-text-field
+                                        id="gl4"                         
+                                        @input="codeFormat($event,4,4)"                                 
+                                        v-model="glCodes[3]"
+                                        :error="glCodesErr[3]"                      
+                                        :rules="[rules.glcode4]"                                 
+                                        outlined/>
+                                        </v-col>
+                                <v-col cols="2">
+                                    <v-text-field
+                                        id="gl5"                        
+                                        @input="codeFormat($event,5,5)"                                 
+                                        v-model="glCodes[4]"
+                                        :error="glCodesErr[4]"                      
+                                        :rules="[rules.glcode5]"                                 
+                                        outlined/> 
+                                </v-col> 
+                            </v-row>
+                        </template>
+                    </title-card>			
                 </v-card-text>
 
                 <v-card-actions>
@@ -96,25 +146,28 @@ import Vue from 'vue';
 import Breadcrumbs from "../../../components/Breadcrumbs.vue";
 import { ADMIN_URL } from "../../../urls";
 import axios from "axios";
+import TitleCard from "../../recoveries/views/Common/TitleCard.vue";
 // import { secureGet } from "@/store/jwt";
 export default {
     name: "Departments",
     components: {
-        Breadcrumbs
+        Breadcrumbs,
+        TitleCard 
     },
     data: () => ({
         loadingData: false,
         departments: [],		
         
-        department: '',
-        glCode: '',
+        department: '',        
+        glCodes: [],        
         contactName: '',
         contactEmail: '',
 
         departmentErr: false,
-        glCodeErr: false,
+        glCodesErr: [ false , false , false , false , false ],        
         contactNameErr: false,
         contactEmailErr: false,
+        recvDeptErr: false,
 
         currentItem: {},
 
@@ -122,6 +175,7 @@ export default {
         headers: [
             { text: "Department", 			value: "department"},
             { text: "Coding", 				value: "glCode"},
+            { text: "Receiving Department", value: "recvDepartment"},
             { text: "Financial Contact",	value: "contactName"},			
             { text: "Email", 				value: "contactEmail"},
             { text: "", 			 value: "edit", width:'1rem'},
@@ -133,12 +187,30 @@ export default {
         employeeList: [],		
         departmentEmployeeList: [],
         departmentDialog: false,
+        recvDepartment: '',
         action: 'Add',
         updateGL: 0 ,
-        rules:{ glcode : value => {                
-                const pattern= /^[0-9]{3}-[0-9]{6}-[0-9]{4}-[0-9]{4}-[0-9]{5}$/
-                return pattern.test(value) || 'Invalid Gl code.'		
-            }
+        rules:{ // const pattern= /^[0-9]{3}-[0-9]{6}-[0-9]{4}-[0-9]{4}-[0-9]{5}$/
+            glcode1 : value => {
+                    const pattern= /^[0-9]{1,3}$/
+                    return pattern.test(value) || 'Invalid code.'
+            },
+            glcode2 : value => {                                
+                const pattern= /^[0-9]{1,6}$/
+                return pattern.test(value) || 'Invalid code.'		
+            },
+            glcode3 : value => {                                
+                const pattern= /^[0-9]{1,4}$/
+                return pattern.test(value) || 'Invalid code.'		
+            },
+            glcode4 : value => {                                
+                const pattern= /^[0-9]{1,4}$/
+                return pattern.test(value) || 'Invalid code.'		
+            },
+            glcode5 : value => {                                
+                const pattern= /^[0-9]{1,5}$/
+                return pattern.test(value) || 'Invalid code.'		
+            },            
         }
     }),
 
@@ -167,14 +239,16 @@ export default {
         },
 
         clearDepartmentData(){			
-            this.department = "";
-            this.glCode = null;
+            this.department = "";            
+            this.glCodes = [];
+            this.recvDepartment = "";
             this.contactName = "";
             this.contactEmail = "";
             this.departmentErr = false
-            this.glCodeErr = false
+            this.glCodesErr = [false , false , false , false , false]
             this.contactNameErr = false
             this.contactEmailErr = false
+            this.recvDeptErr = false
             this.updateGL++
         },
 
@@ -190,7 +264,8 @@ export default {
             this.currentItem = value			
             this.department = value.department;
             this.loadDepartmentData(value.department);
-            this.glCode = value.glCode;
+            this.glCodes = value.glCode.split('-');
+            this.recvDepartment = value.recvDepartment;
             this.contactName = value.contactName;
             this.contactEmail = value.contactEmail;
             this.action = 'Edit';
@@ -198,12 +273,23 @@ export default {
         },
 
         checkFields(){            
-            this.glCodeErr = this.rules.glcode(this.glCode)==true ? false : true
+            this.glCodesErr[0] = this.rules.glcode1(this.glCodes[0])==true ? false : true
+            this.glCodesErr[1] = this.rules.glcode2(this.glCodes[1])==true ? false : true
+            this.glCodesErr[2] = this.rules.glcode3(this.glCodes[2])==true ? false : true
+            this.glCodesErr[3] = this.rules.glcode4(this.glCodes[3])==true ? false : true
+            this.glCodesErr[4] = this.rules.glcode5(this.glCodes[4])==true ? false : true
             this.departmentErr = this.department ? false : true
             this.contactNameErr = this.contactName? false: true
             this.contactEmailErr = this.contactEmail? false: true
             
-            if(this.departmentErr || this.contactNameErr || this.contactEmailErr || this.glCodeErr)
+            if( this.departmentErr || 
+                this.contactNameErr || 
+                this.contactEmailErr || 
+                this.glCodesErr[0] ||
+                this.glCodesErr[1] ||
+                this.glCodesErr[2] ||
+                this.glCodesErr[3] ||
+                this.glCodesErr[4])
                 return false
             else
                 return true
@@ -212,11 +298,13 @@ export default {
         saveDepartment(){
             if(this.checkFields()){
                 this.departmentDialog = false
+                const glCode = this.glCodes.join('-')
                 const body = {
                     department: this.department,
-                    glCode: this.glCode,				
+                    glCode: glCode,				
                     contactName: this.contactName,
                     contactEmail: this.contactEmail,
+                    recvDepartment: this.recvDepartment,
                 };                
                 const id = this.currentItem?.departmentID? this.currentItem.departmentID: 0;
                 return axios.post(`${ADMIN_URL}/department-info/${id}`, body)
@@ -240,23 +328,12 @@ export default {
             this.departmentEmployeeList = this.employeeList.filter(emp => emp.department == event);
         },
 
-        codeFormat(code) { //console.log(e)
-            this.glCodeErr=false;
-            // const code = this.glCode;
-            // if(isNaN(Number(code.slice(-1))) && code.slice(-1) != '-'){
-            // 	this.glCode = code.slice(0,-1)
-
-            // } 
-            if(code.length==4 && code.slice(-1)!='-' ){
-                this.glCode = code.slice(0,3)+'-'+code.slice(-1);
-            } else if(code.length==11 && code.slice(-1)!='-' ){
-                this.glCode = code.slice(0,10)+'-'+code.slice(-1);
-            } else if(code.length==16 && code.slice(-1)!='-' ){
-                this.glCode = code.slice(0,15)+'-'+code.slice(-1);
-            } else if(code.length==21 && code.slice(-1)!='-' ){
-                this.glCode = code.slice(0,20)+'-'+code.slice(-1);
-            }			
-            
+        codeFormat(code, id, len) { 
+            //console.log(code)
+            const noErr = this.rules[`glcode${id}`](code)            
+            this.glCodesErr[id-1]=false;
+            if(noErr==true && code.length==len && id<5)
+                document.getElementById(`gl${id+1}`).focus();            
         }
 
     }

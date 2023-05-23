@@ -26,6 +26,12 @@
                         }"
                         class="clickable-row">
 
+                        <template v-slot:[`item.active`]="{ item }">
+                            <v-icon v-if="item.active" class="success--text">mdi-check</v-icon>
+                            <v-icon v-else color="red">mdi-close</v-icon>
+
+                        </template>
+
                         <template v-slot:[`item.branch`]="{ item }">
                             {{ item.branch.replace(',', '/') }}
                         </template>
@@ -51,6 +57,11 @@
                 </v-card-title>
 
                 <v-card-text>
+                    <v-switch
+                        v-model="active"
+                        label="Active"
+                        color="primary"
+                        />
 
                     <v-text-field 
                         label="Item Name" 
@@ -64,7 +75,13 @@
                         label="Default Cost" 
                         v-model="price" 
                         class="mt-1"						
-                        outlined prefix="$"/>		
+                        outlined prefix="$"/>	
+                        
+                    <v-text-field 
+                        label="Default Description" 
+                        v-model="description" 
+                        class="mt-1"						
+                        outlined/>
                     
                     <v-row :style="{border:(branchErr? '1px solid red' : '0px solid')}">
                         <v-col v-for="(branchOption, branchInx) in branchOptions" :key="branchInx">							
@@ -76,6 +93,62 @@
                                 :value="branchOption"
                                 :label="branchOption"/>
                         </v-col>
+                    </v-row>
+
+                    <v-row class="mt-10 ml-3">                      
+                        <title-card class="mr-6" titleWidth="6.5rem">
+                            <template #title>
+                                <div>Documents</div>
+                            </template>
+                            <template #body>
+                                <div style="width:15rem; min-height:2rem;" :key="update" class=" mx-4 blue--text text-h7 text-decoration-underline">
+                                    <div v-if="allUploadingDocuments.length>0">
+                                        <div v-for="doc,inx in allUploadingDocuments" :key="inx" class="my-1"> 
+                                            <a :href="doc.file" :download="doc.name" target="_blank" style="color:#643f5d;">
+                                                {{ doc.name }}
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <div v-if="backupFiles" >
+                                        <div v-for="doc,inx in backupFiles" :key="inx" class="my-1">
+                                            <a color="transparent" class="my-3" @click="downloadDocument(doc.docName)">                                    
+                                                <b>{{ doc.docName }}</b>                                    
+                                            </a> 
+                                        </div>
+                                    </div>       
+                                </div>
+                            </template>
+                        </title-card>
+                        <v-col >
+                            <div>
+                                <v-btn class="mx-0 my-0" color="primary" elevation="5" @click="uploadDocument">
+                                    Upload File
+                                    <input
+                                        id="inputfile"
+                                        type="file"
+                                        style="display: none"
+                                        accept="application/pdf"
+                                        @change="handleSelectedFile"
+                                        onclick="this.value=null;"/>
+                                </v-btn>
+                            </div>
+                            <div>
+                                <v-btn v-if="allUploadingDocuments.length>0" class="mx-0 mt-5 cyan--text text--darken-2" color="secondary"  @click="allUploadingDocuments=[]">
+                                    Clear Uploaded File(s)
+                                </v-btn>
+                            </div>
+                        </v-col>
+                    </v-row>
+
+                    <v-row class="mt-15 ml-3">
+                        <v-data-table dense :page="page" :items-per-page="5" :headers="auditHeaders" :items="itemAudits" class="elevation-1">
+                            <template v-slot:[`item.date`]="{ item }">
+                                {{item.date | getDate}}
+                            </template>
+                            <template v-slot:[`item.action`]="{ item }">
+                                <div style="white-space: pre;">{{item.action}}</div>
+                            </template>
+                        </v-data-table>
                     </v-row>
 
                 </v-card-text>
@@ -92,31 +165,49 @@
 
 <script>
 import Breadcrumbs from "../../../components/Breadcrumbs.vue";
+import TitleCard from '../../recoveries/views/Common/TitleCard.vue';
 import { ADMIN_URL } from "../../../urls";
 import axios from "axios";
 // import { secureGet } from "@/store/jwt";
 export default {
     name: "Items",
     components: {
-        Breadcrumbs
+        Breadcrumbs,
+        TitleCard
     },
     data: () => ({
         loadingData: false,
         items:[],
         branch: [],
         branchErr: false,
-        categoryErr: false,				
+        categoryErr: false,		
+        active: true,		
         category: '',
         price: '',
+        description: '',
         currentItem: {},
         totalLength: 0,
         headers: [
-            { text: "Item Name", 	 value: "category"},			
-            { text: "Branch",		 value: "branch"},
-            { text: "Default Cost",  value: "price"},
-            { text: "", 			 value: "edit", width:'1rem'},
+            { text: "Active", 	            value: "active"},	    
+            { text: "Item Name", 	        value: "category"},			
+            { text: "Branch",		        value: "branch"},
+            { text: "Default Cost",         value: "price"},
+            { text: "Default Description",  value: "description"},
+            { text: "", 			        value: "edit", width:'1rem'},
         ],
         branchOptions: ['ITCS', 'CIM', 'SIS', 'eServices', 'DAS'],
+
+        auditHeaders: [
+            { text: "Date",   value: "date",   class: "grey lighten-4", cellClass: "px-1 py-1", width: "20%" },                
+            { text: "Action", value: "action", class: "grey lighten-4", cellClass: "px-1 py-1", width: "40%" },
+            { text: "User",   value: "user",   class: "grey lighten-4", cellClass: "px-1 py-1", width: "40%" },                
+        ],
+
+        allUploadingDocuments: [],
+        itemAudits: [],
+        backupFiles: [],
+        update: 0,
+        reader: new FileReader(),
         page: 1,
         pageCount: 0,
         iteamsPerPage: 10,		
@@ -151,7 +242,12 @@ export default {
             this.currentItem = {};            		
             this.branch = [];		
             this.category = "";
+            this.description = "";
             this.price = "";
+            this.active = true;
+            this.itemAudits = [];
+            this.backupFiles = []; 
+            this.allUploadingDocuments = [];
         },
 
         addItem() {
@@ -163,10 +259,16 @@ export default {
         },
 
         editItem(value) {
+            this.page--;
             this.currentItem = value
             this.branch = value.branch.split('/');		
             this.category = value.category;
+            this.active = value.active;
             this.price = value.price;	
+            this.description = value.description;
+            this.backupFiles = value.docName? value.docName: [];
+            this.allUploadingDocuments = [];
+            this.itemAudits = value.itemCategoryAudits?value.itemCategoryAudits.sort((a,b)=>{ return (a.date > b.date ? -1 :1) }):[];
             this.action = 'Edit';
             this.branchErr = false;
             this.categoryErr = false;
@@ -189,18 +291,130 @@ export default {
                     category: this.category,
                     branch: this.branch.join('/'),				
                     price: this.price,
+                    description: this.description,
+                    active: this.active,
+                    action: this.getActionDescription()
                 };                
                 const id = this.currentItem?.itemCatID? this.currentItem.itemCatID: 0;
                 return axios.post(`${ADMIN_URL}/item-categories/${id}`, body)
-                .then(async () => {
+                .then(async (resp) => {
+                    if (this.reader.result) await this.saveBackUPFile(resp.data.itemCatID)                    
                     await this.updateTable()              
                 })
                 .catch(e => {
                     console.log(e);
                 });
             }
-        }
-        
+        },
+
+        async saveBackUPFile(itemCatID) {
+            this.alert = false;
+            const docNames = []
+            const bodyFormData = new FormData();
+
+            for(const doc of this.allUploadingDocuments){
+                bodyFormData.append("files", doc.file);
+                docNames.push(doc.name)
+            }
+
+            const data = {
+                docNames: docNames,  
+            };
+            bodyFormData.append("data", JSON.stringify(data));
+
+            const header = {
+                responseType: "application/pdf",
+                headers: {
+                    "Content-Type": "multipart/form-data"
+                }
+            };
+
+            return await axios.post(`${ADMIN_URL}/item-category-documents/${itemCatID}`, bodyFormData, header)
+                .then(() => {
+                    this.savingData = false;                    
+                })
+                .catch(e => {
+                    this.savingData = false;
+                    console.log(e.response.data);
+                    this.alertMsg = e.response.data;
+                    this.alert = true;
+                });      
+        },
+
+        uploadDocument() { 
+            this.alert=false;           
+            const el = document.getElementById("inputfile");
+            if (el) el.click();
+        },
+
+        handleSelectedFile(event) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            if (event.target.files && event.target.files[0]) {
+                const file = event.target.files[0];
+
+                // this.quoteFileType = file.type;
+                // this.quoteFileName = file.name;
+
+                this.reader.onload = () => {
+                    this.allUploadingDocuments.push({file: this.reader.result, name: file.name, type: file.type})                    
+                    this.update++;
+                };
+                this.reader.readAsDataURL(file);
+            }
+        },
+
+        downloadDocument(docName){
+            if(!this.currentItem.itemCatID) return
+
+            this.savingData = true;
+            const header = {
+                responseType: "application/pdf",
+                headers: {
+                "Content-Type": "application/text"
+                }
+            };
+
+            axios.get(`${ADMIN_URL}/item-category-documents/${this.currentItem.itemCatID}/${docName}`, header)
+                .then(res => {
+                    this.savingData = false;
+                    const link = document.createElement("a");
+                    link.href = res.data;
+                    document.body.appendChild(link);
+                    link.download = docName;
+                    link.click();
+                    setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+                })
+                .catch(e => {
+                    this.savingData = false;
+                    console.log(e);
+                });            
+        },
+
+        getActionDescription(){
+            if(this.action=='Add') 
+                return 'New item added.'
+            else{
+                let action="Item modified."
+                if(this.currentItem.category != this.category) 
+                    action += `\nChanging name from ${this.currentItem.category} to ${this.category};`
+                if(this.currentItem.price != this.price){
+                    const price = this.price? this.price : 0
+                    action += `\nChanging cost from ${this.currentItem.price} to ${price};`
+                }
+                if(this.currentItem.active != this.active){
+                    const status = this.active? 'Active': 'Inactive'
+                    action += `\nChanging status to ${status};`
+                }
+
+                const branch = this.currentItem.branch.split('/');
+                if(this.branch.length != branch.length)
+                    action += `\nChanging branches;`                
+                
+                return action  
+            }
+        },        
 
     }
 };

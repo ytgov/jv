@@ -1,5 +1,16 @@
 <template>
-    <div class="mt-15 mx-10 mb-5">       
+    <div class="mt-15 mx-10 mb-5"> 
+
+        <v-row class="my-0 mx-0">			
+            <v-btn 
+                :disabled="journals.length == 0"     
+                @click="exportToExcel()"          
+                class="ml-auto"
+                elevation="5"
+                color="primary">
+                Export To Excel
+            </v-btn>		
+		</v-row> 
 
         <v-data-table 
             :headers="headers" 
@@ -63,9 +74,11 @@
 </template>
 
 <script>
+import Vue from "vue";
+import axios from "axios";
+import { ExportToCsv } from 'export-to-csv';
 import EditJournal from './EditJournal.vue'
 import { RECOVERIES_URL} from "@/urls";
-import axios from "axios";
 
 export default {
     components: {
@@ -127,6 +140,35 @@ export default {
                     // this.alert = true;
                 });
             
+        },
+        exportToExcel(){
+
+            const csvInfo = this.journals.map(journal =>{
+                return {
+                    submissionDate: journal.submissionDate?Vue.filter('beautifyDate')(journal.submissionDate):'',                   
+                    jvNum: journal.jvNum?journal.jvNum:'',
+                    department: journal.department?journal.department:'',
+                    period: journal.period?journal.period:'',
+                    refRecoveries: journal.refNum?this.getRefs(journal):'', 
+                    jvAmount: journal.jvAmount?'$'+Vue.filter('currency')(Number(journal.jvAmount).toFixed(2)):'',                                      
+                    status: journal.status? journal.status:''					
+                }
+            })
+            const options = { 
+                fieldSeparator: ',',
+                quoteStrings: '"',
+                decimalSeparator: '.',
+                showLabels: true, 
+                showTitle: false,
+                title: '',
+                filename: 'Journals',
+                useTextFile: false,
+                useBom: true,
+                useKeysAsHeaders: false,
+                headers: ['Date', 'JV Number', 'Department', 'Period', 'Affiliated Recoveries', 'Amount', 'Status']
+            };
+            const csvExporter = new ExportToCsv(options);
+            csvExporter.generateCsv(csvInfo);
         }
     }
 };

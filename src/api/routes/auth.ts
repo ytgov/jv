@@ -20,7 +20,7 @@ export function configureAuthentication(app: Express) {
   app.use(
     auth({
       authRequired: false,
-      auth0Logout: false,
+      auth0Logout: true,
       authorizationParams: {
         response_type: "code",
         audience: "",

@@ -12,6 +12,7 @@
                     <div v-if="type == 'Add New'">Create New Recovery</div>
                     <div v-else-if="type == 'Approve'">Approve</div>
                     <div v-else-if="type == 'Complete' && btnTxt" class="primary--text">{{btnTxt}}</div>
+                    <v-icon v-else-if="type == 'Complete' && !btnTxt" dense color="primary">mdi-magnify</v-icon>
                     <v-icon v-else dense color="primary">mdi-pencil</v-icon>
                 </v-btn>
             </template>
@@ -39,10 +40,24 @@
                         />                        
                     </v-col>
                     <v-col cols="6">
+                        <v-text-field
+                            :readonly="readonly"
+                            :error="state.employeeMailCdErr"
+                            @input="state.employeeMailCdErr = false"
+                            v-model="employeeMailCd"
+                            label="Requestor Mail Code"                            
+                            outlined
+                            :clearable="!readonly"
+                        />
+                    </v-col>                                        
+                </v-row>
+
+                <v-row class="mt-0 mx-0">
+                    <v-col cols="6">
                         <v-select
                             :readonly="readonly"
                             :error="state.departmentErr"
-                            @change="state.departmentErr=false;"
+                            @change="state.departmentErr=false;departmentChanged();"
                             v-model="department"
                             :items="departmentList"
                             item-text="name"
@@ -50,10 +65,30 @@
                             outlined
                         />
                     </v-col>
-                </v-row>
-
-                <v-row class="mt-0 mx-0">
                     <v-col cols="6">
+                        <v-select
+                            :readonly="readonly"
+                            :error="state.employeeBranchErr"
+                            @change="state.employeeBranchErr=false;"
+                            v-model="employeeBranch"
+                            :items="branchList"
+                            item-text="name"
+                            label="Requestor Branch"
+                            outlined
+                        />                      
+                    </v-col>                   
+                </v-row>
+                
+                <v-row class="mt-0 mx-0">                    
+                    <v-col cols="3">
+                        <v-text-field
+                            readonly                                
+                            v-model="recoveryID"
+                            label="Recovery ID"                                
+                            outlined
+                        />
+                    </v-col>
+                    <v-col cols="3">
                         <v-text-field
                             :readonly="readonly"
                             :error="state.refNumErr"
@@ -61,7 +96,7 @@
                             v-model="refNum"
                             label="Reference"
                             persistent-hint
-                            hint="Footprints Incident #, Project #"
+                            hint="Incident #, Project #"
                             outlined
                             :clearable="!readonly"
                         />
@@ -219,15 +254,22 @@
                                 <template #body>
                                     <div style="width:15rem; min-height:2rem;" :key="update" class=" mx-4 blue--text text-h7 text-decoration-underline">
                                         <div v-if="allUploadingDocuments.length>0">
-                                            <div v-for="doc,inx in allUploadingDocuments" :key="inx" class="my-1"> 
+                                            <div v-for="doc,inx in allUploadingDocuments" :key="'uploaded-'+inx" class="my-1"> 
                                                 <a :href="doc.file" :download="doc.name" target="_blank" style="color:#643f5d;">
                                                     {{ doc.name }}
                                                 </a>
                                             </div>
                                         </div>
                                         <div v-if="recovery" >
-                                            <div v-for="doc,inx in recovery.docName" :key="inx" class="my-1">
+                                            <div v-for="doc,inx in recovery.docName" :key="'recovery-'+inx" class="my-1">
                                                 <a color="transparent" class="my-3" @click="downloadDocument(doc.docName)">                                    
+                                                    <b>{{ doc.docName }}</b>                                    
+                                                </a> 
+                                            </div>
+                                        </div>
+                                        <div v-if="itemCategoryDocuments.length>0">
+                                            <div v-for="doc,inx in itemCategoryDocuments" :key="'item-category-'+inx" class="my-1">
+                                                <a color="transparent" class="my-3" @click="downloadDocument(doc.docName, doc.itemCatID)" style="color:#005a65;">                                    
                                                     <b>{{ doc.docName }}</b>                                    
                                                 </a> 
                                             </div>
@@ -275,7 +317,7 @@
                                             Approve Purchase                        
                                         </v-btn>
                                         <div class="mt-1 mb-n15">
-                                            By selecting Approve you have been provided approval by those individuals with Section 24 (commitment authority) 
+                                            By selecting Approve you have been provided approval by those individuals with Section 29 (commitment authority) 
                                         </div>
                                     </div>
                                 </v-col>
@@ -333,7 +375,7 @@
 
 <script>
 import Vue from "vue";
-import { RECOVERIES_URL} from "@/urls";
+import { RECOVERIES_URL, ADMIN_URL} from "@/urls";
 import axios from "axios";
 import TitleCard from '../Common/TitleCard.vue';
 
@@ -365,17 +407,23 @@ export default {
             
             department: "",
             employeeName: "",
+            employeeBranch: "",
+            employeeMailCd: "",
             refNum: '',
+            recoveryID: '',
             recoveryItems: [],
 
             recoveryAudits: [],
 
             departmentList: [],
+            branchList: [],
             employeeList: [],
             itemCategoryList: [],
             itemCategoryListAll: [],
 
             allUploadingDocuments: [],
+
+            itemCategoryDocuments: [],
             
             loadingData: false,
             savingData: false,
@@ -432,13 +480,20 @@ export default {
             if(this.type=="Add New"){
                 this.department = ""
                 this.employeeName = ""
+                this.employeeBranch = ""
+                this.employeeMailCd = ""
                 this.refNum = ''
+                this.recoveryID = ''
                 this.recoveryItems = []
                 this.recoveryAudits = []
             }else{
-                this.department = this.recovery.department;                                
+                this.department = this.recovery.department;
+                this.departmentChanged();                                
                 this.employeeName = this.recovery.firstName+'.'+this.recovery.lastName;
+                Vue.nextTick(() => this.employeeBranch = this.recovery.employeeBranch );
+                this.employeeMailCd = this.recovery.mailcode;
                 this.refNum = this.recovery.refNum;
+                this.recoveryID = this.recovery?.recoveryID ? this.recovery.recoveryID : '';
                 this.recoveryItems = this.recovery.recoveryItems;
                 this.recoveryAudits = this.recovery.recoveryAudits.sort((a,b)=>{ return (a.date > b.date ? -1 :1) });
                 this.calculateTotalPrice()
@@ -455,6 +510,7 @@ export default {
                 })
             }
             this.checkOrderCompleted()
+            this.extractItemCategoryDocuments()
             this.loadingData= false
             this.allUploadingDocuments = []
             this.update++;
@@ -501,14 +557,24 @@ export default {
             this.employeeList = this.$store.state.recoveries.employees.map(item => {
                 return {
                     fullName: item.fullName,
-                    department: item.department
+                    department: item.department,
+                    branch: item.branch,
+                    mailcode: item.mailcode
                 };//.sort((a, b) => (a.fullName >= b.fullName ? 1 : -1));
             });
         },
 
         initItemCategory() {
-            const itemCategoryList = this.$store.state.recoveries.itemCategoryList.map(item => {
-                return { text: item.category,  value:item.itemCatID, price:item.price, branch:item.branch}
+            const activeItemCategoryList =this.readonly? this.$store.state.recoveries.itemCategoryList :this.$store.state.recoveries.itemCategoryList.filter(item => item.active)
+            const itemCategoryList = activeItemCategoryList.map(item => {
+                return { 
+                    text: item.category,  
+                    value:item.itemCatID, 
+                    price:item.price, 
+                    branch:item.branch, 
+                    description:item.description,
+                    docName:item.docName
+                }
             })
             this.itemCategoryListAll = itemCategoryList
             const usrBranch = this.$store.state.auth.user.branch
@@ -522,7 +588,7 @@ export default {
             this.departmentList = [];
             const depts = this.$store.state.recoveries.departmentBranch;
             for (const key of Object.keys(depts)) {
-                this.departmentList.push({ name: key });
+                this.departmentList.push({ name: key, branches: depts[key].branches });                
             }
         },
 
@@ -565,17 +631,45 @@ export default {
 
         itemCategoryChanged(item){
             const category = this.itemCategoryList.filter(cat => cat.value==item.itemCatID)[0]
-            item.unitPrice = category? category.price : 0
+            item.unitPrice = category?.price? category.price : 0
+            item.description = category?.description? category.description: ""
             this.calculateTotalPrice()
+            this.extractItemCategoryDocuments()
+        },
+
+        extractItemCategoryDocuments(){
+            this.itemCategoryDocuments=[]
+            for(const item of this.recoveryItems){
+                if(item.itemCatID>0){
+                    const category = this.itemCategoryListAll.filter(cat => cat.value==item.itemCatID)[0]
+                    if(category)
+                        for(const doc of category.docName)
+                            this.itemCategoryDocuments.push({docName:doc.docName, itemCatID:item.itemCatID})
+                }
+            }
         },
 
         employeeChanged() {
             if (this.employeeName) {                
                 const employee= this.employeeList.filter(employee => employee.fullName == this.employeeName)[0]
                 this.state.departmentErr = false
-                this.department =employee? employee.department :''                    
+                this.department =employee? employee.department :''
+                this.departmentChanged();
+                Vue.nextTick(()=>{
+                    this.employeeBranch = employee? employee.branch :''
+                    this.employeeMailCd = employee? employee.mailcode :''
+                })                                    
             }            
         }, 
+
+        departmentChanged() {
+            
+            if (this.department) { 
+                this.branchList =  this.departmentList.filter(department => department.name == this.department)[0].branches; 
+                this.state.employeeBranchErr = false
+                this.employeeBranch =''                                
+            }            
+        },
         
         fillOrderChanged(item){
             if(item.orderFilled){
@@ -619,6 +713,8 @@ export default {
                 this.state.employeeNameErr = this.employeeName? false : true;          
                 // this.state.refNumErr = this.refNum? false : true;
                 this.state.departmentErr = this.department? false : true;
+                // this.state.employeeBranchErr = this.employeeBranch? false : true;
+                // this.state.employeeMailCdErr = this.employeeMailCd? false : true;
                 this.state.recoveryItemsErr = this.recoveryItems.length>0? false : true;
 
                 let itemErr=false
@@ -659,6 +755,8 @@ export default {
                         lastName: name[1],
                         department: this.department,
                         branch: this.getItemsBranch(),
+                        employeeBranch: this.employeeBranch,
+                        mailcode: this.employeeMailCd,
                         refNum: this.refNum,                                
                     };
                 }else if (status == 'Complete'){
@@ -727,6 +825,7 @@ export default {
                 recoveryItem => !(recoveryItem.tmpId == item.tmpId)
             );
             this.calculateTotalPrice()
+            this.extractItemCategoryDocuments()
         },
 
         uploadDocument() { 
@@ -746,25 +845,30 @@ export default {
                 // this.quoteFileName = file.name;
 
                 this.reader.onload = () => {
-                    this.allUploadingDocuments.push({file: this.reader.result, name: file.name, type: file.type})                    
+                    if((String(file.type)).includes('pdf'))
+                        this.allUploadingDocuments.push({file: this.reader.result, name: file.name, type: file.type})                    
                     this.update++;
                 };
                 this.reader.readAsDataURL(file);
             }
         },
 
-        downloadDocument(docName){
-            if(!this.recovery.recoveryID) return
+        downloadDocument(docName, itemCatID){            
+            let url = `${RECOVERIES_URL}/backup-documents/${this.recovery.recoveryID}/${docName}`
+            if(!itemCatID && !this.recovery.recoveryID) return
+            if(itemCatID){
+                url = `${ADMIN_URL}/item-category-documents/${itemCatID}/${docName}`
+            }
 
             this.savingData = true;
             const header = {
                 responseType: "application/pdf",
                 headers: {
-                "Content-Type": "application/text"
+                    "Content-Type": "application/text"
                 }
             };
 
-            axios.get(`${RECOVERIES_URL}/backup-documents/${this.recovery.recoveryID}/${docName}`, header)
+            axios.get(url, header)
                 .then(res => {
                     this.savingData = false;
                     const link = document.createElement("a");

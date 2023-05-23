@@ -11,6 +11,19 @@
             />
         </v-row> -->
 
+        <v-row class="my-0 mx-0">
+			
+            <v-btn 
+                :disabled="recoveries.length == 0"     
+                @click="exportToExcel()"          
+                class="ml-auto"
+                elevation="5"
+                color="primary">
+                Export To Excel
+            </v-btn>
+		
+		</v-row>
+
         <v-data-table :headers="headers" :items="recoveries" :items-per-page="10" class="elevation-1">
             <!-- eslint-disable-next-line vue/no-unused-vars -->
             <template v-slot:[`item.submissionDate`]="{ item }">
@@ -77,8 +90,9 @@
 </template>
 
 <script>
-    // import Vue from "vue";
+import Vue from "vue";
 import NewRecovery from './NewRecovery.vue'
+import { ExportToCsv } from 'export-to-csv';
 
 
 export default {
@@ -100,7 +114,7 @@ export default {
                 { text: "Items", value: "recoveryItems", class: "blue-grey lighten-4" },
                 // { text: "Quantity", value: "quantity", class: "blue-grey lighten-4" },
                 { text: "Cost", value: "totalPrice", class: "blue-grey lighten-4" },
-                { text: "DateSubmitted", value: "submissionDate", class: "blue-grey lighten-4" },
+                { text: "Date Submitted", value: "submissionDate", class: "blue-grey lighten-4" },
                 { text: "Status", value: "status", class: "blue-grey lighten-4" },
                 { text: "JV #", value: "jvNum", class: "blue-grey lighten-4" },                
                 { text: "", sortable: false, value: "edit", class: "blue-grey lighten-4", width: "1rem" }
@@ -134,6 +148,38 @@ export default {
             const items= recovery.recoveryItems.map(rec => this.itemCategoryList[rec.itemCatID])
             return items.join(', ')
         },
+        exportToExcel(){           
+
+            const csvInfo = this.recoveries.map(rec =>{
+                return {
+                    branch: rec.branch?rec.branch:'',
+                    refNum: rec.refNum?rec.refNum:'', 
+                    createUser: rec.createUser?rec.createUser:'', 
+                    requestor: (rec.firstName?rec.firstName + ' ':'')+ (rec.lastName?rec.lastName:''),
+                    department: rec.department?rec.department:'',
+                    recoveryItems: rec.recoveryItems?this.getRecoveryItems(rec):'',					
+                    totalPrice: rec.totalPrice?'$'+rec.totalPrice:'',                   
+                    submissionDate: rec.submissionDate?Vue.filter('beautifyDate')(rec.submissionDate):'',
+                    status: rec.status? rec.status:'',
+                    jvNum: (rec.journal && rec.journal.jvNum)?rec.journal.jvNum:''					
+                }
+            })
+            const options = { 
+                fieldSeparator: ',',
+                quoteStrings: '"',
+                decimalSeparator: '.',
+                showLabels: true, 
+                showTitle: false,
+                title: '',
+                filename: 'Recoveries',
+                useTextFile: false,
+                useBom: true,
+                useKeysAsHeaders: false,
+                headers: ['Recovery Branch', 'Reference', 'Technician', 'Requestor', 'Department', 'Items', 'Cost', 'Date Submitted', 'Status', 'JV #']
+            };
+            const csvExporter = new ExportToCsv(options);
+            csvExporter.generateCsv(csvInfo);
+        }
 
     }
 };

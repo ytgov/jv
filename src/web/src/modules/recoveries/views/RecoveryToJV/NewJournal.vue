@@ -1,6 +1,6 @@
 <template>
   <div>
-        <v-dialog v-model="addNewJournalDialog" persistent max-width="40%">
+        <v-dialog v-model="addNewJournalDialog" persistent max-width="50%">
             <template v-slot:activator="{ on, attrs }">
                 <v-btn
                     elevation="5"                    
@@ -34,7 +34,7 @@
                 </v-card>
 
                 <v-row class="mt-5 mx-0">
-                    <v-col cols="9">
+                    <v-col cols="8">
                         <v-text-field
                             :readonly="readonly"
                             :error="state.journalNumErr"
@@ -46,9 +46,7 @@
                             :clearable="!readonly"
                         />
                     </v-col>
-                </v-row>
-                <v-row class="mt-5 mx-0">                    
-                    <v-col cols="9">
+                    <v-col cols="4">
                         <v-select
                             :readonly="readonly"
                             :error="state.periodErr"
@@ -58,6 +56,114 @@
                             label="Period"
                             hide-details
                             outlined
+                        />
+                    </v-col>
+                </v-row>
+                <v-row class="mt-2 mx-0">                    
+                    <v-col cols="8" >
+                        <v-text-field
+                            :readonly="readonly"
+                            :error="state.dateErr"
+                            v-model="date"
+                            @change="state.dateErr=false;"
+                            label="JV Date"
+                            outlined
+                            type="date"
+                            hide-details
+                        />                        
+                    </v-col>                            
+                    <v-col cols="4">
+                        <v-select
+                            :readonly="readonly"
+                            :error="state.fiscalYearErr"
+                            @change="state.fiscalYearErr=false;getDescription();"
+                            v-model="fiscalYear"
+                            :items="yearList()"                            
+                            label="Fiscal Year"
+                            hide-details
+                            outlined
+                        />
+                    </v-col>
+                </v-row>
+                <v-row class="mt-2 mx-0">    
+                    <v-col cols="12">
+                        <v-text-field
+                            :readonly="readonly"
+                            :error="state.descriptionErr"
+                            @change="state.descriptionErr=false;"
+                            v-model="description"                           
+                            label="Description"
+                            outlined
+                            hide-details
+                        />
+                    </v-col>
+                </v-row>
+
+                 <v-row class="mt-2 mx-0">
+                    <v-col cols="6">
+                        <v-text-field
+                            :readonly="readonly"
+                            :error="state.orgDepartmentErr"
+                            @change="state.orgDepartmentErr=false;"
+                            v-model="orgDepartment"
+                            label="Originating Department"
+                            outlined
+                            hide-details
+                        />
+                    </v-col>
+                                                
+                    <v-col cols="6">
+                        <v-text-field
+                            :readonly="readonly"
+                            :error="state.oDCompletedByErr"
+                            @input="state.oDCompletedByErr = false"
+                            v-model="odCompletedBy"
+                            label="OD Completed By"
+                            outlined
+                            hide-details
+                        />                        
+                    </v-col>
+                </v-row>
+
+                <v-row class="mt-2 mx-0">
+                    <v-col cols="6">
+                        <v-text-field
+                            :readonly="readonly"
+                            :error="state.recDepartmentErr"
+                            @change="state.recDepartmentErr=false;"
+                            v-model="recvDepartment"                            
+                            item-text="name"
+                            label="Receiving Department"
+                            outlined
+                            hide-details
+                        />
+                    </v-col>
+                    <v-col cols="6">
+                        <v-text-field
+                            :readonly="readonly"
+                            :error="state.rDCompletedByErr"
+                            @input="state.rDCompletedByErr = false"
+                            v-model="rdCompletedBy"
+                            label="RD Completed By"
+                            outlined
+                            hide-details
+                        />
+                        
+                    </v-col>
+                </v-row>
+
+                <v-row class="mt-2 mx-0">
+                    <v-col cols="12">
+                        <v-textarea
+                            :readonly="readonly"
+                            :error="state.explanationErr"
+                            @change="state.explanationErr=false;"
+                            v-model="explanation"                           
+                            label="Journal Explanation"
+                            :rules="rules"
+                            :rows="3"
+                            outlined
+                            :clearable="!readonly"
                         />
                     </v-col>
                 </v-row>
@@ -96,7 +202,7 @@
 import Vue from "vue";
 import { RECOVERIES_URL} from "@/urls";
 import axios from "axios";
-
+import _ from "lodash";
 
 export default { 
     components: {  
@@ -119,7 +225,17 @@ export default {
             department:'',
             departmentGlCode: '',
             periodList: [1,2,3,4,5,6,7,8,9,10,11,12,14],
-            
+
+            date: "",
+            fiscalYear: "",
+            description: "",
+            orgDepartment: "",
+            odCompletedBy: "",
+            recvDepartment: "",
+            rdCompletedBy: "",
+            explanation: "",
+            rules: [v => v.length <= 200 || 'Max 200 characters'],
+
             savingData: false,
                  
             tmpId: 0,
@@ -129,6 +245,13 @@ export default {
             state: {
                 journalNumErr: false,          
                 periodErr: false,
+                dateErr: false,
+                fiscalYearErr: false,
+                orgDepartmentErr: false,
+                oDCompletedByErr: false,
+                recDepartmentErr: false,
+                rDCompletedByErr: false,
+                explanationErr: false
             },
         };
     },
@@ -140,12 +263,20 @@ export default {
             this.admin = Vue.filter("isSystemAdmin")();  
                       
             this.alert=false;           
-            this.initStates(); 
+            this.initStates();
+            this.department = this.recoveries[0].department
             this.journalNum = ""
             this.period = ""
-            this.amount = this.getTotalAmount()
-            this.department = this.recoveries[0].department
+            this.date = (new Date()).toISOString().slice(0,10)
+            this.fiscalYear = this.getFiscalYear();            
+            this.orgDepartment = "HPW-ICT W10"
+            this.odCompletedBy = "HPW-ICT-Invoices@yukon.ca"
+            this.recvDepartment = this.getRD(this.department)
+            this.rdCompletedBy = this.getRdCompletedBy(this.department)
+            this.explanation = ""
+            this.amount = this.getTotalAmount()            
             this.departmentGlCode = this.getGlCode(this.department)
+            this.getDescription()
             this.savingData = false            
             this.update++;
         },
@@ -164,9 +295,30 @@ export default {
             return total
         },
 
+        getFiscalYear(){
+            const submissionDate = this.recoveries[0].submissionDate.slice(0,10)
+            let fiscalYear = submissionDate.slice(0,4)
+            if(submissionDate<(fiscalYear+"-04-01"))
+                fiscalYear = String(Number(fiscalYear)-1)
+
+            return fiscalYear
+        },
+
+        getDescription(){
+            this.description = this.fiscalYear+"/"+(Number(this.fiscalYear.slice(2,4))+1)+`-ICT Recovery to ${this.department}`
+        },
+
+        yearList(){
+            const d = new Date();
+            const year = d.getFullYear();
+            const years = _.range(year, 2000)
+            return years.map(year => String(year))
+        },
+
         checkFields() {          
             this.state.journalNumErr = this.journalNum? false : true;          
             this.state.periodErr = this.period? false : true;
+            this.state.dateErr = this.date? false: true;
             
             for (const key of Object.keys(this.state)) {
                 if (this.state[key]) return false;
@@ -188,7 +340,15 @@ export default {
                     department: this.department,		
                     jvAmount: this.amount,
                     status:'Draft',
-                    recoveryIDs: recoveryIDs     
+                    recoveryIDs: recoveryIDs,
+                    jvDate: this.date,
+                    fiscalYear: this.fiscalYear,
+                    description: this.description,
+                    orgDepartment: this.orgDepartment,
+                    odCompletedBy: this.odCompletedBy,
+                    recvDepartment: this.recvDepartment,
+                    rdCompletedBy: this.rdCompletedBy,
+                    explanation: this.explanation,
                 };                
                 const id = 0;
                 axios.post(`${RECOVERIES_URL}/journals/${id}`, body)
@@ -209,7 +369,16 @@ export default {
             const departmentInfo = this.$store.state.recoveries.departmentsInfo.filter(info => info.department==department)
             return (departmentInfo[0]? departmentInfo[0].glCode : '')
         },
-               
+
+        getRD(department) {
+            const departmentInfo = this.$store.state.recoveries.departmentsInfo.filter(info => info.department==department)
+            return (departmentInfo[0]? departmentInfo[0].recvDepartment : '')
+        },
+         
+        getRdCompletedBy(department) {
+            const departmentInfo = this.$store.state.recoveries.departmentsInfo.filter(info => info.department==department)
+            return (departmentInfo[0]? departmentInfo[0].contactName : '')
+        },
 
         closeDialog(){
             this.addNewJournalDialog = false;

@@ -15,8 +15,8 @@ async function isBranchUser(to, from, next) {
     next({ path: '/' });
 }
 
-async function isBranchTech(to, from, next) {
-  if (Vue.filter("isBranchTech")())
+async function isBranchAgent(to, from, next) {
+  if (Vue.filter("isBranchAgent")())
     next();
   else
     next({ path: '/' });
@@ -45,14 +45,14 @@ const routes = [
       ]
     },
     {
-      path: "/recovery-dashboard-tech",
+      path: "/recovery-dashboard-agent",
       component: () => import("@/layouts/Layout"),
       children: [
         {
           name: "TechDashboard",
           path: "",
           meta: { requiresAuth: true },
-          beforeEnter: isBranchTech,
+          beforeEnter: isBranchAgent,
           component: () => import("../views/TechRecoveryDashboard.vue"),
         },       
       ]

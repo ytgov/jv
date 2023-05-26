@@ -29,7 +29,6 @@
                         <template v-slot:[`item.active`]="{ item }">
                             <v-icon v-if="item.active" class="success--text">mdi-check</v-icon>
                             <v-icon v-else color="red">mdi-close</v-icon>
-
                         </template>
 
                         <template v-slot:[`item.branch`]="{ item }">
@@ -38,6 +37,10 @@
 
                         <template v-slot:[`item.price`]="{ item }">				
                             <span v-if="item.price">$ {{ Number(item.price).toFixed(2) | currency }}</span>
+                        </template>
+
+                        <template v-slot:[`item.changeQuantity`]="{ item }">
+                            <v-icon v-if="item.changeQuantity" class="warning--text">mdi-check</v-icon>                            
                         </template>
 
                         <template v-slot:[`item.edit`]>
@@ -62,7 +65,11 @@
                         label="Active"
                         color="primary"
                         />
-
+                    <v-checkbox 
+                        label="Can Change Quantity"
+                        v-model="changeQuantity"
+                        />
+                    
                     <v-text-field 
                         label="Item Name" 
                         v-model="category" 
@@ -96,7 +103,7 @@
                     </v-row>
 
                     <v-row class="mt-10 ml-3">                      
-                        <title-card class="mr-6" titleWidth="6.5rem">
+                        <title-card class="mr-6" titleWidth="6.85rem">
                             <template #title>
                                 <div>Documents</div>
                             </template>
@@ -183,6 +190,7 @@ export default {
         categoryErr: false,		
         active: true,		
         category: '',
+        changeQuantity: false,
         price: '',
         description: '',
         currentItem: {},
@@ -192,6 +200,7 @@ export default {
             { text: "Item Name", 	        value: "category"},			
             { text: "Branch",		        value: "branch"},
             { text: "Default Cost",         value: "price"},
+            { text: "Change Quantity",      value: "changeQuantity"},
             { text: "Default Description",  value: "description"},
             { text: "", 			        value: "edit", width:'1rem'},
         ],
@@ -242,6 +251,7 @@ export default {
             this.currentItem = {};            		
             this.branch = [];		
             this.category = "";
+            this.changeQuantity = false;
             this.description = "";
             this.price = "";
             this.active = true;
@@ -264,7 +274,8 @@ export default {
             this.branch = value.branch.split('/');		
             this.category = value.category;
             this.active = value.active;
-            this.price = value.price;	
+            this.price = value.price;
+            this.changeQuantity = value.changeQuantity;	
             this.description = value.description;
             this.backupFiles = value.docName? value.docName: [];
             this.allUploadingDocuments = [];
@@ -292,6 +303,7 @@ export default {
                     branch: this.branch.join('/'),				
                     price: this.price,
                     description: this.description,
+                    changeQuantity: this.changeQuantity,
                     active: this.active,
                     action: this.getActionDescription()
                 };                

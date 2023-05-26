@@ -12,7 +12,7 @@ const db = knex(DB_CONFIG);
 export const recoveriesRouter = express.Router();
 const userService = new UserService();
 
-//___DOCUMENTS__
+//____Recovery_DOCUMENTS____
 recoveriesRouter.get(
   "/backup-documents/:recoveryID/:docName",
   RequiresAuthentication,
@@ -91,6 +91,85 @@ recoveriesRouter.post(
   }
 );
 
+//____Journal_DOCUMENTS____
+recoveriesRouter.get(
+  "/journal-documents/:journalID/:docName",
+  RequiresAuthentication,
+  ReturnValidationErrors,
+  async function (req, res) {
+    try {
+      const journalID = req.params.journalID;
+      const docName = req.params.docName;
+      const doc = await db("JournalDocs")
+        .select("document")
+        .where("journalID", journalID)
+        .where("docName", docName)
+        .first();
+      res.status(200).send(doc.document);
+    } catch (error: any) {
+      console.log(error);
+      res.status(500).json("PDF not Found");
+    }
+  }
+);
+
+recoveriesRouter.post(
+  "/journal-documents/:journalID",
+  RequiresAuthentication,
+  RequiresRoleAdminOrTech,
+  ReturnValidationErrors,
+  async function (req: Request, res: Response) {
+    const files = req.body.files;
+
+    const journalID = Number(req.params.journalID);
+    let user = req.user.display_name;
+    const data = JSON.parse(req.body.data);
+
+    try {
+      await userService.getByEmail(req.user.email).then(resp => {
+        user = resp.display_name;
+      });
+
+      await db.transaction(async trx => {
+        for (const inx in data.docNames) {
+          const file = data.docNames.length==1? files : files[inx];
+          const docName = data.docNames[inx];
+
+          const buffer = db.raw(`CAST('${file}' AS VARBINARY(MAX))`);
+          const journalDoc = await db("JournalDocs")
+            .select("documentID")
+            .where("journalID", journalID)
+            .where("docName", docName)
+            .first();
+          if (journalDoc) {
+            await db("JournalDocs")
+              .update({
+                document: buffer
+              })
+              .where("journalID", journalID);
+          } else {
+            const newDocument = {
+              journalID: journalID,
+              docName: docName,
+              document: buffer
+            };
+            await db("JournalDocs").insert(newDocument, "documentID");
+          }
+        }
+
+        const action = "Added File(s): " + data.docNames.join(", ");
+
+        await addJournalAudit(journalID, user, action);
+
+        res.status(200).json("Successful");
+      });
+    } catch (error: any) {
+      console.log(error);
+      res.status(500).json("Insert failed");
+    }
+  }
+);
+
 //____JOURNALS___
 recoveriesRouter.get(
   "/journal/:journalID",
@@ -112,6 +191,9 @@ recoveriesRouter.get(
       recovery.docName = recoveryDocument?.length > 0 ? recoveryDocument : "";
     }
     journal.recoveries = recoveries;
+
+    const journalDocument = await db("JournalDocs").select("docName").where("journalID", journalID);
+    journal.docName = journalDocument?.length > 0 ? journalDocument : "";
 
     const journalAudits = await db("JournalAudit").select("*").where("journalID", journal.journalID);
     journal.journalAudits = journalAudits;
@@ -145,6 +227,9 @@ recoveriesRouter.get(
         recovery.recoveryItems = recoveryItems;
       }
       journal.recoveries = recoveries;
+
+      const journalDocument = await db("JournalDocs").select("docName").where("journalID", journal.journalID);
+      journal.docName = journalDocument?.length > 0 ? journalDocument : "";
 
       const journalAudits = await db("JournalAudit").select("*").where("journalID", journal.journalID);
       journal.journalAudits = journalAudits;
@@ -273,6 +358,7 @@ recoveriesRouter.get(
       descriptionErr: false,
       quantityErr: false,
       unitPriceErr: false,
+      approvedCostErr: false,
       clientChangeErr: false
     };
 
@@ -309,6 +395,7 @@ recoveriesRouter.get("/", RequiresAuthentication, ReturnValidationErrors, async 
     descriptionErr: false,
     quantityErr: false,
     unitPriceErr: false,
+    approvedCostErr: false,
     clientChangeErr: false
   };
 
@@ -387,6 +474,8 @@ recoveriesRouter.post(
         recoveryID = id[0].recoveryID;
 
         await addRecoveryAudit(recoveryID, user, action);
+        
+        await sendEmail(newRecovery, user, recoveryID)
 
         await db("RecoveryItem").delete().where("recoveryID", recoveryID);
 
@@ -471,4 +560,29 @@ function recoveryRoleCheck(req: any){
   };
 
   return adminQuery
+}
+
+async function sendEmail(newRecovery: any, user: any, recoveryID: number){
+  
+  if (newRecovery.status == "Purchase Approved" || newRecovery.status == "Routed For Approval"){
+    
+    const recovery = await db("Recovery").select("*").where("recoveryID", recoveryID).first();
+    
+    const sender = newRecovery.status == "Purchase Approved"? recovery.requastorEmail : recovery.modUser;
+    const recipient = newRecovery.status == "Purchase Approved"? recovery.modUser : recovery.requastorEmail;
+    const recipientName = newRecovery.status == "Purchase Approved"? 'Sir/Madam' : (recovery.firstName+' '+recovery.lastName);
+    
+    //TODO  SEND Email(null, sender, recipient, recipientName, recovery.department)
+
+    await db("RecoveryEmail").insert({
+      recoveryID: recoveryID,
+      emailType: newRecovery.status,
+      sentDate: new Date(),
+      sendingUser: sender,
+      recipients: recipient
+    })
+
+    const action = `Notification emailed to ${recipient}.`
+    await addRecoveryAudit(recoveryID, user,  action.slice(0,49));
+  }  
 }

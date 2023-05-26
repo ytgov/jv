@@ -81,7 +81,7 @@ export default {
             headers: [
                 { text: "Recovery Branch", value: "branch", class: "blue-grey lighten-4" },
                 { text: "Reference", value: "refNum", class: "blue-grey lighten-4" },
-                { text: "Technician", value: "createUser", class: "blue-grey lighten-4" },
+                { text: "Agent", value: "createUser", class: "blue-grey lighten-4" },
                 { text: "Requestor", value: "requestor", class: "blue-grey lighten-4" },
                 { text: "Department", value: "department", class: "blue-grey lighten-4" },
                 { text: "Items", value: "recoveryItems", class: "blue-grey lighten-4" },                

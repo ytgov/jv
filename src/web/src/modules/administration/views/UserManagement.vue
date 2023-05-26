@@ -38,8 +38,8 @@
 			</v-card>
 		</div>
 
-		<v-dialog v-model="userDialog" persistent max-width="800px">
-			<v-card>
+		<v-dialog v-model="userDialog" persistent max-width="900px">
+			<v-card :key="updateUserCard">
 				<v-card-title class="primary" style="border-bottom: 1px solid black">
 					<div class="text-h5">{{ action }} User</div>
 				</v-card-title>
@@ -49,6 +49,7 @@
 					<v-row class="mt-5">
 						<v-col cols="5">
 							<v-autocomplete label="Search Name"
+								@change="departmentChanged()"
 								:disabled="action!='Add'" 
 								v-model="userName" 
 								:items="employeeList"								
@@ -58,27 +59,38 @@
 								outlined/>
 						</v-col>
 						<v-col cols="7">
-							<v-autocomplete label="Department" v-model="userName.department" :items="Object.keys(departmentList)" outlined/>					
+							<v-autocomplete 
+								label="Department"
+								@change="departmentChanged()"
+								v-model="userName.department" 
+								:items="Object.keys(departmentList)" 
+								outlined/>					
 						</v-col>
 					</v-row>
-					<v-row>
-						<v-col cols="6">
+					<v-row class="my-n5">
+						<v-col cols="4">
 							<v-text-field v-model="userName.firstName" label="First Name" outlined/>
 						</v-col>
-						<v-col cols="6">
+						<v-col cols="5">
 							<v-text-field v-model="userName.lastName" label="Last Name" outlined/>
 						</v-col>
-					</v-row>
-					<v-row>
-						<v-col cols="8">
-							<v-text-field v-model="userName.email" label="Email" :error="emailErr" :rules="[rules.email]" outlined/>
-						</v-col>
-						<v-col cols="4">
+						<v-col cols="3">
 							<v-select label="Branch" v-model="userBranch" :items="branchList" outlined/>
 						</v-col>
 					</v-row>
-					<v-row>
-						
+					<v-row class="my-n5">
+						<v-col cols="6">
+							<v-text-field v-model="userName.email" label="Email" :error="emailErr" :rules="[rules.email]" outlined/>
+						</v-col>
+						<v-col cols="6">
+							<v-autocomplete 
+								v-model="userName.unit" 
+								label="Unit"
+								:items="unitList"
+								outlined/>
+						</v-col>
+					</v-row>
+					<v-row class="my-n5">						
 						<v-col cols="12">
 							<v-select 
 								label="Roles" 
@@ -92,7 +104,7 @@
 								outlined/>
 						</v-col>
 					</v-row>
-					<v-row>
+					<v-row class="my-n5">
 						<v-col cols="4">
 							<v-select 
 								label="Status" 
@@ -134,13 +146,17 @@ export default {
 			lastName: "", 
 			department: "", 
 			fullName: "", 
-			email: ""
+			email: "",
+			employeeBranch: "",
+			unit: "",
 		},
 		currentItem: {},
 		userBranch: '',
 		userRoles: [],
 		userStatus: '',
 		emailErr: false,
+		updateUserCard: 0,
+		unitList: [],
 
 		rules: {					       
 			email: value => {
@@ -152,7 +168,8 @@ export default {
 		headers: [						
 			{ text: "Name", 	    value: "display_name"},
 			{ text: "Email", 		value: "email"},			
-			{ text: "Department", 	value: "department"},
+			{ text: "Department", 	value: "department"},			
+			{ text: "Unit", 		value: "unit"},
 			{ text: "Branch", 		value: "branch"},
 			{ text: "Roles", 		value: "roles"},
 			{ text: "Status", 		value: "status"},
@@ -173,8 +190,7 @@ export default {
 		this.loadingData = true;	        
         await this.getUsers();
 		await this.getRoles();
-		this.departmentList = this.$store.state.recoveries.departmentBranch;		
-		this.employeeList = this.$store.state.recoveries.employees;
+		this.loadEmployeeDepartmentData()
         this.loadingData = false;		
 	},
 
@@ -202,6 +218,11 @@ export default {
             });
         },
 
+		loadEmployeeDepartmentData(){
+			this.departmentList = (this.$store.state.recoveries.departmentBranch);		
+			this.employeeList = JSON.parse(JSON.stringify(this.$store.state.recoveries.employees));
+		},
+
 		clearUserData(){
 			this.userName = {
 				firstName: "", 
@@ -215,12 +236,14 @@ export default {
 			this.userStatus = "";
 			this.emailErr = false;
 			this.currentItem ={}
+			this.loadEmployeeDepartmentData()
 		},
 
 		addUser() {
 			this.clearUserData();
-			this.action = 'Add';
+			this.action = 'Add';			
 			this.userDialog = true;
+			this.updateUserCard++;
 		},
 
 		editUser(value) {
@@ -230,7 +253,8 @@ export default {
 				lastName: Vue.filter("capitalize")(value.last_name), 
 				department: value.department, 
 				fullName: value.display_name, 
-				email: value.email
+				email: value.email,
+				unit: value.unit
 			};			
 			this.userBranch = value.branch;
 			this.userRoles = value.roles.split(',');
@@ -238,6 +262,7 @@ export default {
 			this.emailErr = false;
 			this.action = 'Edit';
 			this.userDialog = true;
+			this.departmentChanged()
 		},
 
 		saveUser(){		
@@ -253,6 +278,7 @@ export default {
 				last_name: this.userName.lastName, 
 				display_name: this.getDisplayName(),
 				department: this.userName.department,
+				unit: this.userName.unit,
 				branch: this.userBranch, 
 				roles: this.userRoles.join(','), 
 				status: this.userStatus? this.userStatus : 'Inactive'				
@@ -284,6 +310,16 @@ export default {
 			const role = this.roleList.filter(role => role.role==roleValue)
 			return (role[0]? role[0].name : '')
 		},
+
+		departmentChanged() {
+            this.unitList = []
+            if (this.userName?.department) {
+				const depts = this.$store.state.recoveries.departmentBranch;				
+				if(depts[this.userName.department]){
+					this.unitList = depts[this.userName.department].units
+				} 
+            }            
+        },
 
 	}
 };

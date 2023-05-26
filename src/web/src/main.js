@@ -28,6 +28,9 @@ Vue.directive("yk-primary", {
   }
 }); */
 
+if(location.pathname.includes('/administration'))
+  history.pushState({page: "Administration"}, "", process.env.BASE_URL+"administration")
+
 axios.defaults.withCredentials = true
 
 new Vue({

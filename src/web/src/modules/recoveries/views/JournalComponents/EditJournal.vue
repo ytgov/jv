@@ -192,38 +192,92 @@
                         @updateTable="updateTable()"/>
                 </v-row>
 
-                <v-row class="mt-10 mb-3 mx-0">
-                    <v-btn color="white" class="ml-5 cyan--text text--darken-4" @click="closeDialog">
-                        <div class="px-3">Close</div>
-                    </v-btn>
-                    <create-journal-export v-if="!readonly" :journalID="journal.journalID" class="ml-auto mr-5"/>
-                    <v-btn
-                        v-if="!readonly"
-                        class="ml-auto mr-5 px-5 white--text"
-                        color="#005a65"
-                        @click="saveNewJournal('Draft')"
-                        :loading="savingData"
-                        >Draft
-                    </v-btn>
-                     <v-btn
-                        v-if="!readonly"
-                        class="ml-2 mr-5 px-5 white--text"
-                        color="#005a65"
-                        @click="saveNewJournal('Send')"
-                        :loading="savingData"
-                        >Send
-                    </v-btn>
-                     <v-btn
-                        v-if="!readonly"
-                        class="ml-2 mr-5 px-5 white--text"
-                        color="#005a65"
-                        @click="saveNewJournal('Paid')"
-                        :loading="savingData"
-                        >Cleared
-                    </v-btn>          
+                <v-row class="mt-15 ml-3">                      
+                    <title-card class="mr-6" titleWidth="11rem">
+                        <template #title>
+                            <div>Journal Documents</div>
+                        </template>
+                        <template #body>
+                            <div style="width:20rem; min-height:2rem;" :key="update" class=" mx-4 blue--text text-h7 text-decoration-underline">
+                                <div v-if="allUploadingDocuments.length>0">
+                                    <div v-for="doc,inx in allUploadingDocuments" :key="inx" class="my-1"> 
+                                        <a :href="doc.file" :download="doc.name" target="_blank" style="color:#643f5d;">
+                                            {{ doc.name }}
+                                        </a>
+                                    </div>
+                                </div>
+                                <div v-if="backupFiles" >
+                                    <div v-for="doc,inx in backupFiles" :key="inx" class="my-1">
+                                        <a color="transparent" class="my-3" @click="downloadDocument(doc.docName)">                                    
+                                            <b>{{ doc.docName }}</b>                                    
+                                        </a> 
+                                    </div>
+                                </div>       
+                            </div>
+                        </template>
+                    </title-card>
+                    <div v-if="!readonly" class="mx-0 px-0" style="width:25%">
+                        <div>
+                            <v-btn class="mx-0 my-0" color="primary" elevation="5" @click="uploadDocument" style="padding:0 4.3rem;">
+                                Upload File
+                                <input
+                                    id="inputfile"
+                                    type="file"
+                                    style="display: none"
+                                    accept="application/pdf"
+                                    @change="handleSelectedFile"
+                                    onclick="this.value=null;"/>
+                            </v-btn>
+                        </div>
+                        <div>
+                            <v-btn v-if="allUploadingDocuments.length>0" class="mx-0 mt-5 cyan--text text--darken-2" color="secondary"  @click="allUploadingDocuments=[]">
+                                Clear Uploaded File(s)
+                            </v-btn>
+                        </div>                         
+                    </div>
+                    <div>
+                        <v-btn v-if="allUploadingDocuments.length>0" class="mx-0 mt-0 white--text" color="#005a65"  @click="saveBackUPFile()">
+                            Save File(s)
+                        </v-btn>
+                    </div>
                 </v-row>
 
-                <v-row class="mt-15 mx-3">
+                <v-card style="margin: 5rem 0.8rem 0 0.7rem;" elevation="1">
+                    <v-row class="my-6 mx-0" >
+                        <v-btn color="white" class="ml-5 cyan--text text--darken-4" @click="closeDialog">
+                            <div class="px-3">Close</div>
+                        </v-btn>
+                        <create-journal-export 
+                            v-if="!readonly" 
+                            type="Export" 
+                            :journalID="journal.journalID" 
+                            class="ml-auto mr-5"/>
+                        <v-btn
+                            v-if="!readonly"
+                            class="ml-auto mr-5 px-5 white--text"
+                            color="#005a65"
+                            @click="saveNewJournal('Draft')"
+                            :loading="savingData"
+                            >Draft
+                        </v-btn>
+                        <create-journal-export 
+                            v-if="!readonly" 
+                            type="Send" 
+                            :journalID="journal.journalID"
+                            @jvSent="saveNewJournal('Send')"
+                            class="ml-2 mr-5"/>                        
+                        <v-btn
+                            v-if="!readonly"
+                            class="ml-2 mr-5 px-5 white--text"
+                            color="#005a65"
+                            @click="saveNewJournal('Paid')"
+                            :loading="savingData"
+                            >Cleared
+                        </v-btn>          
+                    </v-row>
+                </v-card>
+
+                <v-row class="mt-0 mx-3">
                     <v-alert v-model="alert" dense color="red darken-4" dark dismissible>
                         {{ alertMsg }}
                     </v-alert>
@@ -251,13 +305,15 @@ import AuditTable from './AuditTable.vue';
 import RecoverableTable from './RecoverableTable.vue'
 import EditRecoverableTable from "./EditRecoverableTable.vue"
 import CreateJournalExport from './JournalExport/CreateJournalExport.vue';
+import TitleCard from '../../views/Common/TitleCard.vue';
 
 export default { 
     components: {  
         AuditTable,
         RecoverableTable,
         EditRecoverableTable,
-        CreateJournalExport
+        CreateJournalExport,
+        TitleCard
     },
     name: "EditJournal",
     props: {
@@ -278,6 +334,11 @@ export default {
             allDeptRecoveries :[],
             savingData: false,
             loadingData: false,
+
+            reader: new FileReader(),
+            allUploadingDocuments: [],
+            update: 0,
+            backupFiles: [],
 
             tmpId: 0,
             alert:false,
@@ -310,6 +371,8 @@ export default {
             this.initDepartments()     
             this.initStates();
             this.audits=this.journal.journalAudits
+            this.backupFiles=this.journal.docName
+            this.allUploadingDocuments= []
             this.recoveries=this.journal.recoveries
             this.journal.jvDate = this.journal?.jvDate?.slice(0,10)
             this.allDeptRecoveries=this.allRecoveries.filter(rec => rec.department==this.journal.department)
@@ -345,10 +408,11 @@ export default {
             return axios.get(`${RECOVERIES_URL}/journal/${id}`)
             .then((resp) => {                    
                 this.journal.journalAudits = resp.data.journalAudits;
+                this.journal.docName = resp.data.docName
                 this.journal.recoveries = resp.data.recoveries;
                 this.journal.jvAmount = resp.data.jvAmount;
                 this.journal.description = resp.data.description;
-                this.journal.jvDate = resp.data.jvDate.slice(0,10);
+                this.journal.jvDate = resp.data.jvDate?.slice(0,10);
                 this.journal.fiscalYear = resp.data.fiscalYear;
                 this.journal.orgDepartment = resp.data.orgDepartment;
                 this.journal.odCompletedBy = resp.data.odCompletedBy;
@@ -441,6 +505,92 @@ export default {
                     this.alert = true;
                 });
             }
+        },
+
+        async saveBackUPFile() {
+            const journalID= this.journal.journalID;
+            this.alert = false;
+            const docNames = []
+            const bodyFormData = new FormData();
+
+            for(const doc of this.allUploadingDocuments){
+                bodyFormData.append("files", doc.file);
+                docNames.push(doc.name)
+            }
+
+            const data = {
+                docNames: docNames,  
+            };
+            bodyFormData.append("data", JSON.stringify(data));
+
+            const header = {
+                responseType: "application/pdf",
+                headers: {
+                    "Content-Type": "multipart/form-data"
+                }
+            };
+
+            return await axios.post(`${RECOVERIES_URL}/journal-documents/${journalID}`, bodyFormData, header)
+                .then(async() => {
+                    this.savingData = false;
+                    await this.updateTable()
+                    this.backupFiles=this.journal.docName
+                    this.allUploadingDocuments= []          
+                })
+                .catch(e => {
+                    this.savingData = false;
+                    console.log(e.response.data);
+                    this.alertMsg = e.response.data;
+                    this.alert = true;
+                });      
+        },
+
+        uploadDocument() { 
+            this.alert=false;           
+            const el = document.getElementById("inputfile");
+            if (el) el.click();
+        },
+
+        handleSelectedFile(event) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            if (event.target.files && event.target.files[0]) {
+                const file = event.target.files[0];              
+
+                this.reader.onload = () => {
+                    this.allUploadingDocuments.push({file: this.reader.result, name: file.name, type: file.type})                    
+                    this.update++;
+                };
+                this.reader.readAsDataURL(file);
+            }
+        },
+
+        downloadDocument(docName){
+            if(!this.journal.journalID) return
+
+            this.savingData = true;
+            const header = {
+                responseType: "application/pdf",
+                headers: {
+                "Content-Type": "application/text"
+                }
+            };
+
+            axios.get(`${RECOVERIES_URL}/journal-documents/${this.journal.journalID}/${docName}`, header)
+                .then(res => {
+                    this.savingData = false;
+                    const link = document.createElement("a");
+                    link.href = res.data;
+                    document.body.appendChild(link);
+                    link.download = docName;
+                    link.click();
+                    setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+                })
+                .catch(e => {
+                    this.savingData = false;
+                    console.log(e);
+                });            
         },
                
 

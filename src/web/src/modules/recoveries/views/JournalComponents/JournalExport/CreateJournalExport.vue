@@ -3,24 +3,27 @@
         <v-dialog v-model="exportJournalDialog" persistent max-width="65%">
             <template v-slot:activator="{ on, attrs }">
                 <v-btn                    
-                    color="#007a65"
+                    color="#005a65"
                     class="px-5 white--text"
                     style="min-width: 0"
                     @click="initForm()"
                     v-bind="attrs"
                     v-on="on"
                     >
-                    Create Journal Export                  
+                    <div v-if="type=='Send'">Send</div>
+                    <div v-else>Create Journal Export</div>
                 </v-btn>
             </template>
 
         <v-card >
             <v-card-title class="primary" style="border-bottom: 1px solid black">
-                <div class="text-h5">
+                <div v-if="type=='Send'" class="text-h5">Send Journal Voucher</div>
+                <div v-else class="text-h5">
                     Create Journal Export
                 </div>
                 <v-btn :loading="loadingData || savingData" color="#005a65" class="ml-auto white--text" @click="exportJournal()">
-                    <div class="px-1">Export</div>
+                    <div v-if="type=='Send'" class="px-1">Send</div>
+                    <div v-else class="px-1">Export</div>
                 </v-btn>
                 <v-btn color="white" class="ml-5 cyan--text text--darken-4" @click="closeDialog">
                     <div class="px-1">Close</div>
@@ -59,6 +62,7 @@ export default {
     name: "CreateJournalExport",
     props: {        
         journalID: {},
+        type: {}
     },
     data() {
         return {
@@ -96,9 +100,13 @@ export default {
         
         async exportJournal(){
             this.savingData = true;
-            await this.downloadExcel();
+            if(this.type=='Export') await this.downloadExcel();
             await this.downloadPdf();
             this.savingData = false;
+            if(this.type=='Send') {
+                this.$emit('jvSent');
+                this.exportJournalDialog= false
+            }
         },
 
         async downloadExcel(){
@@ -113,13 +121,15 @@ export default {
 
             return axios.get(`${PDF_URL}/excel/${id}`, header)
                 .then(async res => {
-                    const blob = res.data;
-                    const link = document.createElement("a");
-                    link.href = URL.createObjectURL(blob);
-                    document.body.appendChild(link);
-                    link.download = `Jv-${jvNum}.xlsx`;
-                    link.click();
-                    await setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+                    if(this.type=='Export'){
+                        const blob = res.data;
+                        const link = document.createElement("a");
+                        link.href = URL.createObjectURL(blob);
+                        document.body.appendChild(link);
+                        link.download = `Jv-${jvNum}.xlsx`;
+                        link.click();
+                        await setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+                    }
                     return
                 })
                 .catch(e => {
@@ -132,11 +142,16 @@ export default {
             const data = []
             const currentTime = (new Date()).toLocaleString()
             const jvNum = this.journal.jvNum
+            
             //JOURNAL
             const jvEl = document.getElementById("journal-print");
             const footerText =  "Journal Voucher "+jvNum+'; Printed on ' + currentTime            
-            const jvHtml = Vue.filter('printPdf')(jvEl?.innerHTML, "Journal Voucher", footerText, "");            
-            data.push({html:jvHtml, backupDocs:[]})
+            const jvHtml = Vue.filter('printPdf')(jvEl?.innerHTML, "Journal Voucher", footerText, "");
+            const journalDocNames = []
+            for(const doc of this.journal.docName){
+                journalDocNames.push({docName:doc.docName, id:this.journal.journalID, itemCategory:false, journal:true})
+            }       
+            data.push({html:jvHtml, backupDocs:journalDocNames})
             
             
             //RECOVERIES
@@ -150,7 +165,7 @@ export default {
                 const recHtml = Vue.filter('printPdf')(recEl?.innerHTML, "Recovery", footerText, "");
                 const docNames = []
                 for(const doc of recovery.docName){
-                    docNames.push({docName:doc.docName, id:recovery.recoveryID, itemCategory:false})
+                    docNames.push({docName:doc.docName, id:recovery.recoveryID, itemCategory:false, journal:false})
                 }
                 
                 const recoveryItems = recovery.recoveryItems
@@ -159,7 +174,7 @@ export default {
                     if(index>-1){
                         const docs = activeItemCategoryList[index].docName
                         for(const doc of docs){
-                            docNames.push({docName:doc.docName, id:item.itemCatID, itemCategory:true})
+                            docNames.push({docName:doc.docName, id:item.itemCatID, itemCategory:true, journal:false})
                         }
                     }
                 })
@@ -174,16 +189,20 @@ export default {
                 }
             };
 
-            return axios.post(`${PDF_URL}/merge`,{data}, header)
+            const type = this.type=='Send'? 'email': 'merge'
+
+            return axios.post(`${PDF_URL}/${type}/${this.journal.journalID}`,{data}, header)
                 .then(async res => {
-                    const blob = res.data;
-                    const link = document.createElement("a");
-                    link.href = URL.createObjectURL(blob);
-                    document.body.appendChild(link);
-                    link.download = `Jv-${jvNum}.pdf`;
-                    link.click();
-                    await setTimeout(() => URL.revokeObjectURL(link.href), 1000);
-                    return
+                    if(this.type=='Export'){                       
+                        const blob = res.data;
+                        const link = document.createElement("a");
+                        link.href = URL.createObjectURL(blob);
+                        document.body.appendChild(link);
+                        link.download = `Jv-${jvNum}.pdf`;
+                        link.click();
+                        await setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+                    }
+                    return                     
                 })
                 .catch(e => {
                     console.log(e);
@@ -204,6 +223,10 @@ export default {
 
 <style scoped>
 
+    ::v-deep(*) {
+        font-family: Arimo !important;
+    }
+
     .container {
         padding: 40px 40px !important; 
         margin-top: 1rem !important;
@@ -212,7 +235,7 @@ export default {
         width: 100% !important;
         max-width: 750px !important;
         min-width: 750px !important;   
-        font-size: 10pt !important;         
+        font-size: 10pt !important;        
         color: #313132 !important;
     }
     .print-display {display: none !important;}

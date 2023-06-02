@@ -21,11 +21,15 @@ lookupRouter.get("/department-branch", RequiresAuthentication, ReturnValidationE
     for (const slice of departments) {
       if (cleanList[slice.department] == null)
         cleanList[slice.department] = {
-          branches: []
+          branches: [],
+          units: []
         };
 
       if (slice.branch && !cleanList[slice.department].branches.includes(slice.branch))
         cleanList[slice.department].branches.push(slice.branch);
+
+      if (slice.unit && !cleanList[slice.department].units.includes(slice.unit))
+        cleanList[slice.department].units.push(slice.unit);
     }    
     res.status(200).json(cleanList);
   } catch (error: any) {

@@ -1,5 +1,5 @@
 <template>
-    <div class="mt-15 mx-10 mb-5">
+    <div class="mt-5 mx-10 mb-5">
         <!-- <v-row>
             <new-recovery 
                 class="ml-auto mb-5 mr-4 mt-n10"  
@@ -12,19 +12,45 @@
         </v-row> -->
 
         <v-row class="my-0 mx-0">
-			
-            <v-btn 
-                :disabled="recoveries.length == 0"     
-                @click="exportToExcel()"          
-                class="ml-auto"
-                elevation="5"
-                color="primary">
-                Export To Excel
-            </v-btn>
+            <v-col cols="3">
+                <v-text-field                
+                    v-model="searchPhrase"
+                    label="Search Key"                            
+                    outlined
+                    clearable
+                    dense
+                />
+            </v-col>
+
+            <v-col cols="7">
+                <v-radio-group
+                class="mt-1"
+                    v-model="searchKey"
+                    dense
+                    row>
+                    <v-radio 
+                        v-for="searchitem,inx in searchKeyList"
+                        :key="inx"
+                        :label="searchitem.text"
+                        :value="searchitem.value"
+                    />
+                   
+                </v-radio-group>
+            </v-col>
+			<v-col cols="2">
+                <v-btn 
+                    :disabled="filteredRecoveries.length == 0"     
+                    @click="exportToExcel()"          
+                    class="float-right mt-0"
+                    elevation="5"
+                    color="primary">
+                    Export To Excel
+                </v-btn>
+            </v-col>
 		
 		</v-row>
 
-        <v-data-table :headers="headers" :items="recoveries" :items-per-page="10" class="elevation-1">
+        <v-data-table :headers="headers" :items="filteredRecoveries" :items-per-page="10" class="elevation-1">
             <!-- eslint-disable-next-line vue/no-unused-vars -->
             <template v-slot:[`item.submissionDate`]="{ item }">
                 <!-- eslint-disable-next-line vue/no-parsing-error -->
@@ -108,9 +134,10 @@ export default {
             headers: [
                 { text: "Recovery Branch", value: "branch", class: "blue-grey lighten-4" },
                 { text: "Reference", value: "refNum", class: "blue-grey lighten-4" },
-                { text: "Technician", value: "createUser", class: "blue-grey lighten-4" },
+                { text: "Agent", value: "createUser", class: "blue-grey lighten-4" },
                 { text: "Requestor", value: "requestor", class: "blue-grey lighten-4" },
                 { text: "Department", value: "department", class: "blue-grey lighten-4" },
+                { text: "Unit", value: "employeeUnit", class: "blue-grey lighten-4" },
                 { text: "Items", value: "recoveryItems", class: "blue-grey lighten-4" },
                 // { text: "Quantity", value: "quantity", class: "blue-grey lighten-4" },
                 { text: "Cost", value: "totalPrice", class: "blue-grey lighten-4" },
@@ -121,17 +148,44 @@ export default {
             ],
             admin: false,
             itemCategoryList: {},
+            searchKey:"all",
+            searchPhrase:"",
+            searchKeyList:[
+                { text: "Any", value: "all"},
+                { text: "Agent", value: "createUser"},
+                { text: "Branch", value: "branch"},
+                { text: "Department", value: "department"},
+                { text: "Unit", value: "employeeUnit"},                
+                { text: "Requestor", value: "requestor"},
+                { text: "Items", value: "recoveryItem"},
+                { text: "Status", value: "status"}
+            ],
+            searchAllList:["branch","refNum","createUser","requestor","department","employeeUnit","recoveryItem","status","jvNum","submissionDate"]
         };
     },
     mounted() {
         // this.admin = Vue.filter("isAdmin")();
-        this.initItemCategory()
-        // const dialogId = this.$store.state.preapproved.openDialogId;
-        // const el = document.getElementById(dialogId);
-        // if (el) {
-        // this.$store.commit("preapproved/SET_OPEN_DIALOG_ID", "");
-        // el.click();
-        // }
+        this.initItemCategory()        
+    },
+    computed: {
+        filteredRecoveries(){
+            for(const recovery of this.recoveries){
+                recovery.requestor = recovery.firstName+ ' '+ recovery.lastName;
+                recovery.recoveryItem = this.getRecoveryItems(recovery);
+            }
+            if(this.searchKey=='all' && this.searchPhrase)
+                return this.recoveries.filter(rec => {                    
+                    for(const key of this.searchAllList){                        
+                        if(rec[key]?.toLowerCase().includes(this.searchPhrase.toLowerCase()))
+                            return true
+                    }
+                    return false 
+                })
+            else if(this.searchKey && this.searchPhrase)
+                return this.recoveries.filter(rec => rec[this.searchKey]?.toLowerCase().includes(this.searchPhrase.toLowerCase()))
+            else
+                return this.recoveries
+        }
     },
     methods: {
         updateTable() {
@@ -150,13 +204,14 @@ export default {
         },
         exportToExcel(){           
 
-            const csvInfo = this.recoveries.map(rec =>{
+            const csvInfo = this.filteredRecoveries.map(rec =>{
                 return {
                     branch: rec.branch?rec.branch:'',
                     refNum: rec.refNum?rec.refNum:'', 
                     createUser: rec.createUser?rec.createUser:'', 
                     requestor: (rec.firstName?rec.firstName + ' ':'')+ (rec.lastName?rec.lastName:''),
                     department: rec.department?rec.department:'',
+                    unit: rec.employeeUnit? rec.employeeUnit:'',
                     recoveryItems: rec.recoveryItems?this.getRecoveryItems(rec):'',					
                     totalPrice: rec.totalPrice?'$'+rec.totalPrice:'',                   
                     submissionDate: rec.submissionDate?Vue.filter('beautifyDate')(rec.submissionDate):'',
@@ -175,7 +230,7 @@ export default {
                 useTextFile: false,
                 useBom: true,
                 useKeysAsHeaders: false,
-                headers: ['Recovery Branch', 'Reference', 'Technician', 'Requestor', 'Department', 'Items', 'Cost', 'Date Submitted', 'Status', 'JV #']
+                headers: ['Recovery Branch', 'Reference', 'Agent', 'Requestor', 'Department', 'Unit', 'Items', 'Cost', 'Date Submitted', 'Status', 'JV #']
             };
             const csvExporter = new ExportToCsv(options);
             csvExporter.generateCsv(csvInfo);

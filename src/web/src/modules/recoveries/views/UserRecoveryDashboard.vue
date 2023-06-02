@@ -6,7 +6,7 @@
         <div v-if="!loadingData">          
             <div class="my-10 mx-3 text-h4">Recoveries</div> 
 
-            <title-card class="mt-5" titleWidth="9.5rem">
+            <title-card class="mt-5" titleWidth="11rem">
                 <template #title>
                     <div>Pending Requests</div>
                 </template>
@@ -15,7 +15,7 @@
                 </template>
             </title-card>
 
-            <title-card class="mt-15" titleWidth="9.5rem">
+            <title-card class="mt-15" titleWidth="11rem">
                 <template #title>
                     <div>Pending Approvals</div>
                 </template>

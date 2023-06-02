@@ -26,7 +26,7 @@
 
             <v-card-text>
                 <v-row class="mt-5 mx-0">
-                    <v-col cols="6">
+                    <v-col cols="4">
                         <v-autocomplete
                             :readonly="readonly"
                             @change="state.employeeNameErr = false;employeeChanged();"
@@ -39,7 +39,7 @@
                             outlined
                         />                        
                     </v-col>
-                    <v-col cols="6">
+                    <v-col cols="3">
                         <v-text-field
                             :readonly="readonly"
                             :error="state.employeeMailCdErr"
@@ -49,11 +49,22 @@
                             outlined
                             :clearable="!readonly"
                         />
-                    </v-col>                                        
+                    </v-col>
+                    <v-col cols="5">
+                        <v-text-field
+                            :readonly="readonly"
+                            :error="state.requastorEmailErr"
+                            @input="state.requastorEmailErr = false"
+                            v-model="requastorEmail"
+                            label="Requestor EMail"                            
+                            outlined
+                            :clearable="!readonly"
+                        />
+                    </v-col>                                       
                 </v-row>
 
                 <v-row class="mt-0 mx-0">
-                    <v-col cols="6">
+                    <v-col cols="4">
                         <v-select
                             :readonly="readonly"
                             :error="state.departmentErr"
@@ -65,7 +76,17 @@
                             outlined
                         />
                     </v-col>
-                    <v-col cols="6">
+                    <v-col cols="4">
+                        <v-select
+                            :readonly="readonly"                            
+                            v-model="employeeUnit"
+                            :items="unitList"
+                            item-text="name"
+                            label="Requestor Unit"
+                            outlined
+                        />                      
+                    </v-col>
+                    <v-col cols="4">
                         <v-select
                             :readonly="readonly"
                             :error="state.employeeBranchErr"
@@ -99,6 +120,14 @@
                             hint="Incident #, Project #"
                             outlined
                             :clearable="!readonly"
+                        />
+                    </v-col>
+                    <v-col cols="3">
+                        <v-text-field
+                            :readonly="readonly && !userView"                            
+                            v-model="requestDescription"
+                            label="Request Description"                            
+                            outlined                            
                         />
                     </v-col>
                 </v-row>
@@ -140,11 +169,23 @@
                                     solo
                                 />
                             </template>
+                            <template v-slot:[`item.changeQuantity`]="{ item }">
+                                <div class="mx-auto d-flex justify-center">
+                                    <v-checkbox
+                                        :readonly="readonly"
+                                        class="mt-n1"                                                                                                           
+                                        hide-details
+                                        solo                                                                       
+                                        v-model="item.changeQuantity"
+                                        />
+                                </div>
+                            </template>
                             <template v-slot:[`item.quantity`]="{ item }">
                                 <v-text-field
+                                    :background-color="item.changeQuantity && userView? '#E8F5E9':'#FFF'"                                    
                                     dense
                                     hide-details
-                                    :readonly="type=='Fill' || type=='Complete'"
+                                    :readonly="type=='Fill' || type=='Complete' || (!item.changeQuantity && userView)"
                                     :error="item.state.quantityErr"
                                     @input="item.state.quantityErr=false; calculateTotalPrice();"                                    
                                     v-model="item.quantity"
@@ -153,12 +194,13 @@
                             </template>
                             <template v-slot:[`item.unitPrice`]="{ item }">
                                 <v-text-field
+                                    :background-color="type=='Fill'? '#E8F5E9':'#FFF'"
                                     dense
                                     hide-details
                                     :error="item.state.unitPriceErr"
                                     @input="item.state.unitPriceErr=false; calculateTotalPrice(true);"
                                     @change="item.state.unitPriceErr=false; calculateTotalPrice();"
-                                    :readonly="readonly"
+                                    :readonly="readonly && type!='Fill'"
                                     v-model="item.unitPrice"
                                     prefix="$"
                                     solo
@@ -186,6 +228,18 @@
                                 />
                             </template>
 
+                            <template v-slot:[`item.approvedCost`]="{ item }">                               
+                                <v-text-field
+                                    dense 
+                                    solo
+                                    hide-details
+                                    :error="item.state.approvedCostErr"
+                                    readonly
+                                    v-model="item.approvedCost"                                    
+                                    prefix="$"                                    
+                                />
+                            </template>
+
                             <template v-slot:[`item.clientChange`]="{ item }">
                                 <v-text-field
                                     dense                                    
@@ -199,15 +253,16 @@
                             </template>
 
                             <template v-slot:[`item.orderFilled`]="{ item }">
-                                <v-checkbox
-                                    class="ml-4 mt-n1"
-                                    dense
-                                    @change="fillOrderChanged(item)"
-                                    :readonly="type=='Complete'"                                    
-                                    hide-details                                    
-                                    v-model="item.orderFilled"
-                                    solo
-                                />
+                                <div class="d-flex justify-center">
+                                    <v-checkbox                                    
+                                        :class="type=='Fill'? 'mt-n1 mr-n2 bg-success':'mt-n1 mr-n2'"                                    
+                                        @change="fillOrderChanged(item)"
+                                        :readonly="type=='Complete'"                                    
+                                        hide-details                                    
+                                        v-model="item.orderFilled"
+                                        solo
+                                    />
+                                </div>
                             </template>
 
                             <template v-slot:[`item.filledBy`]="{ item }">
@@ -244,10 +299,27 @@
                     </v-col>
                 </v-row>
 
+                <div v-if="recovery.status == 'Re-Draft'">
+                    <v-row class="mt-2 text-h6 mx-3 brown--text text--darken-2">
+                        The Request declined by the Approver because:
+                    </v-row>
+                    <v-row class="mt-n5 mx-3">                    
+                        <v-textarea
+                            background-color="#FFE9C3"
+                            readonly
+                            class="mt-5 text-warning"                                                               
+                            outlined
+                            :rules="rules"
+                            :rows="3"
+                            v-model="reasonForDecline"                    
+                        />
+                    </v-row>
+                </div>
+
                 <v-row class="mt-10 ml-3">
                     <v-col cols="7">
                         <v-row class="mx-0">
-                            <title-card class="mr-6" titleWidth="4.5rem">
+                            <title-card class="mr-6" titleWidth="5rem">
                                 <template #title>
                                     <div>Back-up</div>
                                 </template>
@@ -301,14 +373,14 @@
                     </v-col>
                     <v-col cols="5" class="mx-0">
                         <v-row class="mx-0">
-                            <v-btn v-if="!readonly" class="ml-auto mr-5 my-auto" color="primary" elevation="5" @click="saveNewRecovery('Routed For Approval')">
+                            <v-btn v-if="routeForApprovalBtn" class="ml-auto mr-5 my-auto" color="primary" elevation="5" @click="saveNewRecovery('Routed For Approval')">
                                 Route For Approval                        
                             </v-btn>
                             
                             <v-row v-if="revertBtn || approveBtn" class="mx-0">
                                 <v-col cols="4">
-                                    <v-btn v-if="revertBtn" class="float-right my-0" color="primary" elevation="5" @click="saveNewRecovery('Re-Draft')">
-                                        Revert to Draft                        
+                                    <v-btn v-if="revertBtn" class="float-right my-0" color="primary" elevation="5" @click="declineDialog=true">
+                                        Decline Request                        
                                     </v-btn>
                                 </v-col>
                                 <v-col cols="8">
@@ -368,6 +440,38 @@
             </v-btn>
         </v-card-actions>
       </v-card>
+
+
+      <v-dialog v-model="declineDialog" persistent max-width="30%">
+        <v-card>
+            <v-card-title class="warning white--text">
+                <b class="text-h5">Decline Request</b>
+            </v-card-title>
+            <v-card-text>
+                <v-textarea
+                    class="mt-5"                                       
+                    label="Reason For Decline "                                
+                    outlined
+                    :rules="rules"
+                    :rows="5"
+                    v-model="reasonForDecline"                    
+                />
+            </v-card-text>
+            <v-card-actions class="mt-n5 mb-3">
+                <v-btn color="white" class="ml-5 cyan--text text--darken-4" @click="declineDialog=false">                    
+                    Cancel
+                </v-btn>            
+                <v-btn
+                    :disabled="!reasonForDecline || (reasonForDecline && reasonForDecline.length<10)"                  
+                    class="ml-auto mr-5 px-5 white--text"
+                    color="#005a65"
+                    @click="declineDialog=false;saveNewRecovery('Re-Draft')"
+                    :loading="savingData"
+                    > Confirm
+                </v-btn>
+            </v-card-actions>
+        </v-card>
+      </v-dialog>
     </v-dialog>
    
   </div>
@@ -401,14 +505,21 @@ export default {
                 { text: "Action", value: "action", class: "grey lighten-4", cellClass: "px-1 py-1", width: "40%" },
                 { text: "User",   value: "user",   class: "grey lighten-4", cellClass: "px-1 py-1", width: "40%" },                
             ],
+            
+            rules: [v => v?.length <= 255 || 'Max 255 characters'],
 
             admin: false,
             addNewRecoveryDialog: false,
+            declineDialog: false,
             
             department: "",
             employeeName: "",
+            requastorEmail: "",
             employeeBranch: "",
+            employeeUnit: "",
             employeeMailCd: "",
+            requestDescription: "",
+            reasonForDecline: "",
             refNum: '',
             recoveryID: '',
             recoveryItems: [],
@@ -417,6 +528,7 @@ export default {
 
             departmentList: [],
             branchList: [],
+            unitList: [],
             employeeList: [],
             itemCategoryList: [],
             itemCategoryListAll: [],
@@ -437,6 +549,10 @@ export default {
             completeBtn: false,
             supervisor: false,
 
+            
+            userView: false,
+            routeForApprovalBtn: false,
+
             total: 0,
 
             reader: new FileReader(),
@@ -447,7 +563,8 @@ export default {
             alertMsg:'',
 
             state: {
-                employeeNameErr: false,          
+                employeeNameErr: false,
+                requastorEmailErr: false,         
                 refNumErr: false,
                 departmentErr: false,
                 recoveryItemsErr: false,          
@@ -464,10 +581,12 @@ export default {
             this.supervisor = Vue.filter("isBranchAdmin")();
             this.readonly = this.type != "Add New" && this.type != "Edit";
             this.approveBtn = this.type == "Approve";
-            this.revertBtn = this.type == "Approve" && this.admin;
+            this.revertBtn = this.type == "Approve";
             this.saveBtn = this.type == "Fill";
             this.uploadBtn = this.type != "Approve" && this.type != "Complete"
             this.alert=false;
+            this.userView = this.type == "Approve";
+            this.routeForApprovalBtn = !this.readonly
 
             if(this.type == "Complete")
                 await this.loadRecovery()
@@ -480,9 +599,13 @@ export default {
             if(this.type=="Add New"){
                 this.department = ""
                 this.employeeName = ""
+                this.requastorEmail = ""
                 this.employeeBranch = ""
+                this.employeeUnit = ""
                 this.employeeMailCd = ""
+                this.reasonForDecline = ""
                 this.refNum = ''
+                this.requestDescription = ''
                 this.recoveryID = ''
                 this.recoveryItems = []
                 this.recoveryAudits = []
@@ -490,9 +613,15 @@ export default {
                 this.department = this.recovery.department;
                 this.departmentChanged();                                
                 this.employeeName = this.recovery.firstName+'.'+this.recovery.lastName;
-                Vue.nextTick(() => this.employeeBranch = this.recovery.employeeBranch );
+                this.requastorEmail = this.recovery.requastorEmail;
+                Vue.nextTick(() => {
+                    this.employeeBranch = this.recovery.employeeBranch;
+                    this.employeeUnit = this.recovery.employeeUnit;
+                });
                 this.employeeMailCd = this.recovery.mailcode;
                 this.refNum = this.recovery.refNum;
+                this.requestDescription = this.recovery.description
+                this.reasonForDecline = this.recovery.reasonForDecline
                 this.recoveryID = this.recovery?.recoveryID ? this.recovery.recoveryID : '';
                 this.recoveryItems = this.recovery.recoveryItems;
                 this.recoveryAudits = this.recovery.recoveryAudits.sort((a,b)=>{ return (a.date > b.date ? -1 :1) });
@@ -519,10 +648,12 @@ export default {
         initItemHeader(){
             const item =  { text: "Item",         value: "itemCategory", class: "blue-grey lighten-4", cellClass: "px-1 py-1", sortable: false};
             const desc =  { text: "Description",  value: "description",  class: "blue-grey lighten-4", cellClass: "px-1 py-1", sortable: false};
+            const chxqnt= { text: "Can Change Quantity",value:"changeQuantity",class: "blue-grey lighten-4", cellClass: "px-1 py-1", sortable: false};
             const qnt =   { text: "Quantity",     value: "quantity",     class: "blue-grey lighten-4", cellClass: "px-1 py-1", sortable: false};
             const price = { text: "Unit Price",   value: "unitPrice",    class: "blue-grey lighten-4", cellClass: "px-1 py-1", sortable: false};
             const cost =  { text: "Cost",         value: "totalPrice",   class: "blue-grey lighten-4", cellClass: "px-1 py-1", sortable: false};  
             const rvCost= { text: "Revised Cost", value: "revisedCost",  class: "blue-grey lighten-4", cellClass: "px-1 py-1", sortable: false};
+            const apCost= { text: "Approved Cost",value: "approvedCost", class: "blue-grey lighten-4", cellClass: "px-1 py-1", sortable: false};
             const fill  = { text: "Filled",       value: "orderFilled",  class: "blue-grey lighten-4", cellClass: "px-1 py-1", sortable: false};
             const fillBy= { text: "Filled By",    value: "filledBy",     class: "blue-grey lighten-4", cellClass: "px-1 py-1", sortable: false};
             const change= { text: "Client Change",value: "clientChange", class: "blue-grey lighten-4", cellClass: "px-1 py-1", sortable: false};
@@ -530,16 +661,16 @@ export default {
             
             this.itemHeaders = []
             if(this.type=='Add New' || this.type=='Edit'){
-                this.itemHeadersWidth=[19,40,10,13,15,3];
-                this.itemHeaders.push(item,desc,qnt,price,cost,remove);
+                this.itemHeadersWidth=[19,28,9,14,12,15,3];
+                this.itemHeaders.push(item,desc,qnt,chxqnt,price,cost,remove);
             }
             if(this.type=='Approve'){
                 this.itemHeadersWidth=[13,25,8,10,12,12,20];
                 this.itemHeaders.push(item,desc,qnt,price,cost,rvCost,change);
             }
             if(this.type=='Fill'|| this.type=='Complete'){
-                this.itemHeadersWidth=[11,22,7,9,9,9,4,14,15];
-                this.itemHeaders.push(item,desc,qnt,price,cost,rvCost,fill,fillBy,change)
+                this.itemHeadersWidth=[11,15,7,9,9,9,9,4,14,13];
+                this.itemHeaders.push(item,desc,qnt,price,cost,rvCost,apCost,fill,fillBy,change)
             }
 
             for(const inx in this.itemHeaders){
@@ -559,7 +690,9 @@ export default {
                     fullName: item.fullName,
                     department: item.department,
                     branch: item.branch,
-                    mailcode: item.mailcode
+                    mailcode: item.mailcode,
+                    unit: item.unit,
+                    email: item.email
                 };//.sort((a, b) => (a.fullName >= b.fullName ? 1 : -1));
             });
         },
@@ -573,6 +706,7 @@ export default {
                     price:item.price, 
                     branch:item.branch, 
                     description:item.description,
+                    changeQuantity: item.changeQuantity,
                     docName:item.docName
                 }
             })
@@ -588,7 +722,7 @@ export default {
             this.departmentList = [];
             const depts = this.$store.state.recoveries.departmentBranch;
             for (const key of Object.keys(depts)) {
-                this.departmentList.push({ name: key, branches: depts[key].branches });                
+                this.departmentList.push({ name: key, branches: depts[key].branches, units: depts[key].units });                
             }
         },
 
@@ -597,6 +731,7 @@ export default {
                 tmpId: this.tmpId,
                 itemCatID: null,
                 description: '',
+                changeQuantity: false,
                 quantity: 0,
                 unitPrice: 0,
                 totalPrice: '', 
@@ -605,6 +740,7 @@ export default {
                     descriptionErr: false,
                     quantityErr: false,
                     unitPriceErr: false,
+                    approvedCostErr: false,
                     clientChangeErr: false
                 }
             }
@@ -623,16 +759,19 @@ export default {
                 else{
                     item.revisedCost = total.toFixed(2)
                     item.totalPrice = Number(item.totalPrice).toFixed(2)
+                    item.approvedCost = Number(item.approvedCost).toFixed(2)
                 }
                     
                 this.total += total
             }
+            this.checkTotalApproval()
         },
 
         itemCategoryChanged(item){
             const category = this.itemCategoryList.filter(cat => cat.value==item.itemCatID)[0]
             item.unitPrice = category?.price? category.price : 0
             item.description = category?.description? category.description: ""
+            item.changeQuantity = category?.changeQuantity? category.changeQuantity: false
             this.calculateTotalPrice()
             this.extractItemCategoryDocuments()
         },
@@ -656,18 +795,39 @@ export default {
                 this.department =employee? employee.department :''
                 this.departmentChanged();
                 Vue.nextTick(()=>{
+                    this.employeeUnit = employee? employee.unit :''
                     this.employeeBranch = employee? employee.branch :''
                     this.employeeMailCd = employee? employee.mailcode :''
+                    this.requastorEmail = employee? employee.email : ''
                 })                                    
             }            
-        }, 
+        },
+        
+        checkTotalApproval(){
+            this.routeForApprovalBtn = !this.readonly;
+            this.saveBtn = this.type == "Fill";
+
+            if(this.type=="Fill")
+                for(const item of this.recoveryItems){
+                    const total = Number(item.unitPrice) * Number(item.quantity)
+                    item.state.approvedCostErr = false;
+                    if(total>Number(item.approvedCost)) {
+                        item.state.approvedCostErr = true;
+                        this.routeForApprovalBtn = true;
+                        this.saveBtn = false;
+                    }
+                }
+        },  
 
         departmentChanged() {
             
             if (this.department) { 
-                this.branchList =  this.departmentList.filter(department => department.name == this.department)[0].branches; 
+                const dept = this.departmentList.filter(department => department.name == this.department)[0]
+                this.branchList = dept? dept.branches: []; 
+                this.unitList = dept? dept.units: [];
                 this.state.employeeBranchErr = false
-                this.employeeBranch =''                                
+                this.employeeBranch =''
+                this.employeeUnit = ''                                
             }            
         },
         
@@ -689,7 +849,7 @@ export default {
         },
 
         checkFields() {
-            if (this.allUploadingDocuments.length>0) {
+            if (this.allUploadingDocuments?.length>0) {
                 for(const doc of this.allUploadingDocuments){
                     if(doc.type != 'application/pdf'){
                         this.alertMsg = "Please upload the Quote PDF file.";
@@ -713,9 +873,10 @@ export default {
                 this.state.employeeNameErr = this.employeeName? false : true;          
                 // this.state.refNumErr = this.refNum? false : true;
                 this.state.departmentErr = this.department? false : true;
+                this.state.requastorEmailErr = this.requastorEmail? false : true;
                 // this.state.employeeBranchErr = this.employeeBranch? false : true;
                 // this.state.employeeMailCdErr = this.employeeMailCd? false : true;
-                this.state.recoveryItemsErr = this.recoveryItems.length>0? false : true;
+                this.state.recoveryItemsErr = this.recoveryItems?.length>0? false : true;
 
                 let itemErr=false
                 for(const item of this.recoveryItems){ 
@@ -756,9 +917,15 @@ export default {
                         department: this.department,
                         branch: this.getItemsBranch(),
                         employeeBranch: this.employeeBranch,
+                        employeeUnit: this.employeeUnit,
                         mailcode: this.employeeMailCd,
-                        refNum: this.refNum,                                
+                        requastorEmail: this.requastorEmail,
+                        refNum: this.refNum,
+                        description: this.requestDescription                                
                     };
+                    for(const item of body.recoveryItems){
+                        item.orderFilled = false
+                    }
                 }else if (status == 'Complete'){
                     body = { ...body,
                         completeDate: new Date(),
@@ -766,8 +933,22 @@ export default {
                     };
                 }else if (status == 'Purchase Approved'){
                     body = { ...body,
-                        submissionDate: new Date(),               		                
+                        submissionDate: new Date(),
+                        description: this.requestDescription,
+                        declineRequest: false                                    		                
                     };
+                    for(const item of body.recoveryItems){
+                        item.approvedCost = (Number(item.unitPrice) * Number(item.quantity)).toFixed(2)
+                    }                
+                }else if (status == 'Re-Draft'){
+                    body = { ...body,
+                        description: this.requestDescription,
+                        reasonForDecline: this.reasonForDecline.slice(0,255),
+                        declineRequest: true              		                
+                    };
+                    for(const item of body.recoveryItems){
+                        item.approvedCost = null
+                    }
                 }
                 // console.log(body);
                 const id = this.recovery?.recoveryID ? this.recovery.recoveryID : 0;
@@ -916,7 +1097,7 @@ export default {
 
         getActionType(status){
             if(status=='Routed For Approval') return 'Routed For Approval'
-            if(status=='Re-Draft') return 'Revert to Draft'
+            if(status=='Re-Draft') return `Request Declined (${this.reasonForDecline.slice(0,25)}...)`
             if(status=='Purchase Approved') return 'Purchase Approved'
             if(status=='Partially Fullfilled') return 'Partially Filled Items'
             if(status=='Fullfilled') return 'Filled Items'
@@ -938,6 +1119,14 @@ export default {
 .v-text-field--solo.error--text{
     background: red;
     border: 1px solid red;
+}
+::v-deep(.text-warning textarea){
+  color: #563B00 !important;
+}
+
+::v-deep(.bg-success .v-input--selection-controls__input) {
+    background: #E8F5E9 !important;    
+    
 }
 /* 
 ::v-deep(tbody tr:nth-of-type(even)) {

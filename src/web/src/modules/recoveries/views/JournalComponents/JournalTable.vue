@@ -1,7 +1,7 @@
 <template>
-    <div class="mt-15 mx-10 mb-5"> 
+    <div class="mt-5 mx-10 mb-5"> 
 
-        <v-row class="my-0 mx-0">			
+        <v-row class="mt-n2 mb-3 mx-0">			
             <v-btn 
                 :disabled="journals.length == 0"     
                 @click="exportToExcel()"          

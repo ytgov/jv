@@ -1,10 +1,10 @@
 <template>
-	<v-card :loading="loadingData" :disabled="loadingData" en class="px-5 pb-15">
+	<v-card :loading="loadingData" :disabled="loadingData" en class="px-5 pb-15" style="width:100%;">
 		<h1>Administration</h1>
 		
 		<Breadcrumbs />
 		<v-row>
-			<v-col cols="6">
+			<v-col cols="12">
 				<v-card elevation="1">				
 					<v-list class="pb-0 pt-0">
 						<v-list-item-group>
@@ -38,8 +38,7 @@
 						</v-list-item-group>
 					</v-list>
 				</v-card>
-			</v-col>
-			<v-col cols="6"/>			
+			</v-col>						
 		</v-row>
 	</v-card>
 </template>

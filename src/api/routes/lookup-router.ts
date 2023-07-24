@@ -88,7 +88,7 @@ function timeToUpdate(item: any){
   return updateTime>lastUpdate
 }
 
-async function updateEmployees(){
+export async function updateEmployees(){
   console.log("___________UPDATING EMPLOYEE LIST___________")
   const today = new Date();
   try {
@@ -126,7 +126,7 @@ async function updateEmployees(){
   }
 }
 
-async function updateDepartments(){
+export async function updateDepartments(){
   console.log("___________UPDATING DEPARTMENTS___________")
   const today = new Date();
   try {

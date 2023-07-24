@@ -2,10 +2,15 @@
 import { DB_CONFIG } from "../config";
 import knex from "knex";
 import { sendPendingApprovalEmail } from "../services/email";
+import { updateDepartments, updateEmployees } from "../routes/lookup-router"
 const db = knex(DB_CONFIG);
 
 export async function emailCronjob(){
     console.log('running a cron job');
+
+    await updateEmployees();
+    await updateDepartments();
+
     const reminder = true
 
     const reminderDate = new Date()

@@ -30,6 +30,13 @@ export const DB_SCHEMA = process.env.DB_SCHEMA || "dbo";
 
 export const AZURE_KEY = process.env.AZURE_KEY || "";
 
+
+export const EMAILER_USERNAME = process.env.EMAILER_USERNAME || "";
+export const EMAILER_PASSWORD = process.env.EMAILER_PASSWORD || "";
+export const EMAIL_HOST = process.env.EMAIL_HOST || "";
+export const EMAIL_PORT = process.env.EMAIL_PORT || 25;
+export const EMAIL_SENDER = process.env.EMAIL_SENDER || "<noreply@yukon.ca>"
+
 export const DB_CONFIG = {
   client: DB_TYPE,
   connection: {

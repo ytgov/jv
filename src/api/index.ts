@@ -8,6 +8,8 @@ import { configureAuthentication } from './routes/auth';
 import { CreateMigrationRoutes } from './data';
 import { recoveriesRouter, recoveryRouter, lookupRouter, userRouter, dataRouter, adminRouter, pdfRouter } from './routes';
 import { loadUser } from "./middleware/authz.middleware";
+import { emailCronjob } from './services/emailcronjob';
+var cron = require('node-cron');
 var fileupload = require("express-fileupload");
 
 const app = express();
@@ -66,6 +68,14 @@ app.use(express.static(path.join(__dirname, 'web')));
 // if no other routes match, just send the front-end
 app.use((req: Request, res: Response) => {
 	res.sendFile(path.join(__dirname, 'web') + '/index.html');
+});
+
+
+cron.schedule('0 4 * * *', () =>  { //Running at 4:00AM PDT
+	emailCronjob()
+}, {
+	scheduled: true,
+	timezone: "America/Vancouver"
 });
 
 app.listen(config.API_PORT, () => {

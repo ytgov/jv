@@ -131,9 +131,9 @@
                     </title-card>			
                 </v-card-text>
 
-                <v-card-actions>
-                    <v-btn color="grey darken-5" @click="clearDepartmentData();departmentDialog = false"> Cancel </v-btn>
-                    <v-btn class="ml-auto" color="green darken-1" @click="saveDepartment"> Save </v-btn>
+                <v-card-actions>					
+                    <v-btn class="ml-3" color="secondary primary--text" @click="clearDepartmentData();departmentDialog = false"> Cancel </v-btn>
+                    <v-btn class="mr-3 ml-auto px-6" color="primary" @click="saveDepartment"> Save </v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>

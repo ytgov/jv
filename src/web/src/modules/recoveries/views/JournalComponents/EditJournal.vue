@@ -20,6 +20,9 @@
                 <div class="text-h5">
                     JV {{journal.jvNum}} ({{journal.status}})
                 </div>
+                <v-btn style="min-width: 0px" elevation="0" color="white" class="mt-n1 ml-auto cyan--text text--darken-4 px-2" @click="closeDialog">
+                    <v-icon dense>mdi-close</v-icon>
+                </v-btn>
             </v-card-title>           
 
             <v-card-text>                

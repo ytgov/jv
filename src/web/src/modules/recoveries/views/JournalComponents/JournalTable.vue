@@ -97,6 +97,7 @@ export default {
                 { text: "Department", value: "department", class: "blue-grey lighten-4" },
                 { text: "Period", value: "period", class: "blue-grey lighten-4" },
                 { text: "Affiliated Recoveries", value: "refRecoveries", class: "blue-grey lighten-4" },
+                { text: "Description", value: "description", class: "blue-grey lighten-4" },
                 { text: "Amount", value: "jvAmount", class: "blue-grey lighten-4" },                
                 { text: "Status", value: "status", class: "blue-grey lighten-4" },
                 { text: "", sortable: false, value: "edit", class: "blue-grey lighten-4", width: "6rem" }                             

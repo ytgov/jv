@@ -20,6 +20,9 @@
                 <div class="text-h5">
                     JV {{journal.jvNum}} ({{journal.status}})
                 </div>
+                <v-btn style="min-width: 0px" elevation="0" color="white" class="mt-n1 ml-auto cyan--text text--darken-4 px-2" @click="closeDialog">
+                    <v-icon dense>mdi-close</v-icon>
+                </v-btn>
             </v-card-title>           
 
             <v-card-text>                
@@ -250,7 +253,8 @@
                         <create-journal-export 
                             v-if="!readonly" 
                             type="Export" 
-                            :journalID="journal.journalID" 
+                            :journalID="journal.journalID"
+                            @err="alertMsg=$event; alert=true;" 
                             class="ml-auto mr-5"/>
                         <v-btn
                             v-if="!readonly"
@@ -265,7 +269,8 @@
                             type="Send" 
                             :journalID="journal.journalID"
                             @jvSent="saveNewJournal('Send')"
-                            class="ml-2 mr-5"/>                        
+                            @err="alertMsg=$event; alert=true;"
+                            class="ml-2 mr-5"/>                    
                         <v-btn
                             v-if="!readonly"
                             class="ml-2 mr-5 px-5 white--text"
@@ -277,9 +282,9 @@
                     </v-row>
                 </v-card>
 
-                <v-row class="mt-0 mx-3">
-                    <v-alert v-model="alert" dense color="red darken-4" dark dismissible>
-                        {{ alertMsg }}
+                <v-row class="mt-5 mx-3">
+                    <v-alert class="mx-auto" v-model="alert" dense color="red darken-4" dark dismissible>
+                        <v-icon color="white" dense class="mr-2 mt-n2">mdi-alert</v-icon><b class="mr-5">{{ alertMsg }}</b>
                     </v-alert>
                 </v-row>
 

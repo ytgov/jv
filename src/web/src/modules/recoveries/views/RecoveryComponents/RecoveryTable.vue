@@ -50,7 +50,14 @@
 		
 		</v-row>
 
-        <v-data-table :headers="headers" :items="filteredRecoveries" :items-per-page="10" class="elevation-1">
+        <v-data-table 
+            :headers="headers" 
+            :items="filteredRecoveries" 
+            :items-per-page="10"
+            :sort-by="['journal','submissionDate']"
+            :sort-desc="[false, true]"
+            class="elevation-1"
+        >
             <!-- eslint-disable-next-line vue/no-unused-vars -->
             <template v-slot:[`item.submissionDate`]="{ item }">
                 <!-- eslint-disable-next-line vue/no-parsing-error -->
@@ -69,7 +76,7 @@
                 ${{item.totalPrice.toFixed(2)|currency}}
             </template>
 
-            <template v-slot:[`item.jvNum`]="{ item }">
+            <template v-slot:[`item.journal`]="{ item }">
                 <div v-if="item.journal && item.journal.jvNum">{{item.journal.jvNum}}</div>
             </template>
             
@@ -143,7 +150,7 @@ export default {
                 { text: "Cost", value: "totalPrice", class: "blue-grey lighten-4" },
                 { text: "Date Submitted", value: "submissionDate", class: "blue-grey lighten-4" },
                 { text: "Status", value: "status", class: "blue-grey lighten-4" },
-                { text: "JV #", value: "jvNum", class: "blue-grey lighten-4" },                
+                { text: "JV #", value: "journal", class: "blue-grey lighten-4" },                
                 { text: "", sortable: false, value: "edit", class: "blue-grey lighten-4", width: "1rem" }
             ],
             admin: false,

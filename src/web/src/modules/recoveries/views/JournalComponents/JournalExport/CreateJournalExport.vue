@@ -204,8 +204,11 @@ export default {
                     }
                     return                     
                 })
-                .catch(e => {
+                .catch(async e => {
                     console.log(e);
+                    const err = JSON.parse(await e.response.data.text())
+                    console.log(err);
+                    this.$emit('err', err)
                     this.loadingData = false
                 }); 
         },         

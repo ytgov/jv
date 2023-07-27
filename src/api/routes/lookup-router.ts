@@ -22,14 +22,21 @@ lookupRouter.get("/department-branch", RequiresAuthentication, ReturnValidationE
       if (cleanList[slice.department] == null)
         cleanList[slice.department] = {
           branches: [],
-          units: []
+          units: [],
+          branchUnits:{}
         };
 
-      if (slice.branch && !cleanList[slice.department].branches.includes(slice.branch))
-        cleanList[slice.department].branches.push(slice.branch);
+      if (slice.branch && !cleanList[slice.department].branches.includes(slice.branch)){
+        cleanList[slice.department].branches.push(slice.branch);        
+        cleanList[slice.department].branchUnits[slice.branch]=[];
+      }
 
       if (slice.unit && !cleanList[slice.department].units.includes(slice.unit))
         cleanList[slice.department].units.push(slice.unit);
+
+      if (slice.branch && slice.unit && !cleanList[slice.department].branchUnits[slice.branch].includes(slice.unit))
+        cleanList[slice.department].branchUnits[slice.branch].push(slice.unit);        
+
     }    
     res.status(200).json(cleanList);
   } catch (error: any) {
@@ -88,7 +95,7 @@ function timeToUpdate(item: any){
   return updateTime>lastUpdate
 }
 
-async function updateEmployees(){
+export async function updateEmployees(){
   console.log("___________UPDATING EMPLOYEE LIST___________")
   const today = new Date();
   try {
@@ -126,7 +133,7 @@ async function updateEmployees(){
   }
 }
 
-async function updateDepartments(){
+export async function updateDepartments(){
   console.log("___________UPDATING DEPARTMENTS___________")
   const today = new Date();
   try {

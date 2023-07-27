@@ -118,8 +118,8 @@
 				</v-card-text>
 
 				<v-card-actions class="mb-3">
-					<v-btn color="grey darken-5" @click="userDialog = false"> Cancel </v-btn>
-					<v-btn class="ml-auto" color="green darken-1" @click="saveUser"> Save </v-btn>
+					<v-btn class="ml-3" color="secondary primary--text" @click="userDialog = false"> Cancel </v-btn>
+					<v-btn class="mr-3 ml-auto px-6" color="primary" @click="saveUser"> Save </v-btn>
 				</v-card-actions>
 			</v-card>
 		</v-dialog>

@@ -1,6 +1,7 @@
 import express, { Request, Response } from "express";
 import { ReturnValidationErrors , RequiresAuthentication, RequiresRoleAdminOrIctFinance} from "../middleware";
 import { DB_CONFIG , PDF_URL} from "../config";
+import { sendJvEmail } from "../services/email";
 import knex from "knex";
 import axios from "axios";
 const FormData = require('form-data');
@@ -58,7 +59,9 @@ pdfRouter.post("/email/:journalID", RequiresAuthentication, RequiresRoleAdminOrI
             return res.status(500).json(action);
         } 
 
-        //TODO  SEND Email(pdfFile, userEmail, departmentsInfo.contactEmail, departmentsInfo.contactName, journal.department)
+        const emailSent = await sendJvEmail(pdfFile, journalID, user, userEmail, departmentsInfo.contactEmail, departmentsInfo.contactName, journal.department)
+        
+        if(!emailSent) return res.status(500).json("Email failed");
 
         await db("JournalSentEmail").insert({
             journalID: journalID,

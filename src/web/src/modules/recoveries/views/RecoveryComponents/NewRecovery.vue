@@ -10,7 +10,7 @@
                     v-bind="attrs"
                     v-on="on">
                     <div v-if="type == 'Add New'">Create New Recovery</div>
-                    <div v-else-if="type == 'Approve'">Approve</div>
+                    <div v-else-if="type == 'Approve'">Review</div>
                     <div v-else-if="type == 'Complete' && btnTxt" class="primary--text">{{btnTxt}}</div>
                     <v-icon v-else-if="type == 'Complete' && !btnTxt" dense color="primary">mdi-magnify</v-icon>
                     <v-icon v-else dense color="primary">mdi-pencil</v-icon>
@@ -78,25 +78,25 @@
                     </v-col>
                     <v-col cols="4">
                         <v-select
+                            :readonly="readonly"
+                            :error="state.employeeBranchErr"
+                            @change="state.employeeBranchErr=false;branchChanged();"
+                            v-model="employeeBranch"
+                            :items="branchList"
+                            item-text="name"
+                            label="Requestor Branch"
+                            outlined
+                        />                 
+                    </v-col>
+                    <v-col cols="4">
+                        <v-select
                             :readonly="readonly"                            
                             v-model="employeeUnit"
                             :items="unitList"
                             item-text="name"
                             label="Requestor Unit"
                             outlined
-                        />                      
-                    </v-col>
-                    <v-col cols="4">
-                        <v-select
-                            :readonly="readonly"
-                            :error="state.employeeBranchErr"
-                            @change="state.employeeBranchErr=false;"
-                            v-model="employeeBranch"
-                            :items="branchList"
-                            item-text="name"
-                            label="Requestor Branch"
-                            outlined
-                        />                      
+                        />                 
                     </v-col>                   
                 </v-row>
                 
@@ -525,7 +525,7 @@ export default {
             recoveryItems: [],
 
             recoveryAudits: [],
-
+            allDepartments: {},
             departmentList: [],
             branchList: [],
             unitList: [],
@@ -617,6 +617,7 @@ export default {
                 Vue.nextTick(() => {
                     this.employeeBranch = this.recovery.employeeBranch;
                     this.employeeUnit = this.recovery.employeeUnit;
+                    this.branchChanged()
                 });
                 this.employeeMailCd = this.recovery.mailcode;
                 this.refNum = this.recovery.refNum;
@@ -721,6 +722,7 @@ export default {
         initDepartments() {
             this.departmentList = [];
             const depts = this.$store.state.recoveries.departmentBranch;
+            this.allDepartments = depts;
             for (const key of Object.keys(depts)) {
                 this.departmentList.push({ name: key, branches: depts[key].branches, units: depts[key].units });                
             }
@@ -824,11 +826,18 @@ export default {
             if (this.department) { 
                 const dept = this.departmentList.filter(department => department.name == this.department)[0]
                 this.branchList = dept? dept.branches: []; 
-                this.unitList = dept? dept.units: [];
+                // this.unitList = dept? dept.units: [];
                 this.state.employeeBranchErr = false
                 this.employeeBranch =''
                 this.employeeUnit = ''                                
             }            
+        },
+
+        branchChanged(){
+            if(this.department && this.employeeBranch) {
+                const dept = this.allDepartments[this.department]?.branchUnits
+                this.unitList = dept? dept[this.employeeBranch]: [];
+            }
         },
         
         fillOrderChanged(item){

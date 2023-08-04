@@ -104,7 +104,7 @@ export async function updateEmployees(){
         headers: {
           "Ocp-Apim-Subscription-Key": AZURE_KEY
         },
-        timeout: 10000
+        timeout: 20000
       })
       .then(async (resp: any) => {
         if(resp?.data?.employees)          
@@ -142,7 +142,7 @@ export async function updateDepartments(){
         headers: {
           "Ocp-Apim-Subscription-Key": AZURE_KEY
         },
-        timeout: 5000
+        timeout: 15000
       })
       .then(async (resp: any) => {
         if(resp?.data?.divisions)          

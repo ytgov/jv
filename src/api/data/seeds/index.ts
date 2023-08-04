@@ -29,8 +29,22 @@ export async function seedUp() {
       branch: "ITCS",
       roles: "Admin",
       create_date: "2023-03-27"
+    },
+    {
+      email: "hassan.anvar@pacificintelligent.com",
+      first_name: "Hassan",
+      last_name: "Anvar",
+      display_name: "Hassan.Anvar",
+      mailcode: "",
+      department: "",
+      status: "Active",
+      branch: "ITCS",
+      roles: "Admin",
+      create_date: "2023-03-27"
     }
   ]);
+
+  await rolesUp()
 }
 
 export async function rolesUp() {

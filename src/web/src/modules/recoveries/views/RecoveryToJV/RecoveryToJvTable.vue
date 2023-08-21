@@ -49,7 +49,10 @@
             <template v-slot:[`item.recoveryItems`]="{ item }">
                 {{getRecoveryItems(item)}}
             </template>
-
+            
+            <template v-slot:[`item.totalPrice`]="{ item }">
+                ${{item.totalPrice.toFixed(2)|currency}}
+            </template>
             <!-- <template v-slot:[`item.jvNum`]="{ item }">
                 {{item.journal}}
             </template> -->
@@ -59,6 +62,8 @@
                     <div style="width: 3.5rem">                        
                         <new-recovery
                             v-if="item.status=='Complete'"
+                            :noGlCode="!Boolean(item.glCode)"
+                            :editGlCode="!item.journalID"
                             type="Complete"
                             maxWidth="85%"
                             title="Complete"
@@ -98,6 +103,7 @@ export default {
                 { text: "Items", value: "recoveryItems", class: "blue-grey lighten-4" },                
                 { text: "Cost", value: "totalPrice", class: "blue-grey lighten-4" },
                 { text: "DateSubmitted", value: "submissionDate", class: "blue-grey lighten-4" },
+                { text: "Gl Code", value: "glCode", class: "blue-grey lighten-4" },
                 { text: "Status", value: "status", class: "blue-grey lighten-4" },
                 // { text: "JV #", value: "jvNum", class: "blue-grey lighten-4" }, 
                 { text: "", sortable: false, value: "edit", class: "blue-grey lighten-4", width: "3.5rem" },                               

@@ -15,8 +15,8 @@ const routes = [
 				component: () => import("../views/UserManagement.vue")
 			},
 			{
-				path: "/administration/departments",
-				name: "Departments",
+				path: "/administration/departmental-coding",
+				name: "Departmental Coding",
 				component: () => import("../views/Departments.vue")
 			},
 			{

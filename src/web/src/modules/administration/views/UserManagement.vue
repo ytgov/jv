@@ -116,7 +116,7 @@
 					</v-row>
 
 				</v-card-text>
-
+				<v-alert v-if="alertMsg" class="mt-5 mx-10" type="info" dismissible>{{ alertMsg }}</v-alert>
 				<v-card-actions class="mb-3">
 					<v-btn class="ml-3" color="secondary primary--text" @click="userDialog = false"> Cancel </v-btn>
 					<v-btn class="mr-3 ml-auto px-6" color="primary" @click="saveUser"> Save </v-btn>
@@ -182,6 +182,7 @@ export default {
 		employeeList: [],
 		roleList: [],
 		userDialog: false,
+		alertMsg: '',
 		action: 'Add'
 	}),
 
@@ -235,6 +236,7 @@ export default {
 			this.userRoles = [];
 			this.userStatus = "";
 			this.emailErr = false;
+			this.alertMsg = "";
 			this.currentItem ={}
 			this.loadEmployeeDepartmentData()
 		},
@@ -267,11 +269,9 @@ export default {
 
 		saveUser(){		
 			
-			console.log(this.userName)
-			console.log(this.userRoles)
 			if(this.rules.email(this.userName.email) != true) return
 			
-			this.userDialog = false;
+			this.alertMsg = ""
 			const body = {
 				email: this.userName.email, 
 				first_name: this.userName.firstName,
@@ -286,10 +286,12 @@ export default {
 			const id = this.currentItem?.id? this.currentItem.id: 0;
 			return axios.post(`${USERS_URL}/${id}`, body)
 			.then(async () => {
+				this.userDialog = false;
 				await this.getUsers();             
 			})
 			.catch(e => {
 				console.log(e);
+				this.alertMsg = e.response.data;
 			});
 			
 		},

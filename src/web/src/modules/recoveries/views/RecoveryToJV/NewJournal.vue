@@ -25,11 +25,11 @@
                     <v-row class="mt-3 mx-3">
                         <b class="mr-5">Department:</b> {{department}}
                     </v-row>
-                    <v-row class="mt-5 mx-3">
+                    <!-- <v-row class="mt-5 mx-3">
                         <b class="mr-5">GL:</b> {{departmentGlCode}}
-                    </v-row>
+                    </v-row> -->
                     <v-row class="mt-5 mb-4 mx-3">
-                        <b class="mr-5">Amount:</b> $ {{amount}}
+                        <b class="mr-5">Amount:</b> $ {{amount.toFixed(2)|currency}}
                     </v-row>
                 </v-card>
 

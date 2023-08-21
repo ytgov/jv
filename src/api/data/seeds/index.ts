@@ -4,45 +4,11 @@ import { DB_SCHEMA } from "../../config";
 export async function seedUp() {
   console.log("Seeding");
 
-  await sqldb("user").delete().whereRaw("1=1");
-  await sqldb("user").insert([
-    {
-      email: "Diedre.Davidson@yukon.ca",
-      first_name: "Diedre",
-      last_name: "Davidson",
-      display_name: "Diedre.Davidson",
-      mailcode: "",
-      department: "",
-      status: "Active",
-      branch: "ITCS",
-      roles: "Admin",
-      create_date: "2023-03-27"
-    },
-    {
-      email: "Max.parker@yukon.ca",
-      first_name: "Max",
-      last_name: "Parker",
-      display_name: "Max.Parker",
-      mailcode: "",
-      department: "",
-      status: "Active",
-      branch: "ITCS",
-      roles: "Admin",
-      create_date: "2023-03-27"
-    },
-    {
-      email: "hassan.anvar@pacificintelligent.com",
-      first_name: "Hassan",
-      last_name: "Anvar",
-      display_name: "Hassan.Anvar",
-      mailcode: "",
-      department: "",
-      status: "Active",
-      branch: "ITCS",
-      roles: "Admin",
-      create_date: "2023-03-27"
-    }
-  ]);
+  await sqldb("user").update({ roles: "BranchUser" }).whereRaw("1=1");
+  await sqldb("user").update({ first_name: "Max",    last_name: "Parker",   display_name: "Max.Parker",      status: "Active", roles: "Admin" }).where({ email: "Max.parker@yukon.ca" });
+  await sqldb("user").update({ first_name: "Diedre", last_name: "Davidson", display_name: "Diedre.Davidson", status: "Active", roles: "Admin" }).where({ email: "dpdavids@ynet.gov.yk.ca" });
+  await sqldb("user").update({ first_name: "Diedre", last_name: "Davidson", display_name: "Diedre.Davidson", status: "Active", roles: "Admin" }).where({ email: "Diedre.Davidson@yukon.ca" });
+  await sqldb("user").update({ first_name: "Hassan", last_name: "Anvar",    display_name: "Hassan.Anvar",    status: "Active", roles: "Admin" }).where({ email: "hassan.anvar@pacificintelligent.com" });
 
   await rolesUp()
 }

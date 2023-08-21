@@ -54,8 +54,8 @@
             :headers="headers" 
             :items="filteredRecoveries" 
             :items-per-page="10"
-            :sort-by="['journal','submissionDate']"
-            :sort-desc="[false, true]"
+            :sort-by="['journal','status', 'submissionDate']"
+            :sort-desc="[false, false, false]"
             class="elevation-1"
         >
             <!-- eslint-disable-next-line vue/no-unused-vars -->
@@ -109,6 +109,8 @@
                         /> -->
                         <new-recovery
                             v-if="item.status=='Complete'"
+                            :noGlCode="!Boolean(item.glCode)"
+                            :editGlCode="!item.journalID"
                             type="Complete"
                             maxWidth="85%"
                             title="Complete"

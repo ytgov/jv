@@ -218,6 +218,8 @@ export default {
       else if(path.includes('/recovery-dashboard-agent')) this.routeTitle='Dashboard (Agent)'
       else if(path.includes('/recovery-dashboard-finance')) this.routeTitle='Dashboard (Finance)'
       else if(path.includes('/recoveries')) this.routeTitle='Recovery List'
+      else if(path.includes('/administration')) this.routeTitle='Administration'
+      else if(path.includes('/profile')) this.routeTitle='My Profile'
     }
   }
 };

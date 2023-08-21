@@ -159,7 +159,7 @@
                     </v-row>
 
                 </v-card-text>
-
+                <v-alert v-if="alertMsg" class="mt-5 mx-10" type="info" dismissible>{{ alertMsg }}</v-alert>
                 <v-card-actions>
                     <v-btn class="ml-3" color="secondary primary--text" @click="itemDialog = false"> Cancel </v-btn>
                     <v-btn class="mr-3 ml-auto px-6" color="primary" @click="saveItem"> Save </v-btn>
@@ -221,6 +221,7 @@ export default {
         pageCount: 0,
         iteamsPerPage: 10,		
         itemDialog: false,
+        alertMsg: '',
         action: 'Add'
     }),
     async mounted() {
@@ -248,6 +249,7 @@ export default {
         },
 
         clearItemData(){
+            this.alertMsg = "";
             this.currentItem = {};            		
             this.branch = [];		
             this.category = "";
@@ -297,7 +299,7 @@ export default {
 
         async saveItem(){
             if(this.checkFields()){
-                this.itemDialog = false;
+                this.alertMsg = "";
                 const body = {
                     category: this.category,
                     branch: this.branch.join('/'),				
@@ -310,17 +312,19 @@ export default {
                 const id = this.currentItem?.itemCatID? this.currentItem.itemCatID: 0;
                 return axios.post(`${ADMIN_URL}/item-categories/${id}`, body)
                 .then(async (resp) => {
-                    if (this.reader.result) await this.saveBackUPFile(resp.data.itemCatID)                    
+                    if (this.reader.result) await this.saveBackUPFile(resp.data.itemCatID)
+                    this.itemDialog = false;                    
                     await this.updateTable()              
                 })
                 .catch(e => {
                     console.log(e);
+                    this.alertMsg = e.response.data;
                 });
             }
         },
 
         async saveBackUPFile(itemCatID) {
-            this.alert = false;
+            this.alertMsg = "";
             const docNames = []
             const bodyFormData = new FormData();
 
@@ -347,9 +351,8 @@ export default {
                 })
                 .catch(e => {
                     this.savingData = false;
-                    console.log(e.response.data);
+                    console.log(e);
                     this.alertMsg = e.response.data;
-                    this.alert = true;
                 });      
         },
 

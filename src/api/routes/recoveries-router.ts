@@ -505,6 +505,36 @@ recoveriesRouter.post(
   }
 );
 
+recoveriesRouter.post(
+  "/glcode/:recoveryID",
+  RequiresAuthentication,
+  ReturnValidationErrors,
+  async function (req: Request, res: Response) {
+    let recoveryID = Number(req.params.recoveryID);
+    let user = req.user.display_name;
+    let recoveryAudits: any[] = []
+    const adminQuery = recoveryRoleCheck(req)
+    const recovery = await db("Recovery").modify(adminQuery).where("recoveryID", recoveryID).first();
+    if(!recovery) return res.status(400).json('Recovery Not Found!');
+    const newGlcode = req.body.glCode;
+
+    try {      
+      await db.transaction(async trx => {       
+        await db("Recovery").update({ glCode: newGlcode }).where("recoveryID", recoveryID);
+        
+        const action = `Update Glcode to ${newGlcode}`;
+        await addRecoveryAudit(recoveryID, user, action);
+
+        recoveryAudits = await db("RecoveryAudit").select("*").where("recoveryID", recovery.recoveryID);
+      });
+      res.status(200).json({ recoveryAudits: recoveryAudits, glCode: newGlcode });
+    } catch (error: any) {
+      console.log(error);
+      res.status(500).json("Insert failed");
+    }
+  }
+);
+
 //___AUDIT___
 async function addRecoveryAudit(recoveryID: number, user: string, action: string) {
   const newRecoveryAudit = {
@@ -542,6 +572,7 @@ function recoveryRoleCheck(req: any){
   let user = req.user
   let userLastName = ""
   let userFirstName = ""
+  const userEmail = req.user.email; 
 
   if(user.first_name && user.last_name){
     userFirstName = user.first_name
@@ -559,7 +590,7 @@ function recoveryRoleCheck(req: any){
     else if (user.roles?.indexOf("BranchAdmin") >= 0) queryBuilder.whereLike("branch", `%${user.branch}%`).select("*");
     else if (user.roles?.indexOf("BranchAgent") >= 0) queryBuilder.whereLike("branch", `%${user.branch}%`).select("*");
     else if (user.roles?.indexOf("DeptFinance") >= 0) queryBuilder.where("department", user.department).select("*");
-    else queryBuilder.where("lastName", userLastName).where("firstName", userFirstName).select("*");
+    else queryBuilder.where({"lastName": userLastName, "firstName": userFirstName}).orWhere("requastorEmail", userEmail).select("*");
   };
 
   return adminQuery

@@ -6,8 +6,11 @@
                     type="Complete"
                     maxWidth="85%"
                     title="Complete"
+                    :noGlCode="!Boolean(item.glCode)"
+                    :editGlCode="true"
                     :btnTxt="item.refNum? item.refNum :'View Recovery'"
-                    :recovery="item"                    
+                    :recovery="item"
+                    @updateTable="updateTable"                    
                 />
             </template>
             <template v-slot:[`item.description`]="{ item }">
@@ -97,6 +100,10 @@ export default {
                     console.log(e);                    
                 });            
         },
+
+        updateTable() {
+            this.$emit("updateTable");
+        }
     },
 }
 </script>

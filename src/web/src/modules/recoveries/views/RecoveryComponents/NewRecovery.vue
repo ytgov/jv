@@ -1,6 +1,7 @@
 <template>
   <div>
         <v-dialog v-model="addNewRecoveryDialog" persistent :max-width="maxWidth">
+            
             <template v-slot:activator="{ on, attrs }">
                 <v-btn
                     :elevation="type == 'Add New' ? '5' : '0'"
@@ -11,11 +12,29 @@
                     v-on="on">
                     <div v-if="type == 'Add New'">Create New Recovery</div>
                     <div v-else-if="type == 'Approve'">Review</div>
-                    <div v-else-if="type == 'Complete' && btnTxt" class="primary--text">{{btnTxt}}</div>
-                    <v-icon v-else-if="type == 'Complete' && !btnTxt" dense color="primary">mdi-magnify</v-icon>
+
+                    <v-tooltip v-else-if="type == 'Complete' && btnTxt && noGlCode" right color="warning">
+                        <template #activator="{ on }">
+                        <div class="primary--text">{{btnTxt}}</div> 
+                        <v-icon color="warning" class="mr-1" v-on="on">mdi-alert</v-icon>
+                        </template>
+                        <span>No GlCode</span>
+                    </v-tooltip>
+                    <div v-else-if="type == 'Complete' && btnTxt" class="primary--text">{{btnTxt}}</div>                                                
+                    
+                    <v-tooltip v-else-if="type == 'Complete' && !btnTxt && noGlCode" left color="warning">
+                        <template #activator="{ on }">
+                        <v-icon color="warning" class="mr-1" v-on="on">mdi-alert</v-icon>
+                        </template>
+                        <span>No GlCode</span>
+                    </v-tooltip>
+                    <v-icon v-else-if="type == 'Complete' && !btnTxt" dense color="primary">mdi-magnify</v-icon>                        
+                    
                     <v-icon v-else dense color="primary">mdi-pencil</v-icon>
                 </v-btn>
             </template>
+               
+            
 
         <v-card :loading="loadingData" :disabled="loadingData">
             <v-card-title class="primary" style="border-bottom: 1px solid black">
@@ -137,6 +156,7 @@
                         v-if="!readonly"                       
                         class="ml-auto mr-5"
                         color="primary"
+                        :loading="savingData"
                         @click="addRecoveryItem()"
                         small
                         >Add Item
@@ -351,7 +371,7 @@
                             </title-card>
                             <v-col >
                                 <div>
-                                    <v-btn v-if="uploadBtn"  class="mx-0 my-0" color="primary" elevation="5" @click="uploadDocument">
+                                    <v-btn v-if="uploadBtn"  :loading="savingData" class="mx-0 my-0" color="primary" elevation="5" @click="uploadDocument">
                                         Upload Back-up
                                         <input
                                             id="inputfile"
@@ -373,19 +393,19 @@
                     </v-col>
                     <v-col cols="5" class="mx-0">
                         <v-row class="mx-0">
-                            <v-btn v-if="routeForApprovalBtn" class="ml-auto mr-5 my-auto" color="primary" elevation="5" @click="saveNewRecovery('Routed For Approval')">
+                            <v-btn v-if="routeForApprovalBtn" :loading="savingData" class="ml-auto mr-5 my-auto" color="primary" elevation="5" @click="saveNewRecovery('Routed For Approval')">
                                 Route For Approval                        
                             </v-btn>
                             
                             <v-row v-if="revertBtn || approveBtn" class="mx-0">
                                 <v-col cols="4">
-                                    <v-btn v-if="revertBtn" class="float-right my-0" color="primary" elevation="5" @click="declineDialog=true">
+                                    <v-btn v-if="revertBtn"  :loading="savingData" class="float-right my-0" color="primary" elevation="5" @click="declineDialog=true">
                                         Decline Request                        
                                     </v-btn>
                                 </v-col>
                                 <v-col cols="8">
                                     <div v-if="approveBtn" class="float-right my-auto" style="width:80%">
-                                        <v-btn color="primary" elevation="5" @click="saveNewRecovery('Purchase Approved')">
+                                        <v-btn color="primary"  :loading="savingData" elevation="5" @click="saveNewRecovery('Purchase Approved')">
                                             Approve Purchase                        
                                         </v-btn>
                                         <div class="mt-1 mb-n15">
@@ -404,11 +424,52 @@
                 </v-row>
 
                 <v-row class="mt-15 ml-3">
-                    <v-data-table dense :items-per-page="5" :headers="auditHeaders" :items="recoveryAudits" class="elevation-1">
-                        <template v-slot:[`item.date`]="{ item }">
-                            {{item.date | getDate}}
-                        </template>
-                    </v-data-table>
+                    <v-col cols="6">
+                        <v-data-table dense :items-per-page="5" :headers="auditHeaders" :items="recoveryAudits" class="elevation-1">
+                            <template v-slot:[`item.date`]="{ item }">
+                                {{item.date | getDate}}
+                            </template>
+                        </v-data-table>
+                    </v-col>
+                    <v-col cols="1" />
+                    <v-col v-if="glCodeEnable" cols="4">
+                        <div class="mb-5">
+                            <b class="text-h6">GL Code: </b>
+                            <span v-if="recovery.glCode" class="text-h6">{{recovery.glCode}}</span>
+                            <span v-else class="red--text text-h6">No GLcode Saved!</span>
+                        </div>
+                        <v-select                                                                                                           
+                            v-model="glCode"
+                            :items="glCodeList"
+                            item-value="glCode"       
+                            label="GL Coding"
+                            outlined>
+                            <template v-slot:selection="{ item }">
+                                {{ item.glCode }}
+                            </template>
+                            <template v-slot:item="{ item }">                                
+                                <v-row >
+                                    <v-col >
+                                        <div style="font-size:14pt;">
+                                            <b class="primary--text">
+                                                {{item.glCode?.replace('-',' ').replace('-',' ').replace('-',' ').replace('-',' ')}}
+                                            </b>
+                                        </div>
+                                        <div style="font-size:11pt;">{{item.ictBranch}}</div>
+                                        <div style="font-size:10pt;">{{item.ictUnit}}</div>
+                                    </v-col>
+                                </v-row>                                
+                            </template>                            
+                        </v-select>
+                        <v-btn
+                            class="float-right"
+                            :disabled="!Boolean(glCode)"
+                            color="primary"
+                            :loading="savingData" 
+                            @click="saveGlCode()"
+                            >Save GlCode
+                        </v-btn>
+                    </v-col>
                 </v-row>
 
                 <v-row class="mt-15 mx-3">
@@ -494,6 +555,8 @@ export default {
         recovery: {},
         maxWidth: {},
         btnTxt: { type: String, required:false },
+        noGlCode: { type: Boolean, default: false},
+        editGlCode: { type: Boolean, default: false},
     },
     data() {
         return {
@@ -521,6 +584,7 @@ export default {
             requestDescription: "",
             reasonForDecline: "",
             refNum: '',
+            glCode: '',
             recoveryID: '',
             recoveryItems: [],
 
@@ -536,7 +600,8 @@ export default {
             allUploadingDocuments: [],
 
             itemCategoryDocuments: [],
-            
+            glCodeList: [],
+
             loadingData: false,
             savingData: false,
             readonly: false,         
@@ -548,7 +613,7 @@ export default {
             uploadBtn: false,
             completeBtn: false,
             supervisor: false,
-
+            glCodeEnable: false,
             
             userView: false,
             routeForApprovalBtn: false,
@@ -575,15 +640,20 @@ export default {
 
     methods: {
 
+        isReadOnly(){
+           return (this.type != "Add New" && this.type != "Edit")
+        },
+
         async initForm() {
             this.loadingData= true
             this.admin = Vue.filter("isSystemAdmin")();
             this.supervisor = Vue.filter("isBranchAdmin")();
-            this.readonly = this.type != "Add New" && this.type != "Edit";
+            this.readonly = this.isReadOnly();
             this.approveBtn = this.type == "Approve";
             this.revertBtn = this.type == "Approve";
             this.saveBtn = this.type == "Fill";
             this.uploadBtn = this.type != "Approve" && this.type != "Complete"
+            this.glCodeEnable = this.type == "Complete" && Vue.filter("isICTFinance")() && this.editGlCode ;
             this.alert=false;
             this.userView = this.type == "Approve";
             this.routeForApprovalBtn = !this.readonly
@@ -605,6 +675,7 @@ export default {
                 this.employeeMailCd = ""
                 this.reasonForDecline = ""
                 this.refNum = ''
+                this.glCode = ''
                 this.requestDescription = ''
                 this.recoveryID = ''
                 this.recoveryItems = []
@@ -621,6 +692,7 @@ export default {
                 });
                 this.employeeMailCd = this.recovery.mailcode;
                 this.refNum = this.recovery.refNum;
+                this.glCode = this.recovery.glCode;
                 this.requestDescription = this.recovery.description
                 this.reasonForDecline = this.recovery.reasonForDecline
                 this.recoveryID = this.recovery?.recoveryID ? this.recovery.recoveryID : '';
@@ -629,6 +701,8 @@ export default {
                 this.calculateTotalPrice()
             }
             
+            if(this.glCodeEnable) this.initGlCode();
+
             this.savingData = false
             if(this.type=="Fill"){
                 this.recoveryItems.forEach(item => {if(!item.quantity) item.orderFilled=true;})
@@ -728,6 +802,40 @@ export default {
             }
         },
 
+        initGlCode() {
+            const deptsInfo = this.$store.state.recoveries.departmentsInfo
+            this.glCodeList= deptsInfo.filter(dept =>  dept.department==this.department);                         
+            
+            if(!this.glCode)
+                this.glCodeList.forEach(dept => {
+                    const branch = this.recovery.employeeBranch ?  this.recovery.employeeBranch : ''
+                    const unit = this.recovery.employeeUnit? this.recovery.employeeUnit : ''
+                    const deptBranch = dept.ictBranch? dept.ictBranch : ''
+                    const deptUnit = dept.ictUnit? dept.ictUnit : ''                
+                    if(deptBranch == branch && deptUnit == unit) this.glCode = dept.glCode;                        
+                })
+        },
+
+        async saveGlCode(){
+            const body = { glCode: this.glCode };
+            const id = this.recovery?.recoveryID ? this.recovery.recoveryID : 0;
+            return await axios.post(`${RECOVERIES_URL}/glcode/${id}`, body)
+            .then(async (resp) => {                
+                this.savingData = false;
+                this.recovery.recoveryAudits = resp?.data?.recoveryAudits;
+                this.recovery.glCode = resp?.data?.glCode;
+                this.recoveryAudits = this.recovery.recoveryAudits.sort((a,b)=>{ return (a.date > b.date ? -1 :1) });
+                return 
+            })
+            .catch(e => {
+                this.savingData = false;
+                console.log(e);
+                this.alertMsg = e.response.data;
+                this.alert = true;
+            });
+        },
+
+
         addRecoveryItem(){
             const recoveryItem = {
                 tmpId: this.tmpId,
@@ -793,6 +901,7 @@ export default {
         employeeChanged() {
             if (this.employeeName) {                
                 const employee= this.employeeList.filter(employee => employee.fullName == this.employeeName)[0]
+                // console.log(employee)
                 this.state.departmentErr = false
                 this.department =employee? employee.department :''
                 this.departmentChanged();
@@ -829,7 +938,8 @@ export default {
                 // this.unitList = dept? dept.units: [];
                 this.state.employeeBranchErr = false
                 this.employeeBranch =''
-                this.employeeUnit = ''                                
+                this.employeeUnit = ''
+                setTimeout(()=>{this.branchChanged()},1)                            
             }            
         },
 
@@ -912,6 +1022,7 @@ export default {
             if (this.checkFields()) {
                 this.alert = false;
                 this.savingData = true;
+                this.readonly = true;
                 const name = this.employeeName.split('.')
                 let body = {
                     recoveryItems: this.recoveryItems,
@@ -964,11 +1075,13 @@ export default {
                 axios.post(`${RECOVERIES_URL}/${id}`, body)
                 .then(async (resp) => {
                     if (this.reader.result) await this.saveBackUPFile(resp.data.recoveryID)
-                    this.savingData = false;                    
+                    this.savingData = false;
+                    this.readonly = this.isReadOnly();                  
                     this.closeDialog()
                 })
                 .catch(e => {
                     this.savingData = false;
+                    this.readonly = this.isReadOnly();
                     console.log(e);
                     this.alertMsg = e.response.data;
                     this.alert = true;

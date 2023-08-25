@@ -18,12 +18,12 @@
 								</v-list-item-content>
 							</v-list-item>
 
-							<v-list-item @click="goTo('/administration/departments')">
+							<v-list-item @click="goTo('/administration/departmental-coding')">
 								<v-list-item-icon>
 									<v-icon>mdi-code-array</v-icon>
 								</v-list-item-icon>
 								<v-list-item-content>
-									<v-list-item-title>Departments</v-list-item-title>
+									<v-list-item-title>Departmental Coding</v-list-item-title>
 								</v-list-item-content>
 							</v-list-item>
 

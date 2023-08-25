@@ -185,7 +185,7 @@ async function generateExcelFile(journalID: any){
         let totalDebit = 0;
         const itemCategoryList = await db("ItemCategory").select("*");
 
-        const departmentInfo = await db("DepartmentInfo").select("*").where("department", journal.department);
+        // const departmentInfo = await db("DepartmentInfo").select("*").where("department", journal.department);
 
         for(const recovery of recoveries){
             
@@ -197,7 +197,8 @@ async function generateExcelFile(journalID: any){
                     items += itemCategoryList[index].category+'#'+item.quantity+'@'+item.unitPrice+', '
             }
 
-            const glcodes = departmentInfo[0]?.glCode? departmentInfo[0].glCode.split('-') : ['','','','','']
+            // const glcodes = departmentInfo[0]?.glCode? departmentInfo[0].glCode.split('-') : ['','','','','']
+            const glcodes = recovery?.glCode? recovery.glCode.split('-') : ['','','','','']
 
             const explanation = `${recovery.firstName} ${recovery.lastName}; ${items.slice(0,-2)}`
             rowCounter++;

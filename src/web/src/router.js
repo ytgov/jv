@@ -9,7 +9,6 @@ import store from "@/store";
 import homeRoutes from "@/modules/home/router";
 import recoveriesRoutes from "@/modules/recoveries/router"
 
-import adminRoutes from "@/modules/admin/router";
 
 import administrationRoutes from "@/modules/administration/router";
 
@@ -28,7 +27,6 @@ const routes = [
   },
   ...homeRoutes,
   ...recoveriesRoutes,
-  ...adminRoutes,
   ...administrationRoutes,
   {
     path: "*",

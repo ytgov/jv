@@ -1,7 +1,7 @@
 <template>
-    <v-container>		
+    <div style="width:92%; margin:0 auto;">		
 
-        <h1>Departments</h1>
+        <h1>Departmental Coding</h1>
 
         <breadcrumbs />
 
@@ -11,14 +11,14 @@
                     class="my-4 ml-auto"					
                     color="primary"
                     @click="addDepartment()">
-                    <div>Add Department</div>
+                    <div>Add Departmental Coding</div>
                     <v-icon class="mx-0 px-0" color="white">mdi-plus</v-icon>
                 </v-btn>
             </v-row>
             <v-card class="default px-3 py-3">
                 <v-card-text>
                     <v-data-table
-                        :items="departments"
+                        :items="departmentsCodingInfo"
                         :headers="headers"
                         :loading="loadingData"						
                         @click:row="editDepartment"
@@ -37,7 +37,7 @@
         <v-dialog v-model="departmentDialog" persistent max-width="800px">
             <v-card>
                 <v-card-title class="primary" style="border-bottom: 1px solid black">
-                    <div class="text-h5">{{ action }} Department</div>
+                    <div class="text-h5">{{ action }} Departmental Coding</div>
                 </v-card-title>
 
                 <v-card-text>
@@ -49,7 +49,22 @@
                         class="mt-5"
                         :error="departmentErr"
                         @change="loadDepartmentData"						
-                        outlined/>						
+                        outlined/>
+
+                    <v-autocomplete
+                        label="ICT Branch"
+                        v-model="ictBranch"
+                        :items="branchList"
+                        item-text="name"                        
+                        @change="branchChanged"
+                        outlined/>
+
+                    <v-autocomplete
+                        label="ICT Unit"                    
+                        v-model="ictUnit"
+                        :items="unitList"
+                        item-text="name"                        
+                        outlined/>    					
 
                     <v-autocomplete 
                         label="Financial Contact" 
@@ -75,7 +90,7 @@
                         :error="recvDeptErr"
                         class="mt-2"
                         outlined/>
-                    <title-card class="mx-0" titleWidth="3rem" :smallTitle="true">
+                    <title-card class="mx-0" titleWidth="3.8rem" :smallTitle="true">
                         <template #title>
                             <div>Coding</div>
                         </template>
@@ -130,7 +145,7 @@
                         </template>
                     </title-card>			
                 </v-card-text>
-
+                <v-alert v-if="alertMsg" class="mt-5 mx-10" type="info" dismissible>{{ alertMsg }}</v-alert>
                 <v-card-actions>					
                     <v-btn class="ml-3" color="secondary primary--text" @click="clearDepartmentData();departmentDialog = false"> Cancel </v-btn>
                     <v-btn class="mr-3 ml-auto px-6" color="primary" @click="saveDepartment"> Save </v-btn>
@@ -138,7 +153,7 @@
             </v-card>
         </v-dialog>
 
-    </v-container>
+    </div>
 </template>
 
 <script>
@@ -156,7 +171,7 @@ export default {
     },
     data: () => ({
         loadingData: false,
-        departments: [],		
+        departmentsCodingInfo: [],		
         
         department: '',        
         glCodes: [],        
@@ -173,23 +188,30 @@ export default {
 
         totalLength: 0,
         headers: [
-            { text: "Department", 			value: "department"},
-            { text: "Coding", 				value: "glCode"},
-            { text: "Receiving Department", value: "recvDepartment"},
-            { text: "Financial Contact",	value: "contactName"},			
-            { text: "Email", 				value: "contactEmail"},
-            { text: "", 			 value: "edit", width:'1rem'},
+            { text: "Department", 			value: "department",     width:'18%'},
+            { text: "ICT Branch",	        value: "ictBranch",      width:'11%'},			
+            { text: "ICT Unit", 		    value: "ictUnit",        width:'11%'},
+            { text: "Coding", 				value: "glCode",         width:'17%'},
+            { text: "Receiving Department", value: "recvDepartment", width:'17%'},
+            { text: "Financial Contact",	value: "contactName",    width:'11%'},			
+            { text: "Email", 				value: "contactEmail",   width:'10%'},
+            { text: "", 			        value: "edit",           width:'5%'},
         ],
         page: 1,
         pageCount: 0,
         iteamsPerPage: 10,		
-        departmentList: [],		
+        departmentList: [],
+        branchList: [],
+        unitList: [],	
         employeeList: [],		
         departmentEmployeeList: [],
         departmentDialog: false,
+        ictBranch: '',
+        ictUnit: '',
         recvDepartment: '',
         action: 'Add',
         updateGL: 0 ,
+        alertMsg: '',
         rules:{ // const pattern= /^[0-9]{3}-[0-9]{6}-[0-9]{4}-[0-9]{4}-[0-9]{5}$/
             glcode1 : value => {
                     const pattern= /^[0-9]{1,3}$/
@@ -221,25 +243,28 @@ export default {
     methods: {
         async updateTable(){
             this.loadingData = true;
-            await this.getDepartments();
+            await this.getDepartmentsCodingInfo();
             this.departmentList = this.$store.state.recoveries.departmentBranch;		
             this.employeeList = this.$store.state.recoveries.employees;
             this.loadingData = false;
         },
 
-        async getDepartments(){
+        async getDepartmentsCodingInfo(){
             return axios.get(`${ADMIN_URL}/department-info`)
             .then(resp => {  
                 //console.log(resp.data)       
-                this.departments = resp.data;              
+                this.departmentsCodingInfo = resp.data;              
             })
             .catch(e => {
                 console.log(e);
             });
         },
 
-        clearDepartmentData(){			
-            this.department = "";            
+        clearDepartmentData(){
+            this.alertMsg = "";			
+            this.department = "";  
+            this.ictBranch = "";
+            this.ictUnit = "";          
             this.glCodes = [];
             this.recvDepartment = "";
             this.contactName = "";
@@ -268,6 +293,8 @@ export default {
             this.recvDepartment = value.recvDepartment;
             this.contactName = value.contactName;
             this.contactEmail = value.contactEmail;
+            this.ictBranch = value.ictBranch;
+            this.ictUnit = value.ictUnit;
             this.action = 'Edit';
             Vue.nextTick(() => this.departmentDialog = true);
         },
@@ -281,7 +308,8 @@ export default {
             this.departmentErr = this.department ? false : true
             this.contactNameErr = this.contactName? false: true
             this.contactEmailErr = this.contactEmail? false: true
-            
+            this.updateGL++;
+
             if( this.departmentErr || 
                 this.contactNameErr || 
                 this.contactEmailErr || 
@@ -297,10 +325,12 @@ export default {
 
         saveDepartment(){
             if(this.checkFields()){
-                this.departmentDialog = false
+                this.alertMsg = ""
                 const glCode = this.glCodes.join('-')
                 const body = {
                     department: this.department,
+                    ictBranch: this.ictBranch,
+                    ictUnit: this.ictUnit,
                     glCode: glCode,				
                     contactName: this.contactName,
                     contactEmail: this.contactEmail,
@@ -309,10 +339,12 @@ export default {
                 const id = this.currentItem?.departmentID? this.currentItem.departmentID: 0;
                 return axios.post(`${ADMIN_URL}/department-info/${id}`, body)
                 .then(async () => {
+                    this.departmentDialog = false
                     await this.updateTable()              
                 })
                 .catch(e => {
                     console.log(e);
+                    this.alertMsg = e.response.data;
                 });
             }
         },
@@ -323,9 +355,21 @@ export default {
             this.contactEmailErr=false;
         },
 
-        loadDepartmentData(event){
+        loadDepartmentData(selectedDept){
             this.departmentErr=false;
-            this.departmentEmployeeList = this.employeeList.filter(emp => emp.department == event);
+            this.departmentEmployeeList = this.employeeList.filter(emp => emp.department == selectedDept);
+            this.branchList = selectedDept? this.departmentList[selectedDept].branches: [];
+            this.ictBranch = ''
+            this.ictUnit = ''
+        },
+
+        branchChanged(selectedBranch){  
+            this.ictUnit = ''          
+            if(this.department && selectedBranch) {                
+                this.unitList = this.departmentList[this.department]?.branchUnits[selectedBranch]                
+            }else{
+                this.unitList = []
+            }
         },
 
         codeFormat(code, id, len) { 

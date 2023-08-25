@@ -2,6 +2,7 @@ import { Express, Request, Response } from "express";
 import { sqldb } from "./index";
 import { join } from "path";
 import { rolesUp, seedUp } from "./seeds"
+import { RequiresRoleAdmin } from "../middleware"
 
 export async function migrateUp() {
     console.log("-------- MIGRATE UP ---------")
@@ -22,7 +23,7 @@ export async function migrateLatest() {
 
 export async function CreateMigrationRoutes(app: Express) {
 
-    app.get("/migrate/up", async (req: Request, res: Response) => {
+    app.get("/migrate/up", RequiresRoleAdmin, async (req: Request, res: Response) => {
         res.send(await migrateUp());
     });
 

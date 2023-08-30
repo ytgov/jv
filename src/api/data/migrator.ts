@@ -27,7 +27,7 @@ export async function CreateMigrationRoutes(app: Express) {
         res.send(await migrateUp());
     });
 
-    app.get("/migrate/down", async (req: Request, res: Response) => {
+    app.get("/migrate/down", RequiresRoleAdmin, async (req: Request, res: Response) => {
         res.send(await migrateDown());
     });
 

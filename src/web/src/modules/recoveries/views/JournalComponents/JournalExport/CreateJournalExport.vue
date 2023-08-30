@@ -1,20 +1,24 @@
 <template>
-  <div>
-        <v-dialog v-model="exportJournalDialog" persistent max-width="65%">
-            <template v-slot:activator="{ on, attrs }">
-                <v-btn                    
-                    color="#005a65"
-                    class="px-5 white--text"
-                    style="min-width: 0"
-                    @click="initForm()"
-                    v-bind="attrs"
-                    v-on="on"
-                    >
-                    <div v-if="type=='Send'">Send</div>
-                    <div v-else>Create Journal Export</div>
-                </v-btn>
+  <div>     
+        <v-tooltip top color="red" :disabled="!disabled">
+            <template v-slot:activator="{ on }">
+                <div v-on="on">
+                    <v-btn  v-on="on"                  
+                        color="#005a65"
+                        class="px-5 white--text"
+                        style="min-width: 0"
+                        :disabled="disabled"
+                        @click="initForm()"                    
+                        >
+                        <div v-if="type=='Send'">Send</div>
+                        <div v-else>Create Journal Export</div>                        
+                    </v-btn>
+                </div>                    
             </template>
+            <span>Please specify all GlCodes on the Recoverable Items</span>
+        </v-tooltip>
 
+        <v-dialog v-model="exportJournalDialog" persistent max-width="65%">
         <v-card >
             <v-card-title class="primary" style="border-bottom: 1px solid black">
                 <div v-if="type=='Send'" class="text-h5">Send Journal Voucher</div>
@@ -62,7 +66,8 @@ export default {
     name: "CreateJournalExport",
     props: {        
         journalID: {},
-        type: {}
+        type: {},
+        disabled: { type: Boolean},
     },
     data() {
         return {
@@ -78,7 +83,7 @@ export default {
 
     methods: {
 
-        async initForm() {
+        async initForm() {this.exportJournalDialog=true
             this.loadingData = true
             await this.getJournal()
             this.loadingData = false

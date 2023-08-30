@@ -217,7 +217,7 @@ recoveriesRouter.get(
     const adminQuery = function (queryBuilder: any) {
       if (user.roles?.indexOf("Admin") >= 0) queryBuilder.select("*");
       else if (user.roles?.indexOf("IctFinance") >= 0) queryBuilder.select("*");
-      else queryBuilder.where("department", user.department).select("*");
+      else queryBuilder.where("department", user.department).whereNot("status","Draft").select("*");
     };
 
     const journals = await db("JournalVoucher").modify(adminQuery);

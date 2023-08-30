@@ -15,8 +15,8 @@
 
                     <v-tooltip v-else-if="type == 'Complete' && btnTxt && noGlCode" right color="warning">
                         <template #activator="{ on }">
-                        <div class="primary--text">{{btnTxt}}</div> 
-                        <v-icon color="warning" class="mr-1" v-on="on">mdi-alert</v-icon>
+                            <div class="primary--text">{{btnTxt}}</div> 
+                            <v-icon color="warning" class="mr-1" v-on="on">mdi-alert</v-icon>
                         </template>
                         <span>No GlCode</span>
                     </v-tooltip>
@@ -24,7 +24,7 @@
                     
                     <v-tooltip v-else-if="type == 'Complete' && !btnTxt && noGlCode" left color="warning">
                         <template #activator="{ on }">
-                        <v-icon color="warning" class="mr-1" v-on="on">mdi-alert</v-icon>
+                            <v-icon color="warning" class="mr-1" v-on="on">mdi-alert</v-icon>
                         </template>
                         <span>No GlCode</span>
                     </v-tooltip>
@@ -441,22 +441,24 @@
                         <v-select                                                                                                           
                             v-model="glCode"
                             :items="glCodeList"
-                            item-value="glCode"       
+                            item-value="glcode"       
                             label="GL Coding"
                             outlined>
                             <template v-slot:selection="{ item }">
-                                {{ item.glCode }}
+                                {{ item.glcode }}
                             </template>
                             <template v-slot:item="{ item }">                                
                                 <v-row >
                                     <v-col >
                                         <div style="font-size:14pt;">
                                             <b class="primary--text">
-                                                {{item.glCode?.replace('-',' ').replace('-',' ').replace('-',' ').replace('-',' ')}}
+                                                {{item.glcode?.replace('-',' ').replace('-',' ').replace('-',' ').replace('-',' ')}}
                                             </b>
                                         </div>
+                                        <div v-if="item.department" class="red--text">{{item.department}}</div>
                                         <div style="font-size:11pt;">{{item.ictBranch}}</div>
                                         <div style="font-size:10pt;">{{item.ictUnit}}</div>
+                                        <hr>
                                     </v-col>
                                 </v-row>                                
                             </template>                            
@@ -540,7 +542,7 @@
 
 <script>
 import Vue from "vue";
-import { RECOVERIES_URL, ADMIN_URL} from "@/urls";
+import { RECOVERIES_URL, ADMIN_URL, USERS_URL} from "@/urls";
 import axios from "axios";
 import TitleCard from '../Common/TitleCard.vue';
 
@@ -701,7 +703,7 @@ export default {
                 this.calculateTotalPrice()
             }
             
-            if(this.glCodeEnable) this.initGlCode();
+            if(this.glCodeEnable) await this.initGlCode();
 
             this.savingData = false
             if(this.type=="Fill"){
@@ -802,18 +804,21 @@ export default {
             }
         },
 
-        initGlCode() {
-            const deptsInfo = this.$store.state.recoveries.departmentsInfo
-            this.glCodeList= deptsInfo.filter(dept =>  dept.department==this.department);                         
-            
-            if(!this.glCode)
-                this.glCodeList.forEach(dept => {
-                    const branch = this.recovery.employeeBranch ?  this.recovery.employeeBranch : ''
-                    const unit = this.recovery.employeeUnit? this.recovery.employeeUnit : ''
-                    const deptBranch = dept.ictBranch? dept.ictBranch : ''
-                    const deptUnit = dept.ictUnit? dept.ictUnit : ''                
-                    if(deptBranch == branch && deptUnit == unit) this.glCode = dept.glCode;                        
+        async initGlCode() {            
+            const body = { email: this.recovery.modUser };
+
+            return axios.post(`${USERS_URL}/agent-glcode`, body)
+                .then(resp => {
+                    if(resp.data){
+                        this.glCodeList = [ ...resp.data.byDefault , ...resp.data.byDepartment , ...resp.data.byBranchUnit ]
+                        if(!this.glCode) this.glCode = resp.data.byDefault[0].glcode;
+                    }
                 })
+                .catch(e => {
+                    console.log(e);
+                    this.alertMsg = e.response.data;
+                    this.alert = true;
+                });  
         },
 
         async saveGlCode(){

@@ -51,12 +51,11 @@
                         @change="loadDepartmentData"						
                         outlined/>
 
-                    <v-autocomplete
+                    <v-select
                         label="ICT Branch"
                         v-model="ictBranch"
-                        :items="branchList"
-                        item-text="name"                        
-                        @change="branchChanged"
+                        :items="branchList"                                                
+                        @change="branchChanged(true)"
                         outlined/>
 
                     <v-autocomplete
@@ -189,8 +188,8 @@ export default {
         totalLength: 0,
         headers: [
             { text: "Department", 			value: "department",     width:'18%'},
-            { text: "ICT Branch",	        value: "ictBranch",      width:'11%'},			
-            { text: "ICT Unit", 		    value: "ictUnit",        width:'11%'},
+            { text: "ICT Branch",	        value: "ictBranch",      width:'8%'},			
+            { text: "ICT Unit", 		    value: "ictUnit",        width:'14%'},
             { text: "Coding", 				value: "glCode",         width:'17%'},
             { text: "Receiving Department", value: "recvDepartment", width:'17%'},
             { text: "Financial Contact",	value: "contactName",    width:'11%'},			
@@ -246,6 +245,7 @@ export default {
             await this.getDepartmentsCodingInfo();
             this.departmentList = this.$store.state.recoveries.departmentBranch;		
             this.employeeList = this.$store.state.recoveries.employees;
+            this.branchList = Vue.filter("ictBranches")();
             this.loadingData = false;
         },
 
@@ -296,6 +296,7 @@ export default {
             this.ictBranch = value.ictBranch;
             this.ictUnit = value.ictUnit;
             this.action = 'Edit';
+            this.branchChanged();
             Vue.nextTick(() => this.departmentDialog = true);
         },
 
@@ -358,17 +359,15 @@ export default {
         loadDepartmentData(selectedDept){
             this.departmentErr=false;
             this.departmentEmployeeList = this.employeeList.filter(emp => emp.department == selectedDept);
-            this.branchList = selectedDept? this.departmentList[selectedDept].branches: [];
-            this.ictBranch = ''
-            this.ictUnit = ''
         },
 
-        branchChanged(selectedBranch){  
-            this.ictUnit = ''          
-            if(this.department && selectedBranch) {                
-                this.unitList = this.departmentList[this.department]?.branchUnits[selectedBranch]                
-            }else{
-                this.unitList = []
+        branchChanged(clearUnit){  
+            if(clearUnit) this.ictUnit = ''
+            this.unitList = []     
+            if(this.ictBranch) {                
+                const usrbranch = this.branchList.filter(branch => branch.value==this.ictBranch)[0]
+				if(usrbranch)
+					this.unitList = usrbranch.units                    
             }
         },
 

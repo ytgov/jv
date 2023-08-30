@@ -10,7 +10,7 @@ export const up = function (knex: knex.Knex, Promise: any) {
 		t.string('firstName', 50).notNullable();
 		t.string('lastName', 50).notNullable();
 		t.string('department', 50).notNullable();
-		t.string('branch', 50);
+		t.string('branch', 150);
 		t.string('refNum', 20);
 		t.date('createDate').notNullable().defaultTo(knex.fn.now());
 		t.string('createUser', 100).notNullable();

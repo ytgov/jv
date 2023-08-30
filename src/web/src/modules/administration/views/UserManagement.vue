@@ -48,8 +48,7 @@
 					
 					<v-row class="mt-5">
 						<v-col cols="5">
-							<v-autocomplete label="Search Name"
-								@change="departmentChanged()"
+							<v-autocomplete label="Search Name"								
 								:disabled="action!='Add'" 
 								v-model="userName" 
 								:items="employeeList"								
@@ -60,8 +59,7 @@
 						</v-col>
 						<v-col cols="7">
 							<v-autocomplete 
-								label="Department"
-								@change="departmentChanged()"
+								label="Department"								
 								v-model="userName.department" 
 								:items="Object.keys(departmentList)" 
 								outlined/>					
@@ -75,7 +73,12 @@
 							<v-text-field v-model="userName.lastName" label="Last Name" outlined/>
 						</v-col>
 						<v-col cols="3">
-							<v-select label="Branch" v-model="userBranch" :items="branchList" outlined/>
+							<v-select 
+								label="Branch" 
+								@change="branchChanged(true)"
+								v-model="userBranch" 
+								:items="branchList" 
+								outlined/>
 						</v-col>
 					</v-row>
 					<v-row class="my-n5">
@@ -84,7 +87,7 @@
 						</v-col>
 						<v-col cols="6">
 							<v-autocomplete 
-								v-model="userName.unit" 
+								v-model="userUnit" 
 								label="Unit"
 								:items="unitList"
 								outlined/>
@@ -152,6 +155,7 @@ export default {
 		},
 		currentItem: {},
 		userBranch: '',
+		userUnit: '',
 		userRoles: [],
 		userStatus: '',
 		emailErr: false,
@@ -168,16 +172,16 @@ export default {
 		headers: [						
 			{ text: "Name", 	    value: "display_name"},
 			{ text: "Email", 		value: "email"},			
-			{ text: "Department", 	value: "department"},			
-			{ text: "Unit", 		value: "unit"},
+			{ text: "Department", 	value: "department"},						
 			{ text: "Branch", 		value: "branch"},
+			{ text: "Unit", 		value: "unit"},
 			{ text: "Roles", 		value: "roles"},
 			{ text: "Status", 		value: "status"},
 			{ text: "", 			value: "edit", width:'1rem'},
 		],
 		
 		departmentList: [],
-		branchList: ['ITCS', 'CIM', 'SIS', 'eServices', 'DAS'],
+		branchList: [],
 		statusList: ['Active', 'Inactive'],
 		employeeList: [],
 		roleList: [],
@@ -222,6 +226,7 @@ export default {
 		loadEmployeeDepartmentData(){
 			this.departmentList = (this.$store.state.recoveries.departmentBranch);		
 			this.employeeList = JSON.parse(JSON.stringify(this.$store.state.recoveries.employees));
+			this.branchList = Vue.filter("ictBranches")();
 		},
 
 		clearUserData(){
@@ -233,6 +238,7 @@ export default {
 				email: ""
 			};
 			this.userBranch = "";
+			this.userUnit = "";
 			this.userRoles = [];
 			this.userStatus = "";
 			this.emailErr = false;
@@ -256,15 +262,15 @@ export default {
 				department: value.department, 
 				fullName: value.display_name, 
 				email: value.email,
-				unit: value.unit
 			};			
 			this.userBranch = value.branch;
+			this.userUnit = value.unit
 			this.userRoles = value.roles.split(',');
 			this.userStatus = value.status;
 			this.emailErr = false;
 			this.action = 'Edit';
 			this.userDialog = true;
-			this.departmentChanged()
+			this.branchChanged()
 		},
 
 		saveUser(){		
@@ -278,7 +284,7 @@ export default {
 				last_name: this.userName.lastName, 
 				display_name: this.getDisplayName(),
 				department: this.userName.department,
-				unit: this.userName.unit,
+				unit: this.userUnit,
 				branch: this.userBranch, 
 				roles: this.userRoles.join(','), 
 				status: this.userStatus? this.userStatus : 'Inactive'				
@@ -313,13 +319,13 @@ export default {
 			return (role[0]? role[0].name : '')
 		},
 
-		departmentChanged() {
+		branchChanged(clearUnit) {
+			if(clearUnit) this.userUnit=""			
             this.unitList = []
-            if (this.userName?.department) {
-				const depts = this.$store.state.recoveries.departmentBranch;				
-				if(depts[this.userName.department]){
-					this.unitList = depts[this.userName.department].units
-				} 
+            if (this.userBranch) {												
+				const usrbranch = this.branchList.filter(branch => branch.value==this.userBranch)[0]
+				if(usrbranch)
+					this.unitList = usrbranch.units
             }            
         },
 

@@ -13,7 +13,7 @@ export const up = function (knex: knex.Knex, Promise: any) {
 		t.string('branch', 200);
 		t.string('roles', 1000);
 		t.string('status', 20).notNullable().defaultTo("Inactive");
-		t.string('mailcode', 20);
+		t.string('mailcode', 50);
 	});
 };
 

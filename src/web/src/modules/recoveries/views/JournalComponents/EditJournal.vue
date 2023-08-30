@@ -249,9 +249,10 @@
                     <v-row class="my-6 mx-0" >
                         <v-btn color="white" class="ml-5 cyan--text text--darken-4" @click="closeDialog">
                             <div class="px-3">Close</div>
-                        </v-btn>
+                        </v-btn>                                               
                         <create-journal-export 
-                            v-if="!readonly" 
+                            v-if="!readonly"
+                            :disabled="glCodeErr" 
                             type="Export" 
                             :journalID="journal.journalID"
                             @err="alertMsg=$event; alert=true;" 
@@ -266,6 +267,7 @@
                         </v-btn>
                         <create-journal-export 
                             v-if="!readonly" 
+                            :disabled="glCodeErr"
                             type="Send" 
                             :journalID="journal.journalID"
                             @jvSent="saveNewJournal('Send')"
@@ -275,6 +277,7 @@
                             v-if="!readonly"
                             class="ml-2 mr-5 px-5 white--text"
                             color="#005a65"
+                            :disabled="glCodeErr"
                             @click="saveNewJournal('Paid')"
                             :loading="savingData"
                             >Cleared
@@ -344,7 +347,7 @@ export default {
             allUploadingDocuments: [],
             update: 0,
             backupFiles: [],
-
+            glCodeErr: false,
             tmpId: 0,
             alert:false,
             alertMsg:'',
@@ -382,6 +385,7 @@ export default {
             this.journal.jvDate = this.journal?.jvDate?.slice(0,10)
             this.allDeptRecoveries=this.allRecoveries.filter(rec => rec.department==this.journal.department)
             this.fixJvAmount()
+            this.glCodeErr = this.recoveries.some(rec => !rec.glCode)
             this.savingData = false
             this.loadingData = false            
         },
@@ -405,6 +409,7 @@ export default {
             this.loadingData = true
             await this.getJournal()
             await this.getRecoveries()
+            this.glCodeErr = this.recoveries.some(rec => !rec.glCode)
             this.loadingData = false
         },
 

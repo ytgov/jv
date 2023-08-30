@@ -23,12 +23,17 @@ lookupRouter.get("/department-branch", RequiresAuthentication, ReturnValidationE
         cleanList[slice.department] = {
           branches: [],
           units: [],
-          branchUnits:{}
+          branchUnits:{},
+          ictBranchUnits:{},
         };
 
       if (slice.branch && !cleanList[slice.department].branches.includes(slice.branch)){
         cleanList[slice.department].branches.push(slice.branch);        
         cleanList[slice.department].branchUnits[slice.branch]=[];
+        
+        if(slice.department=='Highways and Public Works' && slice.division =='Information and Communications Technology'){
+          cleanList[slice.department].ictBranchUnits[slice.branch]=[];
+        }
       }
 
       if (slice.unit && !cleanList[slice.department].units.includes(slice.unit))
@@ -37,6 +42,11 @@ lookupRouter.get("/department-branch", RequiresAuthentication, ReturnValidationE
       if (slice.branch && slice.unit && !cleanList[slice.department].branchUnits[slice.branch].includes(slice.unit))
         cleanList[slice.department].branchUnits[slice.branch].push(slice.unit);        
 
+      if (slice.department=='Highways and Public Works' && 
+          slice.division =='Information and Communications Technology' && 
+          slice.branch && slice.unit && 
+          !cleanList[slice.department].ictBranchUnits[slice.branch].includes(slice.unit))
+        cleanList[slice.department].ictBranchUnits[slice.branch].push(slice.unit);
     }    
     res.status(200).json(cleanList);
   } catch (error: any) {

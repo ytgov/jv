@@ -70,7 +70,7 @@ export default {
             this.loadingData = true;
             return axios.get(`${RECOVERIES_URL}/journals/`)
             .then(resp => {
-                this.journals=resp.data
+                this.journals=resp?.data?.filter(jv => jv.status != 'Draft')
             })
             .catch(e => {
                 console.log(e);

@@ -137,12 +137,16 @@ async function generatePdfFile(requestBodyData: any[]){
         }
 
         const mergedPdf = await PDFDocument.create(); 
-        for (const pdfBytes of pdfsToMerge) { 
-            const pdf = await PDFDocument.load(pdfBytes); 
-            const copiedPages = await mergedPdf.copyPages(pdf, pdf.getPageIndices());
-            copiedPages.forEach((page: any) => {
-                mergedPdf.addPage(page); 
-            }); 
+        for (const pdfBytes of pdfsToMerge) {
+            try{ 
+                const pdf = await PDFDocument.load(pdfBytes);
+                const copiedPages = await mergedPdf.copyPages(pdf, pdf.getPageIndices());
+                copiedPages.forEach((page: any) => {
+                    mergedPdf.addPage(page); 
+                });
+            }catch (error: any) {
+                console.log(error);
+            } 
         }     
         const pdfBytes = await mergedPdf.save();
         const pdfFile = Buffer.from(pdfBytes.buffer, 'binary');

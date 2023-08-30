@@ -6,9 +6,11 @@ import { UserService } from "../services";
 
 export async function loadUser(req: Request, res: Response, next: NextFunction) {
   const db = new UserService();
-  const email = req.user.email;
+  const email = req.user?.email;
   
-  let u = await db.getByEmail(email)
+  let u = null
+  if(email) 
+    u = await db.getByEmail(email)
 
   if (u) {
     u.display_name = `${u.first_name} ${u.last_name}`;

@@ -95,4 +95,23 @@ Vue.filter("currency", function (currency) {
   return currency.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 });
 
+
+Vue.filter("ictBranches", function(){
+  const departmentList = store.state.recoveries.departmentBranch;					
+  const branchOptions = []
+  const itcBranches = departmentList['Highways and Public Works'].ictBranchUnits
+  for(const branch of Object.keys(itcBranches)){
+    if(itcBranches[branch].length>0){
+      const branchAbbr = branch.trim().match(/[A-Z]/g).join('')
+      branchOptions.push({
+        text:branchAbbr,
+        value:branchAbbr,
+        lable: branch.trim(),
+        units: itcBranches[branch]        
+      })
+    }
+  }
+  return branchOptions
+});
+
 Vue.filter('printPdf', print);

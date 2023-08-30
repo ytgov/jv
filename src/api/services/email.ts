@@ -83,7 +83,8 @@ function generatePendingApprovalContent (senderName: string, sender:string, rece
     <br><b>Dear ${receiverName.replace('.',' ')},</b><br><br>
     <p>
         Your recoveries request has been created and is pending your approval. 
-        Please login to the 'Recoveries Application' and review the requests under 'Pending Approvals'.
+        Please login to the <a href='https://recoveries.ynet.gov.yk.ca/recovery-dashboard-user' target='_blank'> Recoveries Application </a> 
+        and review the requests under 'Pending Approvals'.
         <br>
         If you need any further clarification, please contact me through Email (${sender}).
     </p>

@@ -171,6 +171,7 @@
 </template>
 
 <script>
+import Vue from 'vue';
 import Breadcrumbs from "../../../components/Breadcrumbs.vue";
 import TitleCard from '../../recoveries/views/Common/TitleCard.vue';
 import { ADMIN_URL } from "../../../urls";
@@ -204,7 +205,7 @@ export default {
             { text: "Default Description",  value: "description"},
             { text: "", 			        value: "edit", width:'1rem'},
         ],
-        branchOptions: ['ITCS', 'CIM', 'SIS', 'eServices', 'DAS'],
+        branchOptions: [],
 
         auditHeaders: [
             { text: "Date",   value: "date",   class: "grey lighten-4", cellClass: "px-1 py-1", width: "20%" },                
@@ -233,6 +234,7 @@ export default {
             this.loadingData = true;
             this.branchErr = false;
             this.categoryErr = false;
+            this.branchOptions = Vue.filter("ictBranches")().map(branch => branch.text);
             await this.getItems();
             this.loadingData = false;
         },

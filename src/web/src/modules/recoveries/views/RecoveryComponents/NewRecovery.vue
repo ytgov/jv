@@ -122,6 +122,7 @@
                 <v-row class="mt-0 mx-0">                    
                     <v-col cols="3">
                         <v-text-field
+                            disabled
                             readonly                                
                             v-model="recoveryID"
                             label="Recovery ID"                                

@@ -32,7 +32,7 @@
                         </template>
 
                         <template v-slot:[`item.branch`]="{ item }">
-                            {{ item.branch.replace(',', '/') }}
+                            {{ item.branch }}
                         </template>
 
                         <template v-slot:[`item.price`]="{ item }">				
@@ -93,7 +93,7 @@
                     <v-row :style="{border:(branchErr? '1px solid red' : '0px solid')}">
                         <v-col v-for="(branchOption, branchInx) in branchOptions" :key="branchInx">							
                             <v-checkbox								
-                                multiple
+                                :multiple="false"
                                 @change="branchErr=false"
                                 dense								
                                 v-model="branch" 
@@ -186,7 +186,7 @@ export default {
     data: () => ({
         loadingData: false,
         items:[],
-        branch: [],
+        branch: '',
         branchErr: false,
         categoryErr: false,		
         active: true,		
@@ -253,7 +253,7 @@ export default {
         clearItemData(){
             this.alertMsg = "";
             this.currentItem = {};            		
-            this.branch = [];		
+            this.branch = "";		
             this.category = "";
             this.changeQuantity = false;
             this.description = "";
@@ -275,7 +275,7 @@ export default {
         editItem(value) {
             this.page--;
             this.currentItem = value
-            this.branch = value.branch.split('/');		
+            this.branch = value.branch;
             this.category = value.category;
             this.active = value.active;
             this.price = value.price;
@@ -304,7 +304,7 @@ export default {
                 this.alertMsg = "";
                 const body = {
                     category: this.category,
-                    branch: this.branch.join('/'),				
+                    branch: this.branch,				
                     price: this.price,
                     description: this.description,
                     changeQuantity: this.changeQuantity,
@@ -425,8 +425,8 @@ export default {
                     action += `\nChanging status to ${status};`
                 }
 
-                const branch = this.currentItem.branch.split('/');
-                if(this.branch.length != branch.length)
+                const branch = this.currentItem.branch;
+                if(this.branch != branch)
                     action += `\nChanging branches;`                
                 
                 return action  

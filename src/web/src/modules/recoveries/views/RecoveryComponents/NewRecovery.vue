@@ -812,12 +812,12 @@ export default {
                 .then(resp => {
                     if(resp.data){
                         this.glCodeList = [ ...resp.data.byDefault , ...resp.data.byDepartment , ...resp.data.byBranchUnit ]
-                        if(!this.glCode) this.glCode = resp.data.byDefault[0].glcode;
+                        if(!this.glCode && resp.data?.byDefault?.length>0) this.glCode = resp.data.byDefault[0].glcode;
                     }
                 })
                 .catch(e => {
                     console.log(e);
-                    this.alertMsg = e.response.data;
+                    this.alertMsg = e.response? e.response.data: 'GlCode Error';
                     this.alert = true;
                 });  
         },

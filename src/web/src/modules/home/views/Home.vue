@@ -31,24 +31,20 @@
             Recovery List
           </router-link>
         </p> -->
-        <v-card class="px-10 py-15" elevation="3" style="width:60%;">
-          <div class="row d-flex justify-center">
-            <div class="col-md-3" v-for="(route, inx) in routes" :key="'dashboard-' + inx">
-              <v-card color="#008392" class="white--text py-3 text-center" elevation="10" @click="goto(route.route)">
-                <v-card-title>
-                  <div class="mx-auto text-h5">
-                    <v-icon class="white--text text-h4">mdi-monitor</v-icon> {{ route.title }}
-                  </div>
-                </v-card-title>
-                <v-card-text>
-                  <div class="text-center amber--text font-weight-bold font-italic">
-                    Role: {{ route.role }}
-                  </div></v-card-text
-                >
-              </v-card>
-            </div>
+        <div class="row">
+          <div class="col-md-3" v-for="(route, inx) in routes" :key="'dashboard-' + inx">
+            <v-card color="#008392" class="white--text py-3 text-center" elevation="10" @click="goto(route.route)">
+              <v-card-title style="word-break: normal;">
+                <div class="mx-auto text-h5">
+                  <v-icon class="white--text text-h4">mdi-monitor</v-icon> {{ route.title }}
+                </div>
+              </v-card-title>
+              <v-card-text>
+                <div class="text-center amber--text font-weight-bold font-italic">Role: {{ route.role }}</div>
+              </v-card-text>
+            </v-card>
           </div>
-        </v-card>
+        </div>
       </div>
     </v-card>
   </div>

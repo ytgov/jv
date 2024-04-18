@@ -1,9 +1,8 @@
 <template>
   <div class="home">
     <v-card :loading="loadingData" style="border:0px solid white !important; margin-top:1rem;" outlined>
-      
-      <div v-if="loadingData" class="text-center my-15"> Loading... </div>
-      <h1 v-if="!loadingData" >{{ title }}</h1>
+      <div v-if="loadingData" class="text-center my-15">Loading...</div>
+      <h1 v-if="!loadingData">{{ title }}</h1>
       <!-- <p  v-if="!loadingData">
         This is a template that can be used for many different types of applications
       </p> -->
@@ -34,17 +33,23 @@
         </p> -->
         <v-card class="px-10 py-15" elevation="3" style="width:60%;">
           <div class="row d-flex justify-center">
-              <div class="col-md-3" v-for="route,inx in routes" :key="'dashboard-'+inx">
-                  <v-card color="#008392" class="white--text py-3 text-center" elevation="10" @click="goto(route.route)">
-                      <v-card-title> <div class="mx-auto text-h5">  <v-icon class="white--text text-h4">mdi-monitor</v-icon> {{route.title}}</div> </v-card-title>
-                      <v-card-text > <div class="text-center amber--text font-weight-bold font-italic">Role: {{route.role}} </div></v-card-text>
-                  </v-card>
-              </div>
+            <div class="col-md-3" v-for="(route, inx) in routes" :key="'dashboard-' + inx">
+              <v-card color="#008392" class="white--text py-3 text-center" elevation="10" @click="goto(route.route)">
+                <v-card-title>
+                  <div class="mx-auto text-h5">
+                    <v-icon class="white--text text-h4">mdi-monitor</v-icon> {{ route.title }}
+                  </div>
+                </v-card-title>
+                <v-card-text>
+                  <div class="text-center amber--text font-weight-bold font-italic">
+                    Role: {{ route.role }}
+                  </div></v-card-text
+                >
+              </v-card>
+            </div>
           </div>
         </v-card>
-
       </div>
-      
     </v-card>
   </div>
 </template>
@@ -61,7 +66,7 @@ export default {
   data: () => ({
     title: `Welcome to ${config.applicationName}`,
     loadingData: false,
-    routes:[],
+    routes: [],
   }),
   computed: {
     ...mapState("home", ["departments"]),
@@ -85,32 +90,31 @@ export default {
     this.loadingData = true;
     await this.getEmployees();
     await this.getDepartmentBranch();
-    this.getRoutes()
+    this.getRoutes();
     this.loadingData = false;
   },
   methods: {
     ...mapActions("home", ["loadDepartments"]),
     ...mapActions("recoveries", ["getEmployees", "getDepartmentBranch"]),
-    
-    getRoutes(){
-      this.routes = []
 
-      if(Vue.filter("isBranchUser")())
-        this.routes.push({title:'Dashboard', role:'User', route:'/recovery-dashboard-user'})
+    getRoutes() {
+      this.routes = [];
 
-      if(Vue.filter("isBranchAgent")())
-        this.routes.push({title:'Dashboard', role:'Agent', route:'/recovery-dashboard-agent'})
+      if (Vue.filter("isBranchUser")())
+        this.routes.push({ title: "Dashboard", role: "User", route: "/recovery-dashboard-user" });
 
-      if(Vue.filter("isDepartmentalFinance")())
-        this.routes.push({title:'Dashboard', role:'Dept. Finance', route:'/recovery-dashboard-finance'})
+      if (Vue.filter("isBranchAgent")())
+        this.routes.push({ title: "Dashboard", role: "Agent", route: "/recovery-dashboard-agent" });
 
-      if(Vue.filter("isICTFinance")())
-        this.routes.push({title:'Recovery List', role:'ICT Finance', route:'/recoveries'})    
+      if (Vue.filter("isDepartmentalFinance")())
+        this.routes.push({ title: "Dashboard", role: "Dept. Finance", route: "/recovery-dashboard-finance" });
+
+      if (Vue.filter("isICTFinance")())
+        this.routes.push({ title: "Recovery List", role: "ICT Finance", route: "/recoveries" });
     },
-    goto(route){
-      this.$router.push({path: route})
-    }
-
+    goto(route) {
+      this.$router.push({ path: route });
+    },
   },
 };
 </script>

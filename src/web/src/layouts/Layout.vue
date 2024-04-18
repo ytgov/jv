@@ -27,13 +27,7 @@
       </v-list>
     </v-navigation-drawer>
 
-    <v-app-bar
-      app
-      color="#fff"
-      flat
-      height="70"
-      style="left: 0; border-bottom: 3px #f3b228 solid"
-    >
+    <v-app-bar app color="#fff" flat height="70" style="left: 0; border-bottom: 3px #f3b228 solid">
       <!-- <v-icon color="#f3b228" class="mr-5">{{ applicationIcon }}</v-icon> -->
       <img src="/yukon.svg" style="margin: -8px 155px 0 0" height="44" />
       <v-toolbar-title>
@@ -60,30 +54,34 @@
       ></v-select> -->
 
       <div v-if="isAuthenticated">
-
         <v-menu offset-y class="ml-0">
           <template v-slot:activator="{ on, attrs }">
-            <v-btn text color="primary" v-bind="attrs" v-on="on"> {{routeTitle}}<v-icon>mdi-menu-down</v-icon> </v-btn>
+            <v-btn text color="primary" v-bind="attrs" v-on="on">
+              {{ routeTitle }}<v-icon>mdi-menu-down</v-icon>
+            </v-btn>
           </template>
           <v-list dense style="min-width: 200px">
-            <v-list-item  @click="routeTitle='Home'" to="/">
+            <v-list-item @click="routeTitle = 'Home'" to="/">
               <v-list-item-title>Home</v-list-item-title>
             </v-list-item>
-            <v-list-item v-if="isBranchUser" @click="routeTitle='Dashboard (User)'" to="/recovery-dashboard-user">
+            <v-list-item v-if="isBranchUser" @click="routeTitle = 'Dashboard (User)'" to="/recovery-dashboard-user">
               <v-list-item-title>Dashboard (User)</v-list-item-title>
             </v-list-item>
-            <v-list-item v-if="isBranchAgent" @click="routeTitle='Dashboard (Agent)'" to="/recovery-dashboard-agent">
+            <v-list-item v-if="isBranchAgent" @click="routeTitle = 'Dashboard (Agent)'" to="/recovery-dashboard-agent">
               <v-list-item-title>Dashboard (Agent)</v-list-item-title>
             </v-list-item>
-            <v-list-item v-if="isDepartmentalFinance" @click="routeTitle='Dashboard (Finance)'" to="/recovery-dashboard-finance">
+            <v-list-item
+              v-if="isDepartmentalFinance"
+              @click="routeTitle = 'Dashboard (Finance)'"
+              to="/recovery-dashboard-finance"
+            >
               <v-list-item-title>Dashboard (Finance)</v-list-item-title>
             </v-list-item>
-            <v-list-item v-if="isICTFinance" @click="routeTitle='Recovery List'" to="/recoveries">
+            <v-list-item v-if="isICTFinance" @click="routeTitle = 'Recovery List'" to="/recoveries">
               <v-list-item-title>Recovery List</v-list-item-title>
-            </v-list-item>            
+            </v-list-item>
           </v-list>
         </v-menu>
-
 
         <span>{{ username }}</span>
         <v-menu bottom left class="ml-0">
@@ -94,8 +92,7 @@
           </template>
 
           <v-list dense style="min-width: 200px">
-
-            <v-list-item to="/administration">
+            <v-list-item to="/administration" v-if="isSystemAdmin">
               <v-list-item-icon>
                 <v-icon>mdi-table-edit</v-icon>
               </v-list-item-icon>
@@ -144,7 +141,7 @@ import router from "@/router";
 import store from "@/store";
 import * as config from "@/config";
 import { mapState } from "vuex";
-import { LOGOUT_URL} from "../urls";
+import { LOGOUT_URL } from "../urls";
 
 export default {
   name: "App",
@@ -157,10 +154,21 @@ export default {
     isAuthenticated() {
       return store.getters.isAuthenticated;
     },
-    isBranchUser() { return Vue.filter("isBranchUser")() },
-    isBranchAgent() { return Vue.filter("isBranchAgent")() },
-    isDepartmentalFinance() { return Vue.filter("isDepartmentalFinance")() },
-    isICTFinance() { return Vue.filter("isICTFinance")() },
+    isBranchUser() {
+      return Vue.filter("isBranchUser")();
+    },
+    isBranchAgent() {
+      return Vue.filter("isBranchAgent")();
+    },
+    isDepartmentalFinance() {
+      return Vue.filter("isDepartmentalFinance")();
+    },
+    isICTFinance() {
+      return Vue.filter("isICTFinance")();
+    },
+    isSystemAdmin() {
+      return Vue.filter("isSystemAdmin")();
+    },
   },
   data: () => ({
     dialog: false,
@@ -168,13 +176,13 @@ export default {
     drawerRight: null,
     headerShow: false,
     menuShow: false,
-    routeTitle: 'Home',
+    routeTitle: "Home",
     loadingClass: "d-none",
     applicationName: config.applicationName,
     applicationIcon: config.applicationIcon,
     sections: config.sections,
     hasSidebar: false, //config.hasSidebar,
-    hasSidebarClosable: config.hasSidebarClosable
+    hasSidebarClosable: config.hasSidebarClosable,
   }),
   created: async function() {
     await store.dispatch("checkAuthentication");
@@ -190,11 +198,11 @@ export default {
       else this.hasSidebar = config.hasSidebar;
     },
     $route: function() {
-      this.getDropdownTitle()
-    }
+      this.getDropdownTitle();
+    },
   },
-  mounted () {
-    this.getDropdownTitle()
+  mounted() {
+    this.getDropdownTitle();
   },
   methods: {
     nav: function(location) {
@@ -210,17 +218,17 @@ export default {
     signOut: function() {
       store.dispatch("signOut");
       // router.push("/sign-in");
-      window.location.replace(LOGOUT_URL)
+      window.location.replace(LOGOUT_URL);
     },
-    getDropdownTitle(){
-      const path = this.$route.path
-      if(path.includes('/recovery-dashboard-user')) this.routeTitle='Dashboard (User)'
-      else if(path.includes('/recovery-dashboard-agent')) this.routeTitle='Dashboard (Agent)'
-      else if(path.includes('/recovery-dashboard-finance')) this.routeTitle='Dashboard (Finance)'
-      else if(path.includes('/recoveries')) this.routeTitle='Recovery List'
-      else if(path.includes('/administration')) this.routeTitle='Administration'
-      else if(path.includes('/profile')) this.routeTitle='My Profile'
-    }
-  }
+    getDropdownTitle() {
+      const path = this.$route.path;
+      if (path.includes("/recovery-dashboard-user")) this.routeTitle = "Dashboard (User)";
+      else if (path.includes("/recovery-dashboard-agent")) this.routeTitle = "Dashboard (Agent)";
+      else if (path.includes("/recovery-dashboard-finance")) this.routeTitle = "Dashboard (Finance)";
+      else if (path.includes("/recoveries")) this.routeTitle = "Recovery List";
+      else if (path.includes("/administration")) this.routeTitle = "Administration";
+      else if (path.includes("/profile")) this.routeTitle = "My Profile";
+    },
+  },
 };
 </script>

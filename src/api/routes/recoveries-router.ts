@@ -538,6 +538,26 @@ recoveriesRouter.post(
   }
 );
 
+recoveriesRouter.delete(
+  "/:recoveryID",
+  RequiresAuthentication,
+  ReturnValidationErrors,
+  async function (req: Request, res: Response) {
+    let recoveryID = Number(req.params.recoveryID);
+    let user = req.user.display_name;
+    const userEmail = req.user.email;
+
+    console.log("YOU ARE TRYING TO DELETE", recoveryID);
+
+    await db("RecoveryEmail").where({ recoveryID }).delete();
+    await db("RecoveryAudit").where({ recoveryID }).delete();
+    await db("RecoveryItem").where({ recoveryID }).delete();
+    await db("Recovery").where({ recoveryID }).delete();
+
+    res.json({});
+  }
+);
+
 recoveriesRouter.post(
   "/glcode/:recoveryID",
   RequiresAuthentication,

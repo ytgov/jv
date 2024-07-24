@@ -67,7 +67,8 @@
 
       <template v-slot:[`item.edit`]="{ item }">
         <v-row>
-          <div style="width: 4.5rem">
+          <div>
+            <v-btn x-small color="warning" fab @click="deleteRecoveryClick(item)"><v-icon>mdi-delete</v-icon></v-btn>
             <!-- <new-recovery
                             v-if="item.status"
                             type="Edit"
@@ -106,11 +107,32 @@
         </v-row>
       </template>
     </v-data-table>
+
+    <v-dialog v-model="deleteRecoveryDialog" persistent max-width="450px">
+      <v-card>
+        <v-card-title class="orange lighten-4" style="border-bottom: 1px solid black">
+          <div class="text-h4">Delete Recovery</div>
+        </v-card-title>
+
+        <v-card-text>
+          <div class="my-5 text-h6">
+            Are you sure you would like to delete this Recovery?
+          </div>
+        </v-card-text>
+
+        <v-card-actions>
+          <v-btn color="grey darken-5" @click="deleteRecoveryDialog = false"> Cancel </v-btn>
+          <v-btn class="ml-auto" color="red darken-1 white--text" @click="deleteRecovery"> Confirm </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
 <script>
 import Vue from "vue";
+import { RECOVERIES_URL } from "@/urls";
+import axios from "axios";
 import NewRecovery from "./NewRecovery.vue";
 import { ExportToCsv } from "export-to-csv";
 
@@ -137,7 +159,7 @@ export default {
         { text: "Date Submitted", value: "submissionDate", class: "blue-grey lighten-4" },
         { text: "Status", value: "status", class: "blue-grey lighten-4" },
         { text: "JV #", value: "journal", class: "blue-grey lighten-4" },
-        { text: "", sortable: false, value: "edit", class: "blue-grey lighten-4", width: "1rem" },
+        { text: "", sortable: false, value: "edit", class: "blue-grey lighten-4" },
       ],
       admin: false,
       itemCategoryList: {},
@@ -165,6 +187,8 @@ export default {
         "jvNum",
         "submissionDate",
       ],
+      deleteRecoveryDialog: false,
+      recoveryToDelete: null,
     };
   },
   mounted() {
@@ -249,6 +273,25 @@ export default {
       };
       const csvExporter = new ExportToCsv(options);
       csvExporter.generateCsv(csvInfo);
+    },
+
+    deleteRecoveryClick(item) {
+      this.recoveryToDelete = item;
+      this.deleteRecoveryDialog = true;
+    },
+    deleteRecovery() {
+      console.log("CONFIRMED", this.recoveryToDelete);
+
+      axios
+        .delete(`${RECOVERIES_URL}/${this.recoveryToDelete.recoveryID}`)
+        .then(async (resp) => {
+          console.log(resp);
+          this.deleteRecoveryDialog = false;
+          this.$emit("updateTable");
+        })
+        .catch((e) => {
+          console.log(e);
+        });
     },
   },
 };

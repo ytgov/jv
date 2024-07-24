@@ -567,7 +567,7 @@
             </v-btn>
 
             <v-btn
-              :disabled="!reasonForDecline || (reasonForDecline && reasonForDecline.length < 10)"
+              :disabled="!reasonForDecline || (reasonForDecline && reasonForDecline.length < 1)"
               class="ml-auto mr-5 px-5 white--text"
               color="#005a65"
               @click="

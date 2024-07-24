@@ -482,22 +482,24 @@ recoveriesRouter.post(
         }
         recoveryID = id[0].recoveryID;
 
-        let requestorUser = await userService.getByEmail(newRecovery.requastorEmail);
+        if (newRecovery.requastorEmail) {
+          let requestorUser = await userService.getByEmail(newRecovery.requastorEmail);
 
-        if (!requestorUser) {
-          let reqEmployee = await db("Employees").where({ email: newRecovery.requastorEmail }).first();
+          if (!requestorUser) {
+            let reqEmployee = await db("Employees").where({ email: newRecovery.requastorEmail }).first();
 
-          if (reqEmployee) {
-            await db("user").insert({
-              email: newRecovery.requastorEmail,
-              first_name: reqEmployee.first_name,
-              last_name: reqEmployee.last_name,
-              display_name: reqEmployee.full_name,
-              roles: "BranchUser",
-              department: reqEmployee.department,
-              status: "Active",
-              create_date: new Date(),
-            });
+            if (reqEmployee) {
+              await db("user").insert({
+                email: newRecovery.requastorEmail,
+                first_name: reqEmployee.first_name,
+                last_name: reqEmployee.last_name,
+                display_name: reqEmployee.full_name,
+                roles: "BranchUser",
+                department: reqEmployee.department,
+                status: "Active",
+                create_date: new Date(),
+              });
+            }
           }
         }
 

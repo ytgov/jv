@@ -1,5 +1,11 @@
 import express, { Request, Response } from "express";
-import { ReturnValidationErrors, RequiresAuthentication, RequiresRoleAdminOrIctFinance, RequiresRoleAdminOrFinance, RequiresRoleAdminOrTech, } from "../middleware";
+import {
+  ReturnValidationErrors,
+  RequiresAuthentication,
+  RequiresRoleAdminOrIctFinance,
+  RequiresRoleAdminOrFinance,
+  RequiresRoleAdminOrTech,
+} from "../middleware";
 import { DB_SCHEMA, DB_CONFIG } from "../config";
 import knex from "knex";
 import { sendPendingApprovalEmail, sendPurchaseApprovedEmail } from "../services/email";
@@ -48,13 +54,13 @@ recoveriesRouter.post(
     const data = JSON.parse(req.body.data);
 
     try {
-      await userService.getByEmail(req.user.email).then(resp => {
+      await userService.getByEmail(req.user.email).then((resp) => {
         user = resp.display_name;
       });
 
-      await db.transaction(async trx => {
+      await db.transaction(async (trx) => {
         for (const inx in data.docNames) {
-          const file = data.docNames.length==1? files : files[inx];
+          const file = data.docNames.length == 1 ? files : files[inx];
           const docName = data.docNames[inx];
 
           const buffer = db.raw(`CAST('${file}' AS VARBINARY(MAX))`);
@@ -66,14 +72,14 @@ recoveriesRouter.post(
           if (backupDoc) {
             await db("BackUpDocs")
               .update({
-                document: buffer
+                document: buffer,
               })
               .where("recoveryID", recoveryID);
           } else {
             const newDocument = {
               recoveryID: recoveryID,
               docName: docName,
-              document: buffer
+              document: buffer,
             };
             await db("BackUpDocs").insert(newDocument, "documentID");
           }
@@ -127,13 +133,13 @@ recoveriesRouter.post(
     const data = JSON.parse(req.body.data);
 
     try {
-      await userService.getByEmail(req.user.email).then(resp => {
+      await userService.getByEmail(req.user.email).then((resp) => {
         user = resp.display_name;
       });
 
-      await db.transaction(async trx => {
+      await db.transaction(async (trx) => {
         for (const inx in data.docNames) {
-          const file = data.docNames.length==1? files : files[inx];
+          const file = data.docNames.length == 1 ? files : files[inx];
           const docName = data.docNames[inx];
 
           const buffer = db.raw(`CAST('${file}' AS VARBINARY(MAX))`);
@@ -145,14 +151,14 @@ recoveriesRouter.post(
           if (journalDoc) {
             await db("JournalDocs")
               .update({
-                document: buffer
+                document: buffer,
               })
               .where("journalID", journalID);
           } else {
             const newDocument = {
               journalID: journalID,
               docName: docName,
-              document: buffer
+              document: buffer,
             };
             await db("JournalDocs").insert(newDocument, "documentID");
           }
@@ -209,15 +215,15 @@ recoveriesRouter.get(
   RequiresRoleAdminOrFinance,
   ReturnValidationErrors,
   async function (req: Request, res: Response) {
-    let user = req.user
-    await userService.getByEmail(req.user.email).then(resp => {
+    let user = req.user;
+    await userService.getByEmail(req.user.email).then((resp) => {
       user = resp;
     });
 
     const adminQuery = function (queryBuilder: any) {
       if (user.roles?.indexOf("Admin") >= 0) queryBuilder.select("*");
       else if (user.roles?.indexOf("IctFinance") >= 0) queryBuilder.select("*");
-      else queryBuilder.where("department", user.department).whereNot("status","Draft").select("*");
+      else queryBuilder.where("department", user.department).whereNot("status", "Draft").select("*");
     };
 
     const journals = await db("JournalVoucher").modify(adminQuery);
@@ -250,11 +256,11 @@ recoveriesRouter.post(
     let user = req.user.display_name;
 
     try {
-      await userService.getByEmail(req.user.email).then(resp => {
+      await userService.getByEmail(req.user.email).then((resp) => {
         user = resp.display_name;
       });
 
-      await db.transaction(async trx => {
+      await db.transaction(async (trx) => {
         const recoveryIDs = req.body.recoveryIDs;
         delete req.body.recoveryIDs;
 
@@ -295,7 +301,7 @@ recoveriesRouter.delete(
     const journalID = Number(req.params.journalID);
 
     try {
-      await db.transaction(async trx => {
+      await db.transaction(async (trx) => {
         await db("JournalVoucher").delete().where("journalID", journalID);
       });
       res.status(200).json("successful");
@@ -317,8 +323,8 @@ recoveriesRouter.post(
     let user = req.user.display_name;
 
     try {
-      await db.transaction(async trx => {
-        await userService.getByEmail(req.user.email).then(resp => {
+      await db.transaction(async (trx) => {
+        await userService.getByEmail(req.user.email).then((resp) => {
           user = resp.display_name;
         });
 
@@ -360,17 +366,17 @@ recoveriesRouter.get(
       quantityErr: false,
       unitPriceErr: false,
       approvedCostErr: false,
-      clientChangeErr: false
+      clientChangeErr: false,
     };
 
     const recoveryID = Number(req.params.recoveryID);
 
     let tmpId = 2000;
 
-    const adminQuery = recoveryRoleCheck(req)
+    const adminQuery = recoveryRoleCheck(req);
 
     const recovery = await db("Recovery").modify(adminQuery).where("recoveryID", recoveryID).first();
-    if(!recovery) return res.status(400).json('Recovery Not Found!');
+    if (!recovery) return res.status(400).json("Recovery Not Found!");
 
     const recoveryItems = await db("RecoveryItem").select("*").where("recoveryID", recovery.recoveryID);
     for (const recoveryItem of recoveryItems) {
@@ -397,13 +403,13 @@ recoveriesRouter.get("/", RequiresAuthentication, ReturnValidationErrors, async 
     quantityErr: false,
     unitPriceErr: false,
     approvedCostErr: false,
-    clientChangeErr: false
+    clientChangeErr: false,
   };
 
   let tmpId = 1000;
 
-  const adminQuery = recoveryRoleCheck(req)
-  
+  const adminQuery = recoveryRoleCheck(req);
+
   const recoveries = await db("Recovery").modify(adminQuery);
   for (const recovery of recoveries) {
     const recoveryItems = await db("RecoveryItem").select("*").where("recoveryID", recovery.recoveryID);
@@ -435,26 +441,28 @@ recoveriesRouter.post(
     let recoveryID = Number(req.params.recoveryID);
     let user = req.user.display_name;
     const userEmail = req.user.email;
-    
+
     if (recoveryID > 0) {
-      const adminQuery = recoveryRoleCheck(req)
+      const adminQuery = recoveryRoleCheck(req);
       const recovery = await db("Recovery").modify(adminQuery).where("recoveryID", recoveryID).first();
-      if(!recovery) return res.status(400).json('Recovery Not Found!');
-    }else{
-      if(!req.user?.roles || (
-          (req.user?.roles?.indexOf("Admin") == -1) && 
-          (req.user?.roles?.indexOf("BranchAdmin") == -1) && 
-          (req.user?.roles?.indexOf("BranchAgent") == -1))){      
-            return res.status(401).send('You are not an authorized person!');
+      if (!recovery) return res.status(400).json("Recovery Not Found!");
+    } else {
+      if (
+        !req.user?.roles ||
+        (req.user?.roles?.indexOf("Admin") == -1 &&
+          req.user?.roles?.indexOf("BranchAdmin") == -1 &&
+          req.user?.roles?.indexOf("BranchAgent") == -1)
+      ) {
+        return res.status(401).send("You are not an authorized person!");
       }
-    }    
+    }
 
     try {
-      await userService.getByEmail(req.user.email).then(resp => {
+      await userService.getByEmail(req.user.email).then((resp) => {
         user = resp.display_name;
       });
 
-      await db.transaction(async trx => {
+      await db.transaction(async (trx) => {
         const newRecoveryItems = req.body.recoveryItems;
         delete req.body.recoveryItems;
 
@@ -474,13 +482,39 @@ recoveriesRouter.post(
         }
         recoveryID = id[0].recoveryID;
 
+        let requestorUser = await userService.getByEmail(newRecovery.requastorEmail);
+
+        if (!requestorUser) {
+          let reqEmployee = await db("Employees").where({ email: newRecovery.requastorEmail }).first();
+
+          if (reqEmployee) {
+            await db("user").insert({
+              email: newRecovery.requastorEmail,
+              first_name: reqEmployee.first_name,
+              last_name: reqEmployee.last_name,
+              display_name: reqEmployee.full_name,
+              roles: "BranchUser",
+              department: reqEmployee.department,
+              status: "Active",
+              create_date: new Date(),
+            });
+          }
+        }
+
         await addRecoveryAudit(recoveryID, user, action);
-        
+
         await db("RecoveryItem").delete().where("recoveryID", recoveryID);
 
         for (const newRecoveryItem of newRecoveryItems) {
-          if(newRecoveryItem.originalQuantity && Number(newRecoveryItem.originalQuantity) != Number(newRecoveryItem.quantity)){
-            await addRecoveryAudit(recoveryID, user, `Changing Quantity of ${newRecoveryItem.category} from ${newRecoveryItem.originalQuantity} to ${newRecoveryItem.quantity}`);
+          if (
+            newRecoveryItem.originalQuantity &&
+            Number(newRecoveryItem.originalQuantity) != Number(newRecoveryItem.quantity)
+          ) {
+            await addRecoveryAudit(
+              recoveryID,
+              user,
+              `Changing Quantity of ${newRecoveryItem.category} from ${newRecoveryItem.originalQuantity} to ${newRecoveryItem.quantity}`
+            );
           }
           delete newRecoveryItem.state;
           delete newRecoveryItem.tmpId;
@@ -493,9 +527,8 @@ recoveriesRouter.post(
           else await db("RecoveryItem").insert(newRecoveryItem);
         }
 
-        const emailSent = await sendEmail(newRecovery, user, recoveryID)
-        if(!emailSent) return res.status(500).json("Email failed");
-
+        const emailSent = await sendEmail(newRecovery, user, recoveryID);
+        if (!emailSent) return res.status(500).json("Email failed");
       });
       res.status(200).json({ recoveryID: recoveryID });
     } catch (error: any) {
@@ -512,16 +545,16 @@ recoveriesRouter.post(
   async function (req: Request, res: Response) {
     let recoveryID = Number(req.params.recoveryID);
     let user = req.user.display_name;
-    let recoveryAudits: any[] = []
-    const adminQuery = recoveryRoleCheck(req)
+    let recoveryAudits: any[] = [];
+    const adminQuery = recoveryRoleCheck(req);
     const recovery = await db("Recovery").modify(adminQuery).where("recoveryID", recoveryID).first();
-    if(!recovery) return res.status(400).json('Recovery Not Found!');
+    if (!recovery) return res.status(400).json("Recovery Not Found!");
     const newGlcode = req.body.glCode;
 
-    try {      
-      await db.transaction(async trx => {       
+    try {
+      await db.transaction(async (trx) => {
         await db("Recovery").update({ glCode: newGlcode }).where("recoveryID", recoveryID);
-        
+
         const action = `Update Glcode to ${newGlcode}`;
         await addRecoveryAudit(recoveryID, user, action);
 
@@ -541,7 +574,7 @@ async function addRecoveryAudit(recoveryID: number, user: string, action: string
     date: new Date(),
     recoveryID: recoveryID,
     user: user,
-    action: action
+    action: action,
   };
   return await db("RecoveryAudit").insert(newRecoveryAudit, "recoveryID");
 }
@@ -551,7 +584,7 @@ async function addJournalAudit(journalID: number, user: string, action: string) 
     date: new Date(),
     journalID: journalID,
     user: user,
-    action: action
+    action: action,
   };
   return await db("JournalAudit").insert(newJournalAudit, "journalID");
 }
@@ -567,22 +600,22 @@ async function insertIntoTable(table: string, data: any) {
   return await db.raw(newQuery, bindings);
 }
 
-function recoveryRoleCheck(req: any){
+function recoveryRoleCheck(req: any) {
   // console.log(req.user)
-  let user = req.user
-  let userLastName = ""
-  let userFirstName = ""
-  const userEmail = req.user.email; 
+  let user = req.user;
+  let userLastName = "";
+  let userFirstName = "";
+  const userEmail = req.user.email;
 
-  if(user.first_name && user.last_name){
-    userFirstName = user.first_name
-    userLastName = user.last_name      
-  }else{
-    const fullname = user.display_name.split('@')
-    const names = fullname[0]?.split('.')
-    userFirstName = names[0]
-    userLastName = names[1]? names[1] : ''
-  } 
+  if (user.first_name && user.last_name) {
+    userFirstName = user.first_name;
+    userLastName = user.last_name;
+  } else {
+    const fullname = user.display_name.split("@");
+    const names = fullname[0]?.split(".");
+    userFirstName = names[0];
+    userLastName = names[1] ? names[1] : "";
+  }
 
   const adminQuery = function (queryBuilder: any) {
     if (user.roles?.indexOf("Admin") >= 0) queryBuilder.select("*");
@@ -590,45 +623,59 @@ function recoveryRoleCheck(req: any){
     else if (user.roles?.indexOf("BranchAdmin") >= 0) queryBuilder.whereLike("branch", `%${user.branch}%`).select("*");
     else if (user.roles?.indexOf("BranchAgent") >= 0) queryBuilder.whereLike("branch", `%${user.branch}%`).select("*");
     else if (user.roles?.indexOf("DeptFinance") >= 0) queryBuilder.where("department", user.department).select("*");
-    else queryBuilder.where({"lastName": userLastName, "firstName": userFirstName}).orWhere("requastorEmail", userEmail).select("*");
+    else
+      queryBuilder
+        .where({ lastName: userLastName, firstName: userFirstName })
+        .orWhere("requastorEmail", userEmail)
+        .select("*");
   };
 
-  return adminQuery
+  return adminQuery;
 }
 
-async function sendEmail(newRecovery: any, user: any, recoveryID: number){
-  
-  if (newRecovery.status == "Purchase Approved" || newRecovery.status == "Re-Draft" || newRecovery.status == "Routed For Approval"){
-    
+async function sendEmail(newRecovery: any, user: any, recoveryID: number) {
+  if (
+    newRecovery.status == "Purchase Approved" ||
+    newRecovery.status == "Re-Draft" ||
+    newRecovery.status == "Routed For Approval"
+  ) {
     const recovery = await db("Recovery").select("*").where("recoveryID", recoveryID).first();
-    
-    const sender = newRecovery.status == "Routed For Approval"? recovery.modUser : recovery.requastorEmail;
-    const recipient = newRecovery.status == "Routed For Approval"? recovery.requastorEmail : recovery.modUser;    
-    const recipientName = newRecovery.status == "Routed For Approval"? (recovery.firstName+' '+recovery.lastName) :'Recovery Agent';
-    
-    let emailSent = null
 
-    if (newRecovery.status == "Routed For Approval") {   
-      const reminder = false
-      emailSent = await sendPendingApprovalEmail(reminder, user, sender, recipient, recipientName, recovery.department)     
+    const sender = newRecovery.status == "Routed For Approval" ? recovery.modUser : recovery.requastorEmail;
+    const recipient = newRecovery.status == "Routed For Approval" ? recovery.requastorEmail : recovery.modUser;
+    const recipientName =
+      newRecovery.status == "Routed For Approval" ? recovery.firstName + " " + recovery.lastName : "Recovery Agent";
 
+    let emailSent = null;
+
+    if (newRecovery.status == "Routed For Approval") {
+      const reminder = false;
+      emailSent = await sendPendingApprovalEmail(reminder, user, sender, recipient, recipientName, recovery.department);
     } else {
-      const approved = newRecovery.status == "Purchase Approved"
-      emailSent = await sendPurchaseApprovedEmail(approved, user, sender, recipient, recovery.refNum, recovery.department, recovery.reasonForDecline)
+      const approved = newRecovery.status == "Purchase Approved";
+      emailSent = await sendPurchaseApprovedEmail(
+        approved,
+        user,
+        sender,
+        recipient,
+        recovery.refNum,
+        recovery.department,
+        recovery.reasonForDecline
+      );
     }
 
-    if(!emailSent) return false
+    if (!emailSent) return false;
 
     await db("RecoveryEmail").insert({
       recoveryID: recoveryID,
       emailType: newRecovery.status,
       sentDate: new Date(),
       sendingUser: sender,
-      recipients: recipient
-    })
+      recipients: recipient,
+    });
 
-    const action = `Notification emailed to ${recipient}.`
-    await addRecoveryAudit(recoveryID, user,  action.slice(0,49));
+    const action = `Notification emailed to ${recipient}.`;
+    await addRecoveryAudit(recoveryID, user, action.slice(0, 49));
   }
-  return true  
+  return true;
 }

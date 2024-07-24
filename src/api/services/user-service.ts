@@ -10,7 +10,7 @@ export class UserService {
     this.db = knex(DB_CONFIG);
   }
 
-  async create(email: string, first_name: string, last_name: string, roles: string, is_active: string): Promise<any> {
+  async create(email: string, first_name: string, last_name: string, roles: string): Promise<any> {
     let existing = await this.db("user").withSchema(DB_SCHEMA).where({ email }).count("email as cnt");
 
     if (existing[0].cnt > 0) return undefined;
@@ -20,7 +20,6 @@ export class UserService {
       first_name,
       last_name,
       roles,
-      is_active,
       status: "Active",
       create_date: new Date(),
     };

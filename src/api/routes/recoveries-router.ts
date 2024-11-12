@@ -9,10 +9,7 @@ import {
 import { DB_SCHEMA, DB_CONFIG } from "../config";
 import knex from "knex";
 import { sendPendingApprovalEmail, sendPurchaseApprovedEmail } from "../services/email";
-import moment from "moment";
 import { UserService } from "../services";
-import { v4 as uuid } from "uuid";
-import { auth } from "express-openid-connect";
 
 const db = knex(DB_CONFIG);
 
@@ -63,7 +60,9 @@ recoveriesRouter.post(
           const file = data.docNames.length == 1 ? files : files[inx];
           const docName = data.docNames[inx];
 
-          const buffer = db.raw(`CAST('${file}' AS VARBINARY(MAX))`);
+          console.log("UPLOAD", file);
+
+          const buffer = file.data; // db.raw(`CAST('${file}' AS VARBINARY(MAX))`);
           const backupDoc = await db("BackUpDocs")
             .select("documentID")
             .where("recoveryID", recoveryID)

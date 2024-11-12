@@ -44,7 +44,7 @@ export function configureAuthentication(app: Express) {
   });
 
   app.get("/api/auth/login", (req, res) =>
-    res.oidc.login({
+    req.oidc.login({
       returnTo: "/api/auth/profile",
       authorizationParams: {
         redirect_uri: BASE_URL + "/callback"

@@ -7,4 +7,7 @@ namespace Express {
 
         isAuthenticated(): boolean;
     }
+    export interface Response {
+        oidc?: any;
+    }
 }

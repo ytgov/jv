@@ -60,9 +60,12 @@ recoveriesRouter.post(
           const file = data.docNames.length == 1 ? files : files[inx];
           const docName = data.docNames[inx];
 
-          console.log("UPLOAD", file);
+          console.log("UPLOAD", file.length, file);
 
-          const buffer = file.data; // db.raw(`CAST('${file}' AS VARBINARY(MAX))`);
+          const buffer = await db.raw(`CAST('${file}' AS VARBINARY(MAX))`);
+
+          console.log("BUFER LENGTH", buffer.length)
+
           const backupDoc = await db("BackUpDocs")
             .select("documentID")
             .where("recoveryID", recoveryID)

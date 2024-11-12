@@ -22,8 +22,9 @@ var cron = require("node-cron");
 
 const app = express();
 
-app.use(express.json()); // for parsing application/json
+app.use(express.json({ limit: 20 * 1024 * 1024 * 1024 })); // 20Mb,  for parsing application/json
 app.use(express.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
+app.use(fileupload({ limits: { fileSize: 20 * 1024 * 1024 * 1024 } })); //20Mb
 //app.use(helmet());
 app.use(
   helmet.contentSecurityPolicy({
@@ -59,8 +60,6 @@ app.get("/api/healthCheck", (req: Request, res: Response) => {
   doHealthCheck(res);
 });
 
-// accepts FormData
-app.use(fileupload({ limits: { fileSize: 20 * 1024 * 1024 * 1024 } })); //20Mb
 
 app.use("/api/user", loadUser, userRouter);
 app.use("/api/admin", loadUser, adminRouter);

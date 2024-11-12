@@ -645,6 +645,7 @@ export default {
       itemCategoryListAll: [],
 
       allUploadingDocuments: [],
+      toUpload: [],
 
       itemCategoryDocuments: [],
       glCodeList: [],
@@ -1220,28 +1221,16 @@ export default {
 
     async saveBackUPFile(recoveryID) {
       this.alert = false;
-      const docNames = [];
-      const bodyFormData = new FormData();
+      const formData = new FormData();
 
-      for (const doc of this.allUploadingDocuments) {
-        bodyFormData.append("files", doc.file);
-        docNames.push(doc.name);
+      for (const doc of this.toUpload) {
+        formData.append("files", doc);
       }
 
-      const data = {
-        docNames: docNames,
-      };
-      bodyFormData.append("data", JSON.stringify(data));
-
-      const header = {
-        responseType: "application/pdf",
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      };
-
       return await axios
-        .post(`${RECOVERIES_URL}/backup-documents/${recoveryID}`, bodyFormData, header)
+        .post(`${RECOVERIES_URL}/backup-documents/${recoveryID}`, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        })
         .then(() => {
           this.savingData = false;
         })
@@ -1269,6 +1258,8 @@ export default {
       event.preventDefault();
       event.stopPropagation();
 
+      this.toUpload = event.target.files;
+
       if (event.target.files && event.target.files[0]) {
         const file = event.target.files[0];
 
@@ -1291,29 +1282,7 @@ export default {
         url = `${ADMIN_URL}/item-category-documents/${itemCatID}/${docName}`;
       }
 
-      this.savingData = true;
-      const header = {
-        responseType: "application/pdf",
-        headers: {
-          "Content-Type": "application/text",
-        },
-      };
-
-      axios
-        .get(url, header)
-        .then((res) => {
-          this.savingData = false;
-          const link = document.createElement("a");
-          link.href = res.data;
-          document.body.appendChild(link);
-          link.download = docName;
-          link.click();
-          setTimeout(() => URL.revokeObjectURL(link.href), 1000);
-        })
-        .catch((e) => {
-          this.savingData = false;
-          console.log(e);
-        });
+      window.open(url);
     },
 
     async loadRecovery() {

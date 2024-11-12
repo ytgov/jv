@@ -10,6 +10,7 @@ import { DB_SCHEMA, DB_CONFIG } from "../config";
 import knex from "knex";
 import { sendPendingApprovalEmail, sendPurchaseApprovedEmail } from "../services/email";
 import { UserService } from "../services";
+import { isArray } from "lodash";
 
 const db = knex(DB_CONFIG);
 
@@ -22,19 +23,13 @@ recoveriesRouter.get(
   RequiresAuthentication,
   ReturnValidationErrors,
   async function (req, res) {
-    try {
-      const recoveryID = req.params.recoveryID;
-      const docName = req.params.docName;
-      const doc = await db("BackUpDocs")
-        .select("document")
-        .where("recoveryID", recoveryID)
-        .where("docName", docName)
-        .first();
-      res.status(200).send(doc.document);
-    } catch (error: any) {
-      console.log(error);
-      res.status(500).json("PDF not Found");
-    }
+    const { recoveryID, docName } = req.params;
+    const doc = await db("BackUpDocs").where({ recoveryID: recoveryID, docName: docName }).first();
+
+    if (!doc) return res.status(404).send("Document not found");
+    res.setHeader("Content-disposition", `attachment; filename="${doc.docName}"`);
+    res.setHeader("Content-type", "application/pdf");
+    return res.send(doc.document);
   }
 );
 
@@ -44,58 +39,52 @@ recoveriesRouter.post(
   RequiresRoleAdminOrTech,
   ReturnValidationErrors,
   async function (req: Request, res: Response) {
-    const files = req.body.files;
-
-    const recoveryID = Number(req.params.recoveryID);
+    const files = req.files;
+    const recoveryID = parseInt(req.params.recoveryID);
     let user = req.user.display_name;
-    const data = JSON.parse(req.body.data);
 
-    try {
-      await userService.getByEmail(req.user.email).then((resp) => {
-        user = resp.display_name;
-      });
+    if (files) {
+      const fileList = isArray(files.files) ? files.files : [files.files];
 
-      await db.transaction(async (trx) => {
-        for (const inx in data.docNames) {
-          const file = data.docNames.length == 1 ? files : files[inx];
-          const docName = data.docNames[inx];
+      try {
+        await userService.getByEmail(req.user.email).then((resp) => {
+          user = resp.display_name;
+        });
 
-          console.log("UPLOAD", file.length, file);
+        await db.transaction(async (trx) => {
+          for (const file of fileList) {
+            const backupDoc = await trx("BackUpDocs")
+              .select("documentID")
+              .where("recoveryID", recoveryID)
+              .where("docName", file.name)
+              .first();
 
-          const buffer = await db.raw(`CAST('${file}' AS VARBINARY(MAX))`);
-
-          console.log("BUFER LENGTH", buffer.length)
-
-          const backupDoc = await db("BackUpDocs")
-            .select("documentID")
-            .where("recoveryID", recoveryID)
-            .where("docName", docName)
-            .first();
-          if (backupDoc) {
-            await db("BackUpDocs")
-              .update({
-                document: buffer,
-              })
-              .where("recoveryID", recoveryID);
-          } else {
-            const newDocument = {
-              recoveryID: recoveryID,
-              docName: docName,
-              document: buffer,
-            };
-            await db("BackUpDocs").insert(newDocument, "documentID");
+            if (backupDoc) {
+              await trx("BackUpDocs")
+                .update({
+                  document: file.data,
+                })
+                .where({ recoveryID: recoveryID, docName: file.name });
+            } else {
+              const newDocument = {
+                recoveryID: recoveryID,
+                docName: file.name,
+                document: file.data,
+              };
+              await trx("BackUpDocs").insert(newDocument);
+            }
           }
-        }
 
-        const action = "Added File(s): " + data.docNames.join(", ");
+          const action = "Added File(s): " + fileList.map((f) => f.name).join(", ");
 
-        await addRecoveryAudit(recoveryID, user, action);
+          await addRecoveryAudit(recoveryID, user, action);
 
-        res.status(200).json("Successful");
-      });
-    } catch (error: any) {
-      console.log(error);
-      res.status(500).json("Insert failed");
+          return res.status(200).json("Successful");
+        });
+      } catch (error: any) {
+        console.log(error);
+        return res.status(500).json("Insert failed");
+      }
     }
   }
 );

@@ -494,7 +494,12 @@ recoveriesRouter.post(
           }
         }
 
-        await addRecoveryAudit(recoveryID, user, action);
+        await trx("RecoveryAudit").insert({
+          date: new Date(),
+          recoveryID,
+          user,
+          action,
+        });
 
         await db("RecoveryItem").delete().where("recoveryID", recoveryID);
 
@@ -503,11 +508,12 @@ recoveriesRouter.post(
             newRecoveryItem.originalQuantity &&
             Number(newRecoveryItem.originalQuantity) != Number(newRecoveryItem.quantity)
           ) {
-            await addRecoveryAudit(
+            await trx("RecoveryAudit").insert({
+              date: new Date(),
               recoveryID,
               user,
-              `Changing Quantity of ${newRecoveryItem.category} from ${newRecoveryItem.originalQuantity} to ${newRecoveryItem.quantity}`
-            );
+              action: `Changing Quantity of ${newRecoveryItem.category} from ${newRecoveryItem.originalQuantity} to ${newRecoveryItem.quantity}`,
+            });
           }
           delete newRecoveryItem.state;
           delete newRecoveryItem.tmpId;
@@ -516,8 +522,9 @@ recoveriesRouter.post(
           delete newRecoveryItem.category;
 
           newRecoveryItem.recoveryID = recoveryID;
-          if (newRecoveryItem.itemID > 0) await insertIntoTable("RecoveryItem", newRecoveryItem);
-          else await db("RecoveryItem").insert(newRecoveryItem);
+
+          if (newRecoveryItem.itemID > 0) await insertIntoTable("RecoveryItem", newRecoveryItem, trx);
+          else await trx("RecoveryItem").insert(newRecoveryItem);
         }
 
         const emailSent = await sendEmail(newRecovery, user, recoveryID);
@@ -589,7 +596,7 @@ async function addRecoveryAudit(recoveryID: number, user: string, action: string
     user: user,
     action: action,
   };
-  return await db("RecoveryAudit").insert(newRecoveryAudit, "recoveryID");
+  return db("RecoveryAudit").insert(newRecoveryAudit);
 }
 
 async function addJournalAudit(journalID: number, user: string, action: string) {
@@ -604,13 +611,13 @@ async function addJournalAudit(journalID: number, user: string, action: string) 
 
 //________
 //__UTIL__
-async function insertIntoTable(table: string, data: any) {
+async function insertIntoTable(table: string, data: any, myDb = db) {
   const schema = DB_SCHEMA;
-  const { bindings, sql } = db.withSchema(schema).insert(data).into(table).toSQL();
+  const { bindings, sql } = myDb.withSchema(schema).insert(data).into(table).toSQL();
 
   const newQuery = `SET IDENTITY_INSERT ${schema}.${table} ON; ${sql} SET IDENTITY_INSERT ${schema}.${table} OFF;`;
 
-  return await db.raw(newQuery, bindings);
+  return await myDb.raw(newQuery, bindings);
 }
 
 function recoveryRoleCheck(req: any) {

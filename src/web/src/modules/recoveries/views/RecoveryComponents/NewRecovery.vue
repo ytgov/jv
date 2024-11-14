@@ -339,9 +339,9 @@
                     >
                       <div v-if="allUploadingDocuments.length > 0">
                         <div v-for="(doc, inx) in allUploadingDocuments" :key="'uploaded-' + inx" class="my-1">
-                          <a :href="doc.file" :download="doc.name" target="_blank" style="color:#643f5d;">
+                          <!-- <a :href="doc.file" :download="doc.name" target="_blank" style="color:#643f5d;"> -->
                             {{ doc.name }}
-                          </a>
+                          <!-- </a> -->
                         </div>
                       </div>
                       <div v-if="recovery">

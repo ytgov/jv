@@ -96,9 +96,9 @@
                 >
                   <div v-if="allUploadingDocuments.length > 0">
                     <div v-for="(doc, inx) in allUploadingDocuments" :key="inx" class="my-1">
-                      <a :href="doc.file" :download="doc.name" target="_blank" style="color:#643f5d;">
-                        {{ doc.name }}
-                      </a>
+                      <!--  <a :href="doc.file" :download="doc.name" target="_blank" style="color:#643f5d;"> -->
+                      {{ doc.name }}
+                      <!-- </a> -->
                     </div>
                   </div>
                   <div v-if="backupFiles">
@@ -210,6 +210,7 @@ export default {
     ],
 
     allUploadingDocuments: [],
+    toUpload: [],
     itemAudits: [],
     backupFiles: [],
     update: 0,
@@ -325,29 +326,17 @@ export default {
     },
 
     async saveBackUPFile(itemCatID) {
-      this.alertMsg = "";
-      const docNames = [];
-      const bodyFormData = new FormData();
+      this.alertMsg = null;
+      const formData = new FormData();
 
-      for (const doc of this.allUploadingDocuments) {
-        bodyFormData.append("files", doc.file);
-        docNames.push(doc.name);
+      for (const doc of this.toUpload) {
+        formData.append("files", doc);
       }
 
-      const data = {
-        docNames: docNames,
-      };
-      bodyFormData.append("data", JSON.stringify(data));
-
-      const header = {
-        responseType: "application/pdf",
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      };
-
       return await axios
-        .post(`${ADMIN_URL}/item-category-documents/${itemCatID}`, bodyFormData, header)
+        .post(`${ADMIN_URL}/item-category-documents/${itemCatID}`, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        })
         .then(() => {
           this.savingData = false;
         })
@@ -368,6 +357,8 @@ export default {
       event.preventDefault();
       event.stopPropagation();
 
+      this.toUpload = event.target.files;
+
       if (event.target.files && event.target.files[0]) {
         const file = event.target.files[0];
 
@@ -385,29 +376,8 @@ export default {
     downloadDocument(docName) {
       if (!this.currentItem.itemCatID) return;
 
-      this.savingData = true;
-      const header = {
-        responseType: "application/pdf",
-        headers: {
-          "Content-Type": "application/text",
-        },
-      };
-
-      axios
-        .get(`${ADMIN_URL}/item-category-documents/${this.currentItem.itemCatID}/${docName}`, header)
-        .then((res) => {
-          this.savingData = false;
-          const link = document.createElement("a");
-          link.href = res.data;
-          document.body.appendChild(link);
-          link.download = docName;
-          link.click();
-          setTimeout(() => URL.revokeObjectURL(link.href), 1000);
-        })
-        .catch((e) => {
-          this.savingData = false;
-          console.log(e);
-        });
+      let url = `${ADMIN_URL}/item-category-documents/${this.currentItem.itemCatID}/${docName}`;
+      window.open(url);
     },
 
     getActionDescription() {

@@ -108,7 +108,7 @@
       </template>
     </v-data-table>
 
-    <v-dialog v-model="deleteRecoveryDialog" persistent max-width="450px">
+    <v-dialog v-model="deleteRecoveryDialog" persistent max-width="450px" scrollable>
       <v-card>
         <v-card-title class="orange lighten-4" style="border-bottom: 1px solid black">
           <div class="text-h4">Delete Recovery</div>

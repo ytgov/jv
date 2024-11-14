@@ -47,10 +47,14 @@
       </v-card>
     </div>
 
-    <v-dialog v-model="itemDialog" persistent max-width="800px">
+    <v-dialog v-model="itemDialog" persistent max-width="800px" scrollable>
       <v-card>
-        <v-card-title class="primary" style="border-bottom: 1px solid black">
-          <div class="text-h5">{{ action }} Item</div>
+        <v-card-title class="primary pr-4">
+          <div class="text-h5" style="color:white">{{ action }} Item</div>
+          <v-spacer />
+          <v-btn fab small elevation="0" color="primary" class="my-0" @click="itemDialog = false"
+            ><v-icon>mdi-close</v-icon></v-btn
+          >
         </v-card-title>
 
         <v-card-text>

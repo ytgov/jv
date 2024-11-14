@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-dialog v-model="addNewJournalDialog" persistent max-width="65%">
+    <v-dialog v-model="addNewJournalDialog" persistent max-width="65%" scrollable>
       <template v-slot:activator="{ on, attrs }">
         <v-btn color="transparent" class="px-1" style="min-width: 0" @click="initForm()" v-bind="attrs" v-on="on">
           <v-icon v-if="readonly" dense color="primary">mdi-magnify</v-icon>
@@ -203,7 +203,7 @@
                   <div v-if="allUploadingDocuments.length > 0">
                     <div v-for="(doc, inx) in allUploadingDocuments" :key="inx" class="my-1">
                       <!-- <a :href="doc.file" :download="doc.name" target="_blank" style="color:#643f5d;"> -->
-                        {{ doc.name }}
+                      {{ doc.name }}
                       <!-- </a> -->
                     </div>
                   </div>

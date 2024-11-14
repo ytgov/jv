@@ -117,53 +117,53 @@ recoveriesRouter.post(
   RequiresRoleAdminOrTech,
   ReturnValidationErrors,
   async function (req: Request, res: Response) {
-    const files = req.body.files;
+    const files = req.files;
 
     const journalID = Number(req.params.journalID);
     let user = req.user.display_name;
-    const data = JSON.parse(req.body.data);
 
-    try {
-      await userService.getByEmail(req.user.email).then((resp) => {
-        user = resp.display_name;
-      });
+    if (files) {
+      const fileList = isArray(files.files) ? files.files : [files.files];
 
-      await db.transaction(async (trx) => {
-        for (const inx in data.docNames) {
-          const file = data.docNames.length == 1 ? files : files[inx];
-          const docName = data.docNames[inx];
+      try {
+        await userService.getByEmail(req.user.email).then((resp) => {
+          user = resp.display_name;
+        });
 
-          const buffer = db.raw(`CAST('${file}' AS VARBINARY(MAX))`);
-          const journalDoc = await db("JournalDocs")
-            .select("documentID")
-            .where("journalID", journalID)
-            .where("docName", docName)
-            .first();
-          if (journalDoc) {
-            await db("JournalDocs")
-              .update({
-                document: buffer,
-              })
-              .where("journalID", journalID);
-          } else {
-            const newDocument = {
-              journalID: journalID,
-              docName: docName,
-              document: buffer,
-            };
-            await db("JournalDocs").insert(newDocument, "documentID");
+        await db.transaction(async (trx) => {
+          for (const file of fileList) {
+            const backupDoc = await trx("JournalDocs")
+              .select("documentID")
+              .where("journalID", journalID)
+              .where("docName", file.name)
+              .first();
+
+            if (backupDoc) {
+              await trx("JournalDocs")
+                .update({
+                  document: file.data,
+                })
+                .where({ journalID: journalID, docName: file.name });
+            } else {
+              const newDocument = {
+                journalID: journalID,
+                docName: file.name,
+                document: file.data,
+              };
+              await trx("JournalDocs").insert(newDocument);
+            }
           }
-        }
 
-        const action = "Added File(s): " + data.docNames.join(", ");
+          const action = "Added File(s): " + fileList.map((f) => f.name).join(", ");
 
-        await addJournalAudit(journalID, user, action);
+          await addJournalAudit(journalID, user, action);
 
-        res.status(200).json("Successful");
-      });
-    } catch (error: any) {
-      console.log(error);
-      res.status(500).json("Insert failed");
+          return res.status(200).json("Successful");
+        });
+      } catch (error: any) {
+        console.log(error);
+        return res.status(500).json("Insert failed");
+      }
     }
   }
 );
@@ -465,11 +465,11 @@ recoveriesRouter.post(
         if (recoveryID > 0) {
           if (newRecovery.status != "Purchase Approved" && newRecovery.status != "Re-Draft")
             newRecovery.modUser = userEmail;
-          id = await db("Recovery").update(newRecovery, "recoveryID").where("recoveryID", recoveryID);
+          id = await trx("Recovery").update(newRecovery, "recoveryID").where("recoveryID", recoveryID);
         } else {
           newRecovery.createUser = userEmail;
           newRecovery.modUser = userEmail;
-          id = await db("Recovery").insert(newRecovery, "recoveryID");
+          id = await trx("Recovery").insert(newRecovery, "recoveryID");
         }
         recoveryID = id[0].recoveryID;
 
@@ -477,10 +477,10 @@ recoveriesRouter.post(
           let requestorUser = await userService.getByEmail(newRecovery.requastorEmail);
 
           if (!requestorUser) {
-            let reqEmployee = await db("Employees").where({ email: newRecovery.requastorEmail }).first();
+            let reqEmployee = await trx("Employees").where({ email: newRecovery.requastorEmail }).first();
 
             if (reqEmployee) {
-              await db("user").insert({
+              await trx("user").insert({
                 email: newRecovery.requastorEmail,
                 first_name: reqEmployee.first_name,
                 last_name: reqEmployee.last_name,

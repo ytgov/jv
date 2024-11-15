@@ -527,9 +527,10 @@ recoveriesRouter.post(
           else await trx("RecoveryItem").insert(newRecoveryItem);
         }
 
-        const emailSent = await sendEmail(newRecovery, user, recoveryID);
-        if (!emailSent) return res.status(500).json("Email failed");
+        const emailSent = await sendEmail(newRecovery, user, recoveryID, trx);
+        if (!emailSent) throw Error("Email failed");
       });
+
       res.status(200).json({ recoveryID: recoveryID });
     } catch (error: any) {
       console.log(error);
@@ -573,12 +574,12 @@ recoveriesRouter.post(
 
     try {
       await db.transaction(async (trx) => {
-        await db("Recovery").update({ glCode: newGlcode }).where("recoveryID", recoveryID);
+        await trx("Recovery").update({ glCode: newGlcode }).where("recoveryID", recoveryID);
 
         const action = `Update Glcode to ${newGlcode}`;
-        await addRecoveryAudit(recoveryID, user, action);
+        await addRecoveryAudit(recoveryID, user, action, trx);
 
-        recoveryAudits = await db("RecoveryAudit").select("*").where("recoveryID", recovery.recoveryID);
+        recoveryAudits = await trx("RecoveryAudit").select("*").where("recoveryID", recovery.recoveryID);
       });
       res.status(200).json({ recoveryAudits: recoveryAudits, glCode: newGlcode });
     } catch (error: any) {
@@ -589,14 +590,14 @@ recoveriesRouter.post(
 );
 
 //___AUDIT___
-async function addRecoveryAudit(recoveryID: number, user: string, action: string) {
+async function addRecoveryAudit(recoveryID: number, user: string, action: string, myDb = db) {
   const newRecoveryAudit = {
     date: new Date(),
     recoveryID: recoveryID,
     user: user,
     action: action,
   };
-  return db("RecoveryAudit").insert(newRecoveryAudit);
+  return myDb("RecoveryAudit").insert(newRecoveryAudit);
 }
 
 async function addJournalAudit(journalID: number, user: string, action: string) {
@@ -653,13 +654,13 @@ function recoveryRoleCheck(req: any) {
   return adminQuery;
 }
 
-async function sendEmail(newRecovery: any, user: any, recoveryID: number) {
+async function sendEmail(newRecovery: any, user: any, recoveryID: number, myDb = db) {
   if (
     newRecovery.status == "Purchase Approved" ||
     newRecovery.status == "Re-Draft" ||
     newRecovery.status == "Routed For Approval"
   ) {
-    const recovery = await db("Recovery").select("*").where("recoveryID", recoveryID).first();
+    const recovery = await myDb("Recovery").select("*").where("recoveryID", recoveryID).first();
 
     const sender = newRecovery.status == "Routed For Approval" ? recovery.modUser : recovery.requastorEmail;
     const recipient = newRecovery.status == "Routed For Approval" ? recovery.requastorEmail : recovery.modUser;
@@ -686,7 +687,7 @@ async function sendEmail(newRecovery: any, user: any, recoveryID: number) {
 
     if (!emailSent) return false;
 
-    await db("RecoveryEmail").insert({
+    await myDb("RecoveryEmail").insert({
       recoveryID: recoveryID,
       emailType: newRecovery.status,
       sentDate: new Date(),
@@ -695,7 +696,8 @@ async function sendEmail(newRecovery: any, user: any, recoveryID: number) {
     });
 
     const action = `Notification emailed to ${recipient}.`;
-    await addRecoveryAudit(recoveryID, user, action.slice(0, 49));
+    await addRecoveryAudit(recoveryID, user, action.slice(0, 49), myDb);
   }
+
   return true;
 }

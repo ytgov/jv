@@ -3,7 +3,6 @@
     <template v-slot:activator="{ on, attrs }">
       <v-btn
         :elevation="type == 'Add New' ? '5' : '0'"
-        style="min-width: 0"
         :color="type == 'Add New' || type == 'Approve' ? 'primary' : 'transparent'"
         @click="initForm()"
         v-bind="attrs"

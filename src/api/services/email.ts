@@ -15,10 +15,10 @@ const transporter = nodemailer.createTransport({
     host: EMAIL_HOST,
     port: EMAIL_PORT,
     secure: false,
-    auth: {
+    /* auth: {
         user: EMAILER_USERNAME,
         pass: EMAILER_PASSWORD
-    },
+    }, */
     // connectionTimeout: 1000,
 });
 
@@ -36,7 +36,8 @@ async function email(attachments: any[], receivers: string, subject: string, con
         attachments: attachments
     }
     // console.log(message)
-    const info = await transporter.sendMail(message);
+    const info = await transporter.sendMail(message)
+        .catch((e:any) => {console.log("Email Error", e)})
     // console.log("Message sent: %s", info.messageId);
     return info
 }

@@ -501,7 +501,8 @@ recoveriesRouter.post(
           action,
         });
 
-        await db("RecoveryItem").delete().where("recoveryID", recoveryID);
+        await trx("RecoveryItem").delete().where("recoveryID", recoveryID);
+        await trx("BackUpDocs").delete().where({ recoveryID: recoveryID }).whereNotNull("itemCatID");
 
         for (const newRecoveryItem of newRecoveryItems) {
           if (
@@ -515,6 +516,12 @@ recoveriesRouter.post(
               action: `Changing Quantity of ${newRecoveryItem.category} from ${newRecoveryItem.originalQuantity} to ${newRecoveryItem.quantity}`,
             });
           }
+
+          await trx.raw(`INSERT INTO BackUpDocs (recoveryID, docName, document, itemCatName, itemCatID)
+            SELECT ${recoveryID}, docName, document, ItemCategory.category, ItemCategory.itemCatID
+            FROM ItemCategory INNER JOIN ItemCategoryDocs ON ItemCategory.itemCatID = ItemCategoryDocs.itemCatID
+            WHERE ItemCategory.itemCatID = ${newRecoveryItem.itemCatID}`);
+
           delete newRecoveryItem.state;
           delete newRecoveryItem.tmpId;
           delete newRecoveryItem.revisedCost;

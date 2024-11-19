@@ -4,6 +4,7 @@ import { AUTH_CHECK_URL, LOGOUT_URL } from "../urls";
 const state = {
   user: null,
   fullName: "",
+  isInitialized: false,
 };
 const getters = {
   isAuthenticated: (state) => !!state.user,
@@ -21,13 +22,15 @@ const getters = {
 };
 const actions = {
   async checkAuthentication({ commit }) {
-    await axios
+    return await axios
       .get(AUTH_CHECK_URL)
       .then((resp) => {
         commit("setUser", resp.data);
+        return true;
       })
       .catch(() => {
         commit("clearUser");
+        return false;
       });
   },
   async signOut({ commit }) {
@@ -45,10 +48,12 @@ const mutations = {
   setUser(state, user) {
     state.user = user;
     state.fullName = user.display_name;
+    state.isInitialized = true;
   },
   clearUser(state) {
     state.user = null;
     state.fullName = null;
+    state.isInitialized = true;
   },
 };
 

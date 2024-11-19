@@ -28,7 +28,6 @@
     </v-navigation-drawer>
 
     <v-app-bar app color="#fff" flat height="70" style="left: 0; border-bottom: 3px #f3b228 solid">
-      <!-- <v-icon color="#f3b228" class="mr-5">{{ applicationIcon }}</v-icon> -->
       <img src="/yukon.svg" style="margin: -8px 45px 0 0" height="44" />
       <v-toolbar-title>
         <span style="font-weight: 700">{{ applicationName }}</span>
@@ -43,15 +42,6 @@
         ></v-progress-circular>
       </v-toolbar-title>
       <v-spacer></v-spacer>
-      <!-- <v-label dark>License Year:</v-label>
-      <v-select
-        v-model="licenseYear"
-        smaller
-        :items="licenseYears"
-        dense
-        style="margin-left: 15px; max-width: 150px; margin-right: 20px"
-        hide-details
-      ></v-select> -->
 
       <div v-if="isAuthenticated">
         <v-menu offset-y class="ml-0">
@@ -64,20 +54,20 @@
             <v-list-item @click="routeTitle = 'Home'" to="/">
               <v-list-item-title>Home</v-list-item-title>
             </v-list-item>
-            <v-list-item v-if="isBranchUser" @click="routeTitle = 'Dashboard (User)'" to="/recovery-dashboard-user">
+            <v-list-item v-if="isBranchUser" @click="routeTitle = 'Dashboard (User)'" to="/recoveries/user">
               <v-list-item-title>Dashboard (User)</v-list-item-title>
             </v-list-item>
-            <v-list-item v-if="isBranchAgent" @click="routeTitle = 'Dashboard (Agent)'" to="/recovery-dashboard-agent">
+            <v-list-item v-if="isBranchAgent" @click="routeTitle = 'Dashboard (Agent)'" to="/recoveries/agent">
               <v-list-item-title>Dashboard (Agent)</v-list-item-title>
             </v-list-item>
             <v-list-item
               v-if="isDepartmentalFinance"
               @click="routeTitle = 'Dashboard (Finance)'"
-              to="/recovery-dashboard-finance"
+              to="/recoveries/finance"
             >
               <v-list-item-title>Dashboard (Finance)</v-list-item-title>
             </v-list-item>
-            <v-list-item v-if="isICTFinance" @click="routeTitle = 'Recovery List'" to="/recoveries">
+            <v-list-item v-if="isICTFinance" @click="routeTitle = 'Recovery List'" to="/recoveries" exact>
               <v-list-item-title>Recovery List</v-list-item-title>
             </v-list-item>
           </v-list>
@@ -118,8 +108,6 @@
       <div v-else>
         <router-link to="/sign-in">Sign in</router-link>
       </div>
-
-      <!-- <v-app-bar-nav-icon @click.stop="drawerRight = !drawerRight"></v-app-bar-nav-icon> -->
     </v-app-bar>
 
     <v-main v-bind:style="{ 'padding-left: 33px !important': !hasSidebar }">
@@ -186,9 +174,6 @@ export default {
   }),
   created: async function() {
     await store.dispatch("checkAuthentication");
-    //this.username = store.getters.fullName
-    //console.log(this.isAuthenticated);
-
     if (!this.isAuthenticated) this.hasSidebar = false;
     else this.hasSidebar = config.hasSidebar;
   },
@@ -217,14 +202,13 @@ export default {
     },
     signOut: function() {
       store.dispatch("signOut");
-      // router.push("/sign-in");
       window.location.replace(LOGOUT_URL);
     },
     getDropdownTitle() {
       const path = this.$route.path;
-      if (path.includes("/recovery-dashboard-user")) this.routeTitle = "Dashboard (User)";
-      else if (path.includes("/recovery-dashboard-agent")) this.routeTitle = "Dashboard (Agent)";
-      else if (path.includes("/recovery-dashboard-finance")) this.routeTitle = "Dashboard (Finance)";
+      if (path.includes("/recoveries/user")) this.routeTitle = "Dashboard (User)";
+      else if (path.includes("/recoveries/agent")) this.routeTitle = "Dashboard (Agent)";
+      else if (path.includes("/recoveries/finance")) this.routeTitle = "Dashboard (Finance)";
       else if (path.includes("/recoveries")) this.routeTitle = "Recovery List";
       else if (path.includes("/administration")) this.routeTitle = "Administration";
       else if (path.includes("/profile")) this.routeTitle = "My Profile";

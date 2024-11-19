@@ -34,11 +34,15 @@
 
     <v-card :loading="loadingData" :disabled="loadingData">
       <v-card-title class="primary" style="border-bottom: 1px solid black">
-        <div class="text-h5">{{ title }} Recovery</div>
+        <div class="text-h5" style="color:white">{{ title }} Recovery</div>
+        <v-spacer />
+        <v-btn fab small elevation="0" color="primary" class="my-0" @click="closeDialog">
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
       </v-card-title>
 
       <v-card-text>
-        <v-row class="mt-5 mx-0">
+        <v-row class="mt-5">
           <v-col cols="4">
             <v-autocomplete
               :readonly="readonly"
@@ -53,6 +57,7 @@
               v-model="employeeName"
               label="Requestor Name"
               outlined
+              dense
             />
           </v-col>
           <v-col cols="3">
@@ -63,6 +68,7 @@
               v-model="employeeMailCd"
               label="Requestor Mail Code"
               outlined
+              dense
               :clearable="!readonly"
             />
           </v-col>
@@ -74,12 +80,13 @@
               v-model="requastorEmail"
               label="Requestor EMail"
               outlined
+              dense
               :clearable="!readonly"
             />
           </v-col>
         </v-row>
 
-        <v-row class="mt-0 mx-0">
+        <v-row class="mt-0">
           <v-col cols="4">
             <v-select
               :readonly="readonly"
@@ -93,6 +100,7 @@
               item-text="name"
               label="Requestor Department"
               outlined
+              dense
             />
           </v-col>
           <v-col cols="4">
@@ -108,6 +116,7 @@
               item-text="name"
               label="Requestor Branch"
               outlined
+              dense
             />
           </v-col>
           <v-col cols="4">
@@ -118,13 +127,14 @@
               item-text="name"
               label="Requestor Unit"
               outlined
+              dense
             />
           </v-col>
         </v-row>
 
-        <v-row class="mt-0 mx-0">
+        <v-row class="mt-0">
           <v-col cols="3">
-            <v-text-field disabled readonly v-model="recoveryID" label="Recovery ID" outlined />
+            <v-text-field readonly v-model="recoveryID" label="Recovery ID" outlined dense />
           </v-col>
           <v-col cols="3">
             <v-text-field
@@ -136,172 +146,174 @@
               persistent-hint
               hint="Incident #, Project #"
               outlined
+              dense
               :clearable="!readonly"
             />
           </v-col>
-          <v-col cols="3">
+          <v-col cols="6">
             <v-text-field
               :readonly="readonly && !userView"
               v-model="requestDescription"
               label="Request Description"
               outlined
+              dense
             />
           </v-col>
         </v-row>
 
-        <v-row class="mt-0 mx-0">
-          <v-btn
-            v-if="!readonly"
-            class="ml-auto mr-5"
-            color="primary"
-            :loading="savingData"
-            @click="addRecoveryItem()"
-            small
-            >Add Item
-          </v-btn>
-        </v-row>
-
-        <v-row class="mt-5 mx-0">
+        <v-row class="mt-2">
           <v-col cols="12">
-            <v-data-table :headers="itemHeaders" :items="recoveryItems" class="elevation-1" hide-default-footer>
-              <template v-slot:[`item.itemCategory`]="{ item }">
-                <v-autocomplete
-                  dense
-                  hide-details
-                  :error="item.state.itemCategoryErr"
-                  @change="
-                    item.state.itemCategoryErr = false;
-                    itemCategoryChanged(item);
-                  "
-                  :readonly="readonly"
-                  :items="itemCategoryList"
-                  v-model="item.itemCatID"
-                  solo
-                />
-              </template>
-              <template v-slot:[`item.description`]="{ item }">
-                <v-text-field
-                  dense
-                  :error="item.state.descriptionErr"
-                  @input="item.state.descriptionErr = false"
-                  hide-details
-                  :readonly="readonly"
-                  v-model="item.description"
-                  solo
-                />
-              </template>
-              <template v-slot:[`item.changeQuantity`]="{ item }">
-                <div class="mx-auto d-flex justify-center">
-                  <v-checkbox :readonly="readonly" class="mt-n1" hide-details solo v-model="item.changeQuantity" />
-                </div>
-              </template>
-              <template v-slot:[`item.quantity`]="{ item }">
-                <v-text-field
-                  :background-color="item.changeQuantity && userView ? '#E8F5E9' : '#FFF'"
-                  dense
-                  hide-details
-                  :readonly="type == 'Fill' || type == 'Complete' || (!item.changeQuantity && userView)"
-                  :error="item.state.quantityErr"
-                  @input="
-                    item.state.quantityErr = false;
-                    calculateTotalPrice();
-                  "
-                  v-model="item.quantity"
-                  solo
-                />
-              </template>
-              <template v-slot:[`item.unitPrice`]="{ item }">
-                <v-text-field
-                  :background-color="type == 'Fill' ? '#E8F5E9' : '#FFF'"
-                  dense
-                  hide-details
-                  :error="item.state.unitPriceErr"
-                  @input="
-                    item.state.unitPriceErr = false;
-                    calculateTotalPrice(true);
-                  "
-                  @change="
-                    item.state.unitPriceErr = false;
-                    calculateTotalPrice();
-                  "
-                  :readonly="readonly && type != 'Fill'"
-                  v-model="item.unitPrice"
-                  prefix="$"
-                  solo
-                />
-              </template>
-              <template v-slot:[`item.totalPrice`]="{ item }">
-                <v-text-field dense solo hide-details readonly v-model="item.totalPrice" prefix="$" />
-              </template>
-
-              <template v-slot:[`item.revisedCost`]="{ item }">
-                <v-text-field dense solo hide-details readonly v-model="item.revisedCost" prefix="$" />
-              </template>
-
-              <template v-slot:[`item.approvedCost`]="{ item }">
-                <v-text-field
-                  dense
-                  solo
-                  hide-details
-                  :error="item.state.approvedCostErr"
-                  readonly
-                  v-model="item.approvedCost"
-                  prefix="$"
-                />
-              </template>
-
-              <template v-slot:[`item.clientChange`]="{ item }">
-                <v-text-field
-                  dense
-                  hide-details
-                  :error="item.state.clientChangeErr"
-                  @input="item.state.clientChangeErr = false"
-                  :readonly="type != 'Approve'"
-                  v-model="item.clientChange"
-                  solo
-                />
-              </template>
-
-              <template v-slot:[`item.orderFilled`]="{ item }">
-                <div class="d-flex justify-center">
-                  <v-checkbox
-                    :class="type == 'Fill' ? 'mt-n1 mr-n2 bg-success' : 'mt-n1 mr-n2'"
-                    @change="fillOrderChanged(item)"
-                    :readonly="type == 'Complete'"
+            <v-card outlined>
+              <v-data-table :headers="itemHeaders" :items="recoveryItems" hide-default-footer>
+                <template v-slot:[`item.itemCategory`]="{ item }">
+                  <v-autocomplete
+                    dense
                     hide-details
-                    v-model="item.orderFilled"
+                    :error="item.state.itemCategoryErr"
+                    @change="
+                      item.state.itemCategoryErr = false;
+                      itemCategoryChanged(item);
+                    "
+                    :readonly="readonly"
+                    :items="itemCategoryList"
+                    v-model="item.itemCatID"
                     solo
                   />
-                </div>
-              </template>
+                </template>
+                <template v-slot:[`item.description`]="{ item }">
+                  <v-text-field
+                    dense
+                    :error="item.state.descriptionErr"
+                    @input="item.state.descriptionErr = false"
+                    hide-details
+                    :readonly="readonly"
+                    v-model="item.description"
+                    solo
+                  />
+                </template>
+                <template v-slot:[`item.changeQuantity`]="{ item }">
+                  <div class="mx-auto d-flex justify-center">
+                    <v-checkbox :readonly="readonly" class="mt-n1" hide-details solo v-model="item.changeQuantity" />
+                  </div>
+                </template>
+                <template v-slot:[`item.quantity`]="{ item }">
+                  <v-text-field
+                    :background-color="item.changeQuantity && userView ? '#E8F5E9' : '#FFF'"
+                    dense
+                    hide-details
+                    :readonly="type == 'Fill' || type == 'Complete' || (!item.changeQuantity && userView)"
+                    :error="item.state.quantityErr"
+                    @input="
+                      item.state.quantityErr = false;
+                      calculateTotalPrice();
+                    "
+                    v-model="item.quantity"
+                    solo
+                  />
+                </template>
+                <template v-slot:[`item.unitPrice`]="{ item }">
+                  <v-text-field
+                    :background-color="type == 'Fill' ? '#E8F5E9' : '#FFF'"
+                    dense
+                    hide-details
+                    :error="item.state.unitPriceErr"
+                    @input="
+                      item.state.unitPriceErr = false;
+                      calculateTotalPrice(true);
+                    "
+                    @change="
+                      item.state.unitPriceErr = false;
+                      calculateTotalPrice();
+                    "
+                    :readonly="readonly && type != 'Fill'"
+                    v-model="item.unitPrice"
+                    prefix="$"
+                    solo
+                  />
+                </template>
+                <template v-slot:[`item.totalPrice`]="{ item }">
+                  <v-text-field dense solo hide-details readonly v-model="item.totalPrice" prefix="$" />
+                </template>
 
-              <template v-slot:[`item.filledBy`]="{ item }">
-                <v-text-field dense readonly hide-details v-model="item.filledBy" solo />
-              </template>
+                <template v-slot:[`item.revisedCost`]="{ item }">
+                  <v-text-field dense solo hide-details readonly v-model="item.revisedCost" prefix="$" />
+                </template>
 
-              <template v-slot:[`item.remove`]="{ item }">
-                <v-btn
-                  v-if="!readonly"
-                  @click="removeItem(item)"
-                  style="min-width: 0"
-                  color="transparent"
-                  class="px-0 mt-0"
-                  small
-                >
-                  <v-icon class="" color="red">mdi-delete</v-icon>
-                </v-btn>
-              </template>
+                <template v-slot:[`item.approvedCost`]="{ item }">
+                  <v-text-field
+                    dense
+                    solo
+                    hide-details
+                    :error="item.state.approvedCostErr"
+                    readonly
+                    v-model="item.approvedCost"
+                    prefix="$"
+                  />
+                </template>
 
-              <template v-slot:footer>
-                <v-row class="my-2 pb-2 mx-0" style="font-weight:600; font-size:13pt;">
-                  <div class="ml-auto mr-15">TOTAL</div>
-                  <div style="width:8.5rem;">$ {{ total.toFixed(2) | currency }}</div>
-                </v-row>
-              </template>
-              <template v-slot:no-data>
-                <div :class="state.recoveryItemsErr ? 'red white--text' : ''">No data available</div>
-              </template>
-            </v-data-table>
+                <template v-slot:[`item.clientChange`]="{ item }">
+                  <v-text-field
+                    dense
+                    hide-details
+                    :error="item.state.clientChangeErr"
+                    @input="item.state.clientChangeErr = false"
+                    :readonly="type != 'Approve'"
+                    v-model="item.clientChange"
+                    solo
+                  />
+                </template>
+
+                <template v-slot:[`item.orderFilled`]="{ item }">
+                  <div class="d-flex justify-center">
+                    <v-checkbox
+                      :class="type == 'Fill' ? 'mt-n1 mr-n2 bg-success' : 'mt-n1 mr-n2'"
+                      @change="fillOrderChanged(item)"
+                      :readonly="type == 'Complete'"
+                      hide-details
+                      v-model="item.orderFilled"
+                      solo
+                    />
+                  </div>
+                </template>
+
+                <template v-slot:[`item.filledBy`]="{ item }">
+                  <v-text-field dense readonly hide-details v-model="item.filledBy" solo />
+                </template>
+
+                <template v-slot:[`item.remove`]="{ item }">
+                  <v-btn
+                    v-if="!readonly"
+                    @click="removeItem(item)"
+                    style="min-width: 0"
+                    color="transparent"
+                    class="px-0 mt-0"
+                    small
+                  >
+                    <v-icon class="" color="red">mdi-delete</v-icon>
+                  </v-btn>
+                </template>
+
+                <template v-slot:footer>
+                  <v-row class="my-2 pb-2 mx-0" style="font-weight:600; font-size:13pt;">
+                    <v-btn
+                      v-if="!readonly"
+                      class="ml-2"
+                      color="primary"
+                      :loading="savingData"
+                      @click="addRecoveryItem()"
+                      small
+                      >Add Item
+                    </v-btn>
+
+                    <div class="ml-auto mr-12">TOTAL</div>
+                    <div style="width:160px">$ {{ total.toFixed(2) | currency }}</div>
+                  </v-row>
+                </template>
+                <template v-slot:no-data>
+                  <div :class="state.recoveryItemsErr ? 'red white--text' : ''">No data available</div>
+                </template>
+              </v-data-table>
+            </v-card>
           </v-col>
         </v-row>
 
@@ -322,149 +334,127 @@
           </v-row>
         </div>
 
-        <v-row class="mt-10 ml-3">
-          <v-col cols="7">
-            <v-row class="mx-0">
-              <title-card class="mr-6" titleWidth="5rem">
-                <template #title>
-                  <div>Back-up</div>
-                </template>
-                <template #body>
-                  <div
-                    style="width:15rem; min-height:2rem;"
-                    :key="update"
-                    class=" mx-4 blue--text text-h7 text-decoration-underline"
-                  >
-                    <div v-if="allUploadingDocuments.length > 0">
-                      <div v-for="(doc, inx) in allUploadingDocuments" :key="'uploaded-' + inx" class="my-1">
-                        <!-- <a :href="doc.file" :download="doc.name" target="_blank" style="color:#643f5d;"> -->
-                        {{ doc.name }}
-                        <!-- </a> -->
-                      </div>
-                    </div>
-                    <div v-if="recovery">
-                      <div v-for="(doc, inx) in recovery.docName" :key="'recovery-' + inx" class="my-1">
-                        <a color="transparent" class="my-3" @click="downloadDocument(doc.docName)">
-                          <b>{{ doc.docName }}</b>
-                        </a>
-                      </div>
-                    </div>
-                    <div v-if="itemCategoryDocuments.length > 0">
-                      <div v-for="(doc, inx) in itemCategoryDocuments" :key="'item-category-' + inx" class="my-1">
-                        <a
-                          color="transparent"
-                          class="my-3"
-                          @click="downloadDocument(doc.docName, doc.itemCatID)"
-                          style="color:#005a65;"
+        <v-row class="my-3">
+          <v-col cols="6">
+            <title-card titleWidth="5rem">
+              <template #title>
+                <div>Back-up</div>
+              </template>
+              <template #body>
+                <div style="overflow-y: scroll" :style="{ height: uploadBtn || admin ? '140px' : '200px' }">
+                  <div :key="update">
+                    <v-list dense>
+                      <v-list-item
+                        v-for="(doc, inx) in recovery.docName"
+                        :key="'recovery-' + inx"
+                        @click="downloadDocument(doc)"
+                      >
+                        <v-list-item-content>
+                          <v-list-item-title>{{ doc.docName }}</v-list-item-title>
+                          <v-list-item-subtitle>{{ doc.itemCatName ?? "Manual upload" }}</v-list-item-subtitle>
+                        </v-list-item-content>
+                        <v-list-item-icon
+                          v-if="(doc.documentID && uploadBtn) || admin"
+                          @click.stop="deleteDocument(doc)"
                         >
-                          <b>{{ doc.docName }}</b>
-                        </a>
-                      </div>
-                    </div>
+                          <v-icon color="red">mdi-delete</v-icon>
+                        </v-list-item-icon>
+                      </v-list-item>
+                    </v-list>
                   </div>
-                </template>
-              </title-card>
-              <v-col>
-                <div>
-                  <v-btn
-                    v-if="uploadBtn"
-                    :loading="savingData"
-                    class="mx-0 my-0"
-                    color="primary"
-                    elevation="5"
-                    @click="uploadDocument"
-                  >
-                    Upload Back-up
-                    <input
-                      id="inputfile"
-                      type="file"
-                      style="display: none"
-                      accept="application/pdf"
-                      @change="handleSelectedFile"
-                      onclick="this.value=null;"
-                    />
-                  </v-btn>
                 </div>
-                <div>
-                  <v-btn
-                    v-if="uploadBtn && allUploadingDocuments.length > 0"
-                    class="mx-0 mt-5 cyan--text text--darken-2"
-                    color="secondary"
-                    @click="allUploadingDocuments = []"
-                  >
-                    Clear Uploaded File(s)
-                  </v-btn>
-                </div>
-              </v-col>
-            </v-row>
+
+                <v-btn
+                  v-if="uploadBtn || admin"
+                  :loading="savingData"
+                  class="ml-4 my-4"
+                  color="primary"
+                  elevation="5"
+                  small
+                  @click="uploadDocument"
+                >
+                  Upload Back-up
+                  <input
+                    id="inputfile"
+                    type="file"
+                    style="display: none"
+                    accept="application/pdf"
+                    @change="handleSelectedFile"
+                    onclick="this.value=null;"
+                  />
+                </v-btn>
+              </template>
+            </title-card>
           </v-col>
-          <v-col cols="5" class="mx-0">
-            <v-row class="mx-0">
+          <v-col cols="6" class="mx-0">
+            <title-card class="mr-6" titleWidth="7rem">
+              <template #title>
+                <div>Audit history</div>
+              </template>
+              <template #body>
+                <div style="height: 200px; overflow-y: scroll">
+                  <v-list dense>
+                    <v-list-item v-for="item of recoveryAudits" :key="item.auditID">
+                      <v-list-item-content>
+                        <v-list-item-title>{{ item.action }}</v-list-item-title>
+                        <v-list-item-subtitle>{{ formatDate(item.date) }} by {{ item.user }}</v-list-item-subtitle>
+                      </v-list-item-content>
+                    </v-list-item>
+                  </v-list>
+                </div>
+              </template>
+            </title-card>
+          </v-col>
+        </v-row>
+
+        <v-divider class="mb-3" />
+
+        <v-row>
+          <v-col cols="12">
+            <div v-if="routeForApprovalBtn">
               <v-btn
-                v-if="routeForApprovalBtn"
                 :loading="savingData"
-                class="ml-auto mr-5 my-auto"
+                class="ml-auto mr-5 my-0"
                 color="primary"
                 elevation="5"
                 @click="saveNewRecovery('Routed For Approval')"
               >
                 Route For Approval
               </v-btn>
-
-              <v-row v-if="revertBtn || approveBtn" class="mx-0">
-                <v-col cols="4">
-                  <v-btn
-                    v-if="revertBtn"
-                    :loading="savingData"
-                    class="float-right my-0"
-                    color="primary"
-                    elevation="5"
-                    @click="declineDialog = true"
-                  >
-                    Decline Request
-                  </v-btn>
-                </v-col>
-                <v-col cols="8">
-                  <div v-if="approveBtn" class="float-right my-auto" style="width:80%">
-                    <v-btn
-                      color="primary"
-                      :loading="savingData"
-                      elevation="5"
-                      @click="saveNewRecovery('Purchase Approved')"
-                    >
-                      Approve Purchase
-                    </v-btn>
-                    <div class="mt-1 mb-n15">
-                      By selecting Approve you have been provided approval by those individuals with Section 29
-                      (commitment authority)
-                    </div>
-                  </div>
-                </v-col>
-              </v-row>
-
-              <v-btn
-                v-if="saveBtn"
-                class="ml-auto mr-5 my-auto"
-                color="primary"
-                elevation="5"
-                @click="saveNewRecovery(completeBtn ? 'Fullfilled' : 'Partially Fullfilled')"
-              >
-                Save Changes
+            </div>
+            <div v-else-if="revertBtn || approveBtn" class="d-flex">
+              <v-btn v-if="revertBtn" :loading="savingData" color="warning" @click="declineDialog = true">
+                Decline Request
               </v-btn>
-            </v-row>
+
+              <v-spacer />
+
+              <div v-if="approveBtn" style="max-width: 50%; text-align:right">
+                <v-btn color="primary" :loading="savingData" @click="saveNewRecovery('Purchase Approved')">
+                  Approve Purchase
+                </v-btn>
+                <div class="mt-1 mb-n15">
+                  By selecting Approve you have been provided approval by those individuals with Section 29 (commitment
+                  authority)
+                </div>
+              </div>
+            </div>
+
+            <v-btn
+              v-if="saveBtn"
+              class="ml-auto mr-5 my-auto"
+              color="primary"
+              elevation="5"
+              @click="saveNewRecovery(completeBtn ? 'Fullfilled' : 'Partially Fullfilled')"
+            >
+              Save Changes
+            </v-btn>
           </v-col>
         </v-row>
 
-        <v-row class="mt-15 ml-3">
+        <v-row v-if="glCodeEnable">
+          <v-col cols="6" />
           <v-col cols="6">
-            <v-data-table dense :items-per-page="5" :headers="auditHeaders" :items="recoveryAudits" class="elevation-1">
-              <template v-slot:[`item.date`]="{ item }">
-                {{ item.date | getDate }}
-              </template>
-            </v-data-table>
-          </v-col>
-          <v-col cols="1" />
-          <v-col v-if="glCodeEnable" cols="4">
             <div class="mb-5">
               <b class="text-h6">GL Code: </b>
               <span v-if="recovery.glCode" class="text-h6">{{ recovery.glCode }}</span>
@@ -488,6 +478,7 @@
                         }}
                       </b>
                     </div>
+                    <div v-if="item.recvDepartment" style="font-size:11pt;">Receiving: {{ item.recvDepartment }}</div>
                     <div v-if="item.department" class="red--text">{{ item.department }}</div>
                     <div style="font-size:11pt;">{{ item.ictBranch }}</div>
                     <div style="font-size:10pt;">{{ item.ictUnit }}</div>
@@ -507,7 +498,7 @@
           </v-col>
         </v-row>
 
-        <v-row class="mt-15 mx-3">
+        <v-row v-if="alert" class="mt-15 mx-3">
           <v-alert v-model="alert" dense color="red darken-4" dark dismissible>
             {{ alertMsg }}
           </v-alert>
@@ -580,6 +571,7 @@
 import Vue from "vue";
 import { RECOVERIES_URL, ADMIN_URL, USERS_URL } from "@/urls";
 import axios from "axios";
+import moment from "moment";
 import TitleCard from "../Common/TitleCard.vue";
 
 export default {
@@ -638,7 +630,6 @@ export default {
       allUploadingDocuments: [],
       toUpload: [],
 
-      itemCategoryDocuments: [],
       glCodeList: [],
 
       loadingData: false,
@@ -680,6 +671,11 @@ export default {
   methods: {
     isReadOnly() {
       return this.type != "Add New" && this.type != "Edit";
+    },
+
+    formatDate(input) {
+      if (!input) return "";
+      return moment(input).format("YYYY-MM-DD @ h:mma");
     },
 
     async initForm() {
@@ -755,7 +751,6 @@ export default {
         });
       }
       this.checkOrderCompleted();
-      this.extractItemCategoryDocuments();
       this.loadingData = false;
       this.allUploadingDocuments = [];
       this.update++;
@@ -1002,19 +997,6 @@ export default {
       item.description = category?.description ? category.description : "";
       item.changeQuantity = category?.changeQuantity ? category.changeQuantity : false;
       this.calculateTotalPrice();
-      this.extractItemCategoryDocuments();
-    },
-
-    extractItemCategoryDocuments() {
-      this.itemCategoryDocuments = [];
-      for (const item of this.recoveryItems) {
-        if (item.itemCatID > 0) {
-          const category = this.itemCategoryListAll.filter((cat) => cat.value == item.itemCatID)[0];
-          if (category)
-            for (const doc of category.docName)
-              this.itemCategoryDocuments.push({ docName: doc.docName, itemCatID: item.itemCatID });
-        }
-      }
     },
 
     employeeChanged() {
@@ -1224,6 +1206,7 @@ export default {
         })
         .then(() => {
           this.savingData = false;
+          this.loadRecovery();
         })
         .catch((e) => {
           this.savingData = false;
@@ -1236,7 +1219,6 @@ export default {
     removeItem(item) {
       this.recoveryItems = this.recoveryItems.filter((recoveryItem) => !(recoveryItem.tmpId == item.tmpId));
       this.calculateTotalPrice();
-      this.extractItemCategoryDocuments();
     },
 
     uploadDocument() {
@@ -1251,29 +1233,30 @@ export default {
 
       this.toUpload = event.target.files;
 
-      if (event.target.files && event.target.files[0]) {
-        const file = event.target.files[0];
-
-        // this.quoteFileType = file.type;
-        // this.quoteFileName = file.name;
-
-        this.reader.onload = () => {
-          if (String(file.type).includes("pdf"))
-            this.allUploadingDocuments.push({ file: this.reader.result, name: file.name, type: file.type });
-          this.update++;
-        };
-        this.reader.readAsDataURL(file);
-      }
+      if (this.recovery && this.recovery.recoveryID) this.saveBackUPFile(this.recovery?.recoveryID);
     },
 
-    downloadDocument(docName, itemCatID) {
-      let url = `${RECOVERIES_URL}/backup-documents/${this.recovery.recoveryID}/${docName}`;
+    downloadDocument(document, itemCatID) {
+      let url = `${RECOVERIES_URL}/backup-documents/${this.recovery.recoveryID}/${document.docName}`;
       if (!itemCatID && !this.recovery.recoveryID) return;
       if (itemCatID) {
-        url = `${ADMIN_URL}/item-category-documents/${itemCatID}/${docName}`;
+        url = `${ADMIN_URL}/item-category-documents/${itemCatID}/${document.docName}`;
       }
 
       window.open(url);
+    },
+
+    async deleteDocument(document) {
+      return await axios
+        .delete(`${RECOVERIES_URL}/${this.recovery.recoveryID}/backup-documents/${document.documentID}`)
+        .then(() => {
+          this.savingData = false;
+          this.loadRecovery();
+        })
+        .catch((e) => {
+          this.alertMsg = e.response.data;
+          this.alert = true;
+        });
     },
 
     async loadRecovery() {
@@ -1281,10 +1264,13 @@ export default {
         .get(`${RECOVERIES_URL}/${this.recovery.recoveryID}`)
         .then((res) => {
           const recovery = res.data;
-          // console.log(this.recovery)
-          // console.log(recovery)
           this.recovery.docName = recovery.docName;
           this.recovery.recoveryAudits = recovery.recoveryAudits;
+
+          this.recoveryAudits = recovery.recoveryAudits.sort((a, b) => {
+            return a.date > b.date ? -1 : 1;
+          });
+
           this.recovery.recoveryItems = recovery.recoveryItems;
         })
         .catch((e) => {

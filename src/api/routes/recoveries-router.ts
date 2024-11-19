@@ -75,7 +75,7 @@ recoveriesRouter.post(
             }
           }
 
-          const action = "Added File(s): " + fileList.map((f) => f.name).join(", ");
+          const action = "Added Back-up: " + fileList.map((f) => f.name).join(", ");
 
           await addRecoveryAudit(recoveryID, user, action);
 
@@ -380,8 +380,9 @@ recoveriesRouter.get(
     const recoveryAudits = await db("RecoveryAudit").select("*").where("recoveryID", recovery.recoveryID);
     recovery.recoveryAudits = recoveryAudits;
 
-    const recoveryDocument = await db("BackUpDocs").select("docName").where("recoveryID", recovery.recoveryID);
-    recovery.docName = recoveryDocument?.length > 0 ? recoveryDocument : "";
+    recovery.docName = await db("BackUpDocs")
+      .select("documentID", "docName", "itemCatName")
+      .where("recoveryID", recovery.recoveryID);
 
     res.status(200).json(recovery);
   }
@@ -414,8 +415,9 @@ recoveriesRouter.get("/", RequiresAuthentication, ReturnValidationErrors, async 
     const recoveryAudits = await db("RecoveryAudit").select("*").where("recoveryID", recovery.recoveryID);
     recovery.recoveryAudits = recoveryAudits;
 
-    const recoveryDocument = await db("BackUpDocs").select("docName").where("recoveryID", recovery.recoveryID);
-    recovery.docName = recoveryDocument?.length > 0 ? recoveryDocument : "";
+    recovery.docName = await db("BackUpDocs")
+      .select("documentID", "docName", "itemCatName")
+      .where("recoveryID", recovery.recoveryID);
 
     const journal = await db("JournalVoucher").select("*").where("journalID", recovery.journalID).first();
     recovery.journal = journal ? journal : null;
@@ -535,11 +537,16 @@ recoveriesRouter.post(
         }
 
         const emailSent = await sendEmail(newRecovery, user, recoveryID, trx);
-        if (!emailSent) throw Error("Email failed");
+
+        console.log("EMAILER", emailSent)
+
+
+        //if (!emailSent) throw Error("Email failed");
       });
 
       res.status(200).json({ recoveryID: recoveryID });
     } catch (error: any) {
+
       console.log(error);
       res.status(500).json("Insert failed");
     }
@@ -555,12 +562,29 @@ recoveriesRouter.delete(
     let user = req.user.display_name;
     const userEmail = req.user.email;
 
-    console.log("YOU ARE TRYING TO DELETE", recoveryID);
-
     await db("RecoveryEmail").where({ recoveryID }).delete();
     await db("RecoveryAudit").where({ recoveryID }).delete();
     await db("RecoveryItem").where({ recoveryID }).delete();
     await db("Recovery").where({ recoveryID }).delete();
+
+    res.json({});
+  }
+);
+
+recoveriesRouter.delete(
+  "/:recoveryID/backup-documents/:documentID",
+  RequiresAuthentication,
+  ReturnValidationErrors,
+  async function (req: Request, res: Response) {
+    let recoveryID = Number(req.params.recoveryID);
+    let documentID = Number(req.params.documentID);
+    
+    const document = await db("BackUpDocs").where({ documentID, recoveryID }).first();
+
+    if (document) {
+      await addRecoveryAudit(recoveryID, req.user.display_name, `Removed Back-up: ${document.docName}`);
+      await db("BackUpDocs").where({ documentID }).delete();
+    }
 
     res.json({});
   }
@@ -583,7 +607,7 @@ recoveriesRouter.post(
       await db.transaction(async (trx) => {
         await trx("Recovery").update({ glCode: newGlcode }).where("recoveryID", recoveryID);
 
-        const action = `Update Glcode to ${newGlcode}`;
+        const action = `Update GL Code to ${newGlcode}`;
         await addRecoveryAudit(recoveryID, user, action, trx);
 
         recoveryAudits = await trx("RecoveryAudit").select("*").where("recoveryID", recovery.recoveryID);

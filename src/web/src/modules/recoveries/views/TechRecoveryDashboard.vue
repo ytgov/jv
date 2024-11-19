@@ -41,7 +41,6 @@ import { RECOVERIES_URL, ADMIN_URL } from "../../../urls";
 import { mapActions } from "vuex";
 import axios from "axios";
 import TitleCard from "./Common/TitleCard.vue";
-// import { secureGet } from "../../../store/jwt";
 
 export default {
   name: "TechRecoveryDashboard",
@@ -90,7 +89,6 @@ export default {
       return axios
         .get(`${RECOVERIES_URL}/`)
         .then((resp) => {
-          // this.recoveries=resp.data
           this.pendingRecoveries = resp.data.filter((recovery) => recovery.status == "Routed For Approval");
 
           this.assignedRecoveries = resp.data.filter(

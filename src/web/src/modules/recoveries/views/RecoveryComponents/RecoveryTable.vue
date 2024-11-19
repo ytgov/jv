@@ -1,16 +1,5 @@
 <template>
   <div class="mt-5 mx-10 mb-5">
-    <!-- <v-row>
-            <new-recovery 
-                class="ml-auto mb-5 mr-4 mt-n10"  
-                type="Add New"
-                title="Create"
-                maxWidth="55%"
-                :recovery="{}" 
-                @updateTable="updateTable"
-            />
-        </v-row> -->
-
     <v-row class="my-0 mx-0">
       <v-col cols="3">
         <v-text-field v-model="searchPhrase" label="Search Key" outlined clearable dense />

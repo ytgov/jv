@@ -1,25 +1,3 @@
-import Vue from "vue";
-
-async function isICTFinance(to, from, next) {
-  if (Vue.filter("isICTFinance")()) next();
-  else next({ path: "/" });
-}
-
-async function isBranchUser(to, from, next) {
-  if (Vue.filter("isBranchUser")()) next();
-  else next({ path: "/" });
-}
-
-async function isBranchAgent(to, from, next) {
-  if (Vue.filter("isBranchAgent")()) next();
-  else next({ path: "/" });
-}
-
-async function isDepartmentalFinance(to, from, next) {
-  if (Vue.filter("isDepartmentalFinance")()) next();
-  else next({ path: "/" });
-}
-
 const routes = [
   {
     path: "/recoveries",
@@ -29,26 +7,26 @@ const routes = [
       {
         name: "RecoveryHome",
         path: "",
-        beforeEnter: isICTFinance,
         component: () => import("../views/Recoveries.vue"),
+        meta: { requiresRole: ["Admin", "IctFinance"] },
       },
       {
         name: "Agent",
         path: "agent",
-        beforeEnter: isBranchAgent,
         component: () => import("../views/TechRecoveryDashboard.vue"),
+        meta: { requiresRole: ["Admin", "BranchAgent", "BranchAdmin"] },
       },
       {
         name: "UserDashboard",
         path: "user",
-        beforeEnter: isBranchUser,
         component: () => import("../views/UserRecoveryDashboard.vue"),
+        meta: { requiresRole: ["Admin", "BranchUser"] },
       },
       {
         name: "FinanceDashboard",
         path: "finance",
-        beforeEnter: isDepartmentalFinance,
         component: () => import("../views/FinanceUserDashboard.vue"),
+        meta: { requiresRole: ["Admin", "DeptFinance"] },
       },
     ],
   },

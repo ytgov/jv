@@ -187,7 +187,6 @@
 </template>
 
 <script>
-import Vue from "vue";
 import { RECOVERIES_URL } from "@/urls";
 import axios from "axios";
 import _ from "lodash";
@@ -201,7 +200,6 @@ export default {
   },
   data() {
     return {
-      admin: false,
       addNewJournalDialog: false,
 
       journalNum: "",
@@ -240,12 +238,8 @@ export default {
       },
     };
   },
-  mounted() {},
-
   methods: {
     initForm() {
-      this.admin = Vue.filter("isSystemAdmin")();
-
       this.alert = false;
       this.initStates();
       this.department = this.recoveries[0].department;

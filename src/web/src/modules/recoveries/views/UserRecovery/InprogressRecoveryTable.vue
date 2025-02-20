@@ -41,7 +41,6 @@ export default {
         };
     },
     mounted() {
-        // this.admin = Vue.filter("isAdmin")();
         this.loadingData = true;
         this.initItemCategory();
         this.loadingData = false; 

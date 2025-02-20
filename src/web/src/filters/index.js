@@ -2,60 +2,6 @@ import Vue from "vue";
 import store from "../store";
 import { print } from "./print";
 
-Vue.filter("isDepartmentalFinance", async function() {
-  await waitForAuthToInitialize();
-  const userRoles = store.state.auth.user.roles.split(",");
-  const admin = userRoles?.includes("Admin");
-  const role = userRoles?.includes("DeptFinance");
-  const hasRequiredRoles = admin || role;
-  return hasRequiredRoles;
-});
-
-Vue.filter("isICTFinance", async function() {
-  await waitForAuthToInitialize();
-  const userRoles = store.state.auth.user.roles.split(",");
-  const admin = userRoles?.includes("Admin");
-  const role = userRoles?.includes("IctFinance");
-  const hasRequiredRoles = admin || role;
-  return hasRequiredRoles;
-});
-
-Vue.filter("isBranchAdmin", async function() {
-  await waitForAuthToInitialize();
-  const userRoles = store.state.auth.user.roles.split(",");
-  const admin = userRoles?.includes("Admin");
-  const role = userRoles?.includes("BranchAdmin");
-  const hasRequiredRoles = admin || role;
-  return hasRequiredRoles;
-});
-
-Vue.filter("isBranchAgent", async function() {
-  await waitForAuthToInitialize();
-
-  const userRoles = store.state.auth.user.roles.split(",");
-  const admin = userRoles?.includes("Admin");
-  const role1 = userRoles?.includes("BranchAgent");
-  const role2 = userRoles?.includes("BranchAdmin");
-  const hasRequiredRoles = admin || role1 || role2;
-  return hasRequiredRoles;
-});
-
-Vue.filter("isBranchUser", async function() {
-  await waitForAuthToInitialize();
-  const userRoles = store.state.auth.user.roles.split(",");
-  const admin = userRoles?.includes("Admin");
-  const role = userRoles?.includes("BranchUser");
-  const hasRequiredRoles = admin || role;
-  return hasRequiredRoles;
-});
-
-Vue.filter("isSystemAdmin", async function() {
-  await waitForAuthToInitialize();
-  const userRoles = store.state.auth.user.roles.split(",");
-  const admin = userRoles.includes("Admin");
-  return admin;
-});
-
 Vue.filter("beautifyDate", function(date) {
   const MonthList = {
     1: "Jan",
@@ -124,10 +70,14 @@ Vue.filter("ictBranches", function() {
 Vue.filter("printPdf", print);
 
 export async function waitForAuthToInitialize() {
+  console.log("Waiting for auth to initialize", store.state.auth.isInitialized);
   if (store.state.auth.isInitialized) return;
+
+  console.log("HERE");
 
   let tries = 10;
   for (; tries > 0; tries--) {
+    console.log("HERE111", tries);
     await sleep(30);
     if (store.state.auth.isInitialized) return;
   }

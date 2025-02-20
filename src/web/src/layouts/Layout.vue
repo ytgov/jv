@@ -73,14 +73,14 @@
           </v-list>
         </v-menu>
 
-        <span>{{ username }}</span>
+        <span>{{ fullName }}</span>
         <v-menu bottom left class="ml-0">
           <template v-slot:activator="{ on, attrs }">
             <v-btn icon color="primary" v-bind="attrs" v-on="on">
               <v-icon>mdi-dots-vertical</v-icon>
             </v-btn>
           </template>
-
+          {{ isSystemAdmin }}
           <v-list dense style="min-width: 200px">
             <v-list-item to="/administration" v-if="isSystemAdmin">
               <v-list-item-icon>
@@ -124,11 +124,10 @@
 </template>
 
 <script>
-import Vue from "vue";
 import router from "@/router";
 import store from "@/store";
 import * as config from "@/config";
-import { mapState } from "vuex";
+import { mapGetters, mapState } from "vuex";
 import { LOGOUT_URL } from "../urls";
 
 export default {
@@ -136,27 +135,15 @@ export default {
   components: {},
   computed: {
     ...mapState(["isAuthenticated"]),
-    username() {
-      return store.getters.fullName;
-    },
-    isAuthenticated() {
-      return store.getters.isAuthenticated;
-    },
-    isBranchUser() {
-      return Vue.filter("isBranchUser")();
-    },
-    isBranchAgent() {
-      return Vue.filter("isBranchAgent")();
-    },
-    isDepartmentalFinance() {
-      return Vue.filter("isDepartmentalFinance")();
-    },
-    isICTFinance() {
-      return Vue.filter("isICTFinance")();
-    },
-    isSystemAdmin() {
-      return Vue.filter("isSystemAdmin")();
-    },
+    ...mapGetters([
+      "fullName",
+      "isAuthenticated",
+      "isBranchUser",
+      "isBranchAgent",
+      "isDepartmentalFinance",
+      "isICTFinance",
+      "isSystemAdmin",
+    ]),
   },
   data: () => ({
     dialog: false,
@@ -192,7 +179,6 @@ export default {
   methods: {
     nav: function(location) {
       router.push(location);
-      console.log(location);
     },
     toggleHeader: function() {
       this.headerShow = !this.headerShow;

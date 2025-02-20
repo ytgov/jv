@@ -19,6 +19,50 @@ const getters = {
 
     return false;
   },
+  isDepartmentalFinance: (state) => {
+    const userRoles = state.user.roles.split(",");
+    const admin = userRoles?.includes("Admin");
+    const role = userRoles?.includes("DeptFinance");
+    const hasRequiredRoles = admin || role;
+    return hasRequiredRoles;
+  },
+  isICTFinance: (state) => {
+    const userRoles = state.user.roles.split(",");
+    const admin = userRoles?.includes("Admin");
+    const role = userRoles?.includes("IctFinance");
+    const hasRequiredRoles = admin || role;
+    return hasRequiredRoles;
+  },
+  isBranchAdmin: (state) => {
+    const userRoles = state.user.roles.split(",");
+    const admin = userRoles?.includes("Admin");
+    const role = userRoles?.includes("BranchAdmin");
+    const hasRequiredRoles = admin || role;
+    return hasRequiredRoles;
+  },
+
+  isBranchAgent: (state) => {
+    const userRoles = state.user.roles.split(",");
+    const admin = userRoles?.includes("Admin");
+    const role1 = userRoles?.includes("BranchAgent");
+    const role2 = userRoles?.includes("BranchAdmin");
+    const hasRequiredRoles = admin || role1 || role2;
+    return hasRequiredRoles;
+  },
+
+  isBranchUser: (state) => {
+    const userRoles = state.user.roles.split(",");
+    const admin = userRoles?.includes("Admin");
+    const role = userRoles?.includes("BranchUser");
+    const hasRequiredRoles = admin || role;
+    return hasRequiredRoles;
+  },
+
+  isSystemAdmin: (state) => {
+    const userRoles = state.user.roles.split(",");
+    const admin = userRoles.includes("Admin");
+    return admin;
+  },
 };
 const actions = {
   async checkAuthentication({ commit }) {

@@ -48,7 +48,6 @@ export default {
         };
     },
     mounted() {
-        // this.admin = Vue.filter("isAdmin")();
         this.initItemCategory()        
     },
     methods: {

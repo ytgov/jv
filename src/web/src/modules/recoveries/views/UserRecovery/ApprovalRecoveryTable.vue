@@ -62,7 +62,6 @@ export default {
         };
     },
     mounted() {
-        // this.admin = Vue.filter("isAdmin")();
         this.loadingData = true;
         this.initItemCategory();
         Vue.nextTick(() => this.loadingData = false);        

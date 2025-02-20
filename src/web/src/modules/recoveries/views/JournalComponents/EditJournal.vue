@@ -324,7 +324,6 @@
 </template>
 
 <script>
-import Vue from "vue";
 import { RECOVERIES_URL } from "@/urls";
 import axios from "axios";
 import _ from "lodash";
@@ -350,7 +349,6 @@ export default {
   },
   data() {
     return {
-      admin: false,
       addNewJournalDialog: false,
 
       periodList: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14],
@@ -388,11 +386,8 @@ export default {
     };
   },
   mounted() {},
-
   methods: {
     initForm() {
-      this.admin = Vue.filter("isSystemAdmin")();
-
       this.alert = false;
       this.initDepartments();
       this.initStates();

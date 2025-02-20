@@ -49,17 +49,21 @@ const router = new VueRouter({
 router.beforeEach(async (to, from, next) => {
   var requiresAuth = to.meta.requiresAuth || false;
   var requiresAdmin = to.meta.requiresAdmin || false;
+  var requiresRole = to.meta.requiresRole || null;
 
   if (!requiresAuth) {
     return next();
   }
 
   await store.dispatch("checkAuthentication");
+
   var isAuthenticated = store.getters.isAuthenticated;
   var isAdmin = store.getters.isAdmin;
 
+  console.log("Checking for required roles", requiresRole);
+
   if (requiresAuth && !isAuthenticated) {
-    console.log("You aren't authenticatd, redirecting to sign-in");
+    console.log("You aren't authenticated, redirecting to sign-in");
     return next("/sign-in");
   }
 

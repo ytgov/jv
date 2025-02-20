@@ -573,6 +573,7 @@ import { RECOVERIES_URL, ADMIN_URL, USERS_URL } from "@/urls";
 import axios from "axios";
 import moment from "moment";
 import TitleCard from "../Common/TitleCard.vue";
+import { mapGetters } from "vuex";
 
 export default {
   components: {
@@ -667,6 +668,7 @@ export default {
     };
   },
   mounted() {},
+  ...mapGetters(["isSystemAdmin", "isBranchAdmin",  "isICTFinance"]),
 
   methods: {
     isReadOnly() {
@@ -680,14 +682,14 @@ export default {
 
     async initForm() {
       this.loadingData = true;
-      this.admin = Vue.filter("isSystemAdmin")();
-      this.supervisor = Vue.filter("isBranchAdmin")();
+      this.admin = this.isSystemAdmin;
+      this.supervisor =this.isBranchAdmin;
       this.readonly = this.isReadOnly();
       this.approveBtn = this.type == "Approve";
       this.revertBtn = this.type == "Approve";
       this.saveBtn = this.type == "Fill";
       this.uploadBtn = this.type != "Approve" && this.type != "Complete";
-      this.glCodeEnable = this.type == "Complete" && Vue.filter("isICTFinance")() && this.editGlCode;
+      this.glCodeEnable = this.type == "Complete" && this.isICTFinance && this.editGlCode;
       this.alert = false;
       this.userView = this.type == "Approve";
       this.routeForApprovalBtn = !this.readonly;
@@ -979,7 +981,7 @@ export default {
         const total = Number(item.unitPrice) * item.quantity;
         if (!fixUnitPrice) item.unitPrice = Number(item.unitPrice).toFixed(2);
         if (this.type == "Add New" || this.type == "Edit") item.totalPrice = total.toFixed(2);
-        //Vue.filter('currency')();
+        
         else {
           item.revisedCost = total.toFixed(2);
           item.totalPrice = Number(item.totalPrice).toFixed(2);

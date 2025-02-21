@@ -28,20 +28,19 @@
     </v-navigation-drawer>
 
     <v-app-bar app color="#fff" flat height="70" style="left: 0; border-bottom: 3px #f3b228 solid">
-      <img src="/yukon.svg" style="margin: -8px 45px 0 0" height="44" />
-      <v-toolbar-title>
-        <span style="font-weight: 700">{{ applicationName }}</span>
-
-        <v-progress-circular
-          :class="loadingClass"
-          indeterminate
-          color="#f3b228"
-          size="20"
-          width="2"
-          class="ml-4"
-        ></v-progress-circular>
-      </v-toolbar-title>
-      <v-spacer></v-spacer>
+      <router-link to="/">
+        <img src="/yukon.svg" style="margin: -5px 45px 0 0" height="44" />
+      </router-link>
+      <v-app-bar-title class="font-weight-bold" style="width: 200px !important;">{{ applicationName }}</v-app-bar-title>
+      <v-progress-circular
+        :class="loadingClass"
+        indeterminate
+        color="#f3b228"
+        size="20"
+        width="2"
+        class="ml-4"
+      ></v-progress-circular>
+      <v-spacer />
 
       <div v-if="isAuthenticated">
         <v-menu offset-y class="ml-0">
@@ -73,14 +72,14 @@
           </v-list>
         </v-menu>
 
-        <span>{{ fullName }}</span>
+        <span class="d-none d-md-inline">{{ fullName }}</span>
         <v-menu bottom left class="ml-0">
           <template v-slot:activator="{ on, attrs }">
             <v-btn icon color="primary" v-bind="attrs" v-on="on">
               <v-icon>mdi-dots-vertical</v-icon>
             </v-btn>
           </template>
-          {{ isSystemAdmin }}
+
           <v-list dense style="min-width: 200px">
             <v-list-item to="/administration" v-if="isSystemAdmin">
               <v-list-item-icon>
@@ -202,3 +201,9 @@ export default {
   },
 };
 </script>
+
+<style>
+.v-app-bar-title__content {
+  width: auto !important;
+}
+</style>

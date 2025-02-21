@@ -62,7 +62,7 @@
 <script>
 import Vue from "vue";
 import axios from "axios";
-import { ExportToCsv } from "export-to-csv";
+//import { ExportToCsv } from "export-to-csv";
 import EditJournal from "./EditJournal.vue";
 import { RECOVERIES_URL } from "@/urls";
 
@@ -151,8 +151,8 @@ export default {
         useKeysAsHeaders: false,
         headers: ["Date", "JV Number", "Department", "Period", "Affiliated Recoveries", "Amount", "Status"],
       };
-      const csvExporter = new ExportToCsv(options);
-      csvExporter.generateCsv(csvInfo);
+      //const csvExporter = new ExportToCsv(options);
+      //csvExporter.generateCsv(csvInfo);
     },
   },
 };

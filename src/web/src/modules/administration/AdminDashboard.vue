@@ -2,6 +2,7 @@
   <v-card :loading="loadingData" :disabled="loadingData" en class="px-5 pb-15" style="width:100%;">
     <h1>Administration</h1>
 
+    <SimpleBreadcrumbs />
     <Breadcrumbs />
     <v-row>
       <v-col cols="12">
@@ -44,11 +45,13 @@
 
 <script>
 import Breadcrumbs from "../../components/Breadcrumbs.vue";
+import SimpleBreadcrumbs from "@/components/SimpleBreadcrumbs.vue";
 import { mapActions } from "vuex";
 
 export default {
   components: {
     Breadcrumbs,
+    SimpleBreadcrumbs,
   },
   data: () => ({
     loadingData: false,

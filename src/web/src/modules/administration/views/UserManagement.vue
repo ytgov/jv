@@ -1,5 +1,5 @@
 <template>
-  <v-container>
+  <div>
     <h1>User Management</h1>
 
     <Breadcrumbs />
@@ -117,7 +117,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-  </v-container>
+  </div>
 </template>
 
 <script>

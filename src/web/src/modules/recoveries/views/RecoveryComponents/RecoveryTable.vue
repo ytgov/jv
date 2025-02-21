@@ -123,7 +123,7 @@ import Vue from "vue";
 import { RECOVERIES_URL } from "@/urls";
 import axios from "axios";
 import NewRecovery from "./NewRecovery.vue";
-import { ExportToCsv } from "export-to-csv";
+//import { ExportToCsv } from "export-to-csv";
 
 export default {
   components: {
@@ -259,8 +259,8 @@ export default {
           "JV #",
         ],
       };
-      const csvExporter = new ExportToCsv(options);
-      csvExporter.generateCsv(csvInfo);
+      //const csvExporter = new ExportToCsv(options);
+      //csvExporter.generateCsv(csvInfo);
     },
 
     deleteRecoveryClick(item) {

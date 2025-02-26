@@ -1,0 +1,39 @@
+@use 'vuetify' with (
+  $utilities: 'true',
+  $color-pack: false,
+ );
+
+ .main-sidebar .v-list-item {
+  border-left: 5px #00000000 solid;
+  padding-left: 11px !important;
+ } 
+ .main-sidebar .v-list-item--active {
+  border-left: 5px #000000 solid !important;
+ }
+
+ .v-card-subtitle {
+  font-weight: bold !important;
+ }
+
+ .text-gray {
+  color: #242424;
+  font-weight: 400;
+ }
+ 
+ a:not(.v-list-item) {
+  color: #005F73;
+}
+
+.v-breadcrumbs-item {
+  font-weight: bold;
+}
+.v-breadcrumbs-item.v-breadcrumbs-item--disabled {
+  opacity: 1 !important; 
+  font-weight: 400;
+}
+.v-breadcrumbs-item.v-breadcrumbs-item--disabled a {
+  color: #000000aa !important;
+}
+li.v-breadcrumbs-divider {
+  padding: 0 2px;
+}

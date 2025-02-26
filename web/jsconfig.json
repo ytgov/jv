@@ -1,0 +1,16 @@
+/*
+  This file makes VS Code @ lookups work for Vue 2.
+  It is not being used for any kind of other configuration at this point.
+*/
+{
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*", "src/*.js", "src/*.vue"]
+    }
+  },
+  "exclude": ["node_modules", "dist"]
+}

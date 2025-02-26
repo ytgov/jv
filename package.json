@@ -1,0 +1,9 @@
+{
+  "name": "jv-development-tooling",
+  "private": true,
+  "devDependencies": {
+    "eslint": "^9.14.0",
+    "eslint-config-prettier": "^9.1.0",
+    "prettier": "^3.3.3"
+  }
+}

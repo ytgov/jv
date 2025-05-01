@@ -221,9 +221,9 @@ const { departments } = useDepartments()
 
 const search = ref<string>("")
 const branch = ref<string>("")
-const statusFilter = ref<string[]>(["Draft"])
+const statusFilter = ref<string[]>([])
 const departmentFilter = ref<string[]>([])
-const assignFilter = ref<string[]>([])
+const assignFilter = ref<string[]>(["Waiting on me"])
 
 const selectedHeaders = ref<string[]>([])
 const allHeaders = [
@@ -300,6 +300,22 @@ const filteredRecoveries = computed(() => {
     if (assignFilter.value.length > 0) {
       if (assignFilter.value.includes("Created by me")) {
         assignMatch = recovery.createUser == currentUser.value?.email
+      }
+
+      if (assignFilter.value.includes("Waiting on me")) {
+        if (isAgent.value) {
+          const relevantStatuses = [
+            "Draft",
+            "Purchase Approved",
+            "Partially Fullfilled",
+            "Fullfilled",
+          ]
+          assignMatch =
+            relevantStatuses.includes(recovery.status) &&
+            recovery.supplier == currentUser.value?.branch
+        } else if (recovery.requastorEmail == currentUser.value?.email) {
+          assignMatch = recovery.status == "Routed For Approval"
+        }
       }
     }
 

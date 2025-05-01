@@ -431,9 +431,7 @@ recoveriesRouter.post("/", async function (req: AuthorizationRequest, res: Respo
   const userEmail = req.currentUser?.email
   const roles = (req.currentUser?.roles ?? "").split(",")
 
-  if (
-    !(roles.includes("Admin")  || roles.includes("Agent"))
-  ) {
+  if (!(roles.includes("Admin") || roles.includes("Agent"))) {
     return res.status(401).send("You are not an authorized person!")
   }
 
@@ -545,9 +543,7 @@ recoveriesRouter.put(
         .first()
       if (!recovery) return res.status(400).json("Recovery Not Found!")
     } else {
-      if (
-        !(roles.includes("Admin")  || roles.includes("Agent"))
-      ) {
+      if (!(roles.includes("Admin") || roles.includes("Agent"))) {
         return res.status(401).send("You are not an authorized person!")
       }
     }
@@ -593,6 +589,13 @@ recoveriesRouter.put(
             }
           }
         }
+
+        console.log("ADDING AUDIT", {
+          date: new Date(),
+          recoveryID,
+          user,
+          action,
+        })
 
         await trx("RecoveryAudit").insert({
           date: new Date(),
@@ -767,14 +770,12 @@ function recoveryRoleCheck(req: any) {
     if (user.roles?.indexOf("Admin") >= 0) queryBuilder.select("*")
     else if (user.roles?.indexOf("IctFinance") >= 0) queryBuilder.select("*")
     else if (user.roles?.indexOf("Agent") >= 0)
-      queryBuilder.whereLike("branch", `%${user.branch}%`).select("*")
+      queryBuilder.whereLike("branch", `${user.branch}%`).select("*")
     else if (user.roles?.indexOf("DeptFinance") >= 0)
       queryBuilder.where("department", user.department).select("*")
-    else
-      queryBuilder
-        .where({ lastName: userLastName, firstName: userFirstName })
-        .orWhere("requastorEmail", userEmail)
-        .select("*")
+    else {
+      queryBuilder.where("requastorEmail", userEmail).select("*")
+    }
   }
 
   return adminQuery

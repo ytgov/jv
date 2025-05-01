@@ -13,6 +13,20 @@
   >
   </ConfirmButton>
 
+  <ConfirmButton
+    v-if="canComplete"
+    button-text="Mark Completed"
+    button-size="large"
+    button-color="primary"
+    button-variant="flat"
+    confirm-title="Mark Completed?"
+    :extra-text="`This will complete the recovery process and send to ICT Finance for processing. Are you sure you would like to continue?`"
+    confirm-button-text="Yes, continue"
+    confirm-variant="primary"
+    @on-confirm="completeClick"
+  >
+  </ConfirmButton>
+
   <div v-if="canApprove">
     <ConfirmButton
       button-text="Approve Recovery"
@@ -28,18 +42,17 @@
     </ConfirmButton>
     &nbsp;
 
-    <ConfirmButton
+    <RecoveryRejectDialog
       button-text="Reject Recovery"
       button-size="default"
       button-color="warning"
       button-variant="outlined"
       confirm-title="Reject Recovery?"
       :extra-text="`This will send an email to ${recovery?.createUser} and they will be asked to approve or reject this recovery. Are you sure you would like to continue?`"
-      confirm-button-text="Yes, continue"
+      confirm-button-text="Reject"
       confirm-variant="warning"
       @on-confirm="rejectClick"
-    >
-    </ConfirmButton>
+    />
   </div>
 
   <v-menu
@@ -97,6 +110,7 @@ import useSnack from "@/use/use-snack"
 import useRecovery from "@/use/use-recovery"
 import useCurrentUser from "@/use/use-current-user"
 import { isNil } from "lodash"
+import RecoveryRejectDialog from "./recoveries/RecoveryRejectDialog.vue"
 
 const snack = useSnack()
 const router = useRouter()
@@ -119,11 +133,26 @@ const canRouteForApproval = computed(() => {
   )
 })
 
-const canApprove = computed(() => {
+const canComplete = computed(() => {
   if (isNil(currentUser.value)) return false
 
   return (
-    (isSystemAdmin.value || currentUser.value?.email == recovery.value?.requastorEmail) &&
+    (isSystemAdmin.value || currentUser.value?.email == recovery.value?.createUser) &&
+    recovery.value?.status == "Fullfilled"
+  )
+})
+
+const canApprove = computed(() => {
+  if (isNil(currentUser.value)) return false
+
+  if (
+    currentUser.value.email == recovery.value?.requastorEmail &&
+    recovery.value?.status == "Routed For Approval"
+  )
+    return true
+
+  return (
+    (isSystemAdmin.value || currentUser.value.email == recovery.value?.requastorEmail) &&
     recovery.value?.status == "Routed For Approval"
   )
 })
@@ -136,12 +165,14 @@ const canDelete = computed(() => {
 })
 
 const { recovery, save, fetch } = useRecovery(ref(props.recoveryId))
+defineExpose({ fetch })
 
 async function routeForApprovalClick() {
   if (!recovery.value) return
 
   recovery.value.status = "Routed For Approval"
-  recovery.value.action = getActionType(recovery.value.status ?? "")
+  recovery.value.action = "Routed For Approval"
+  recovery.value.reasonForDecline = ""
   await save()
   await fetch()
   emit("reload")
@@ -152,22 +183,34 @@ async function approveClick() {
   if (!recovery.value) return
 
   recovery.value.status = "Purchase Approved"
-  recovery.value.action = getActionType(recovery.value.status ?? "")
+  recovery.value.action = "Purchase Approved"
   await save()
   await fetch()
   emit("reload")
   snack.success("Recovery approved")
 }
 
-async function rejectClick() {
+async function rejectClick(reason: string) {
   if (!recovery.value) return
 
-  recovery.value.status = "Re-Draft"
-  recovery.value.action = getActionType(recovery.value.status ?? "")
+  recovery.value.status = "Draft"
+  recovery.value.action = `Request Declined (${reason.slice(0, 25)}...)`
+  recovery.value.reasonForDecline = reason
   await save()
   await fetch()
   emit("reload")
   snack.success("Recovery rejected")
+}
+
+async function completeClick() {
+  if (!recovery.value) return
+
+  recovery.value.status = "Complete"
+  recovery.value.action = "Completed Request"
+  await save()
+  await fetch()
+  emit("reload")
+  snack.success("Recovery completed")
 }
 
 async function deleteClick() {

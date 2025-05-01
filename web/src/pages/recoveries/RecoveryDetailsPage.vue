@@ -15,7 +15,7 @@
         ><strong>Agent:</strong>&nbsp;{{ recovery?.createUser }}</v-chip
       >
       <v-chip
-        color="success"
+        color="info"
         class="mr-3"
         variant="flat"
         dark
@@ -27,6 +27,7 @@
 
     <RecoveryActionMenu
       v-if="recovery && recovery.recoveryID"
+      ref="actionMenu"
       :recovery-id="recovery.recoveryID"
       @reload="fetch()"
     />
@@ -53,6 +54,7 @@
               v-model="requestor"
               label="Client name"
               hide-details
+              :readonly="!canEdit"
             />
           </v-col>
 
@@ -64,6 +66,8 @@
               v-model="recovery.requastorEmail"
               label="Client email"
               hide-details
+              readonly
+              append-inner-icon="mdi-lock"
             />
           </v-col>
           <v-col
@@ -74,6 +78,7 @@
               v-model="recovery.mailcode"
               label="Client mail code"
               hide-details
+              :readonly="!canEdit"
             />
           </v-col>
           <v-col
@@ -84,6 +89,7 @@
               v-model="recovery.department"
               label="Client department"
               hide-details
+              :readonly="!canEdit"
             />
           </v-col>
           <v-col
@@ -94,6 +100,7 @@
               v-model="recovery.branch"
               label="Client branch"
               hide-details
+              :readonly="!canEdit"
             />
           </v-col>
           <v-col
@@ -104,6 +111,7 @@
               v-model="recovery.employeeUnit"
               label="Client unit"
               hide-details
+              :readonly="!canEdit"
             />
           </v-col>
           <v-col
@@ -114,6 +122,7 @@
               v-model="recovery.refNum"
               label="Reference"
               hide-details
+              :readonly="!canEdit"
             />
           </v-col>
           <v-col
@@ -124,6 +133,7 @@
               v-model="recovery.description"
               label="Request description"
               hide-details
+              :readonly="!canEdit"
             />
           </v-col>
           <v-col
@@ -134,6 +144,7 @@
               v-model="recovery.fiscal_year"
               label="Fiscal year"
               hide-details
+              :readonly="!canEdit"
             />
           </v-col>
           <v-col v-if="!recovery.supplier">
@@ -141,12 +152,13 @@
               v-model="recovery.supplier"
               label="Supplier"
               hide-details
+              :readonly="!canEdit"
             />
           </v-col>
         </v-row>
 
         <v-btn
-          v-if="isAgent || isSystemAdmin"
+          v-if="canEdit"
           :disabled="!isValid"
           class="mt-5"
           @click="saveClick"
@@ -154,10 +166,20 @@
         >
 
         <v-divider class="my-5" />
+
+        <v-alert
+          v-if="recovery.reasonForDecline"
+          title="Approval Rejected by Client"
+          type="error"
+          class="mb-3"
+        >
+          <strong>Reason:</strong> {{ recovery.reasonForDecline }}
+        </v-alert>
+
         <v-card-subtitle class="mb-3 px-0">Recovery Items</v-card-subtitle>
 
         <RecoveryItemListStatic
-          v-if="!(isAgent || isSystemAdmin)"
+          v-if="!canEdit && !canFill"
           :items="recovery.recoveryItems ?? []"
         />
 
@@ -199,10 +221,11 @@
               >
                 <ItemSelect
                   v-model="item.itemCatID"
-                  :supplier="recovery.supplier"
+                  :supplier="canEdit ? recovery.supplier : undefined"
                   density="compact"
                   hide-details
                   :expanded-selection="true"
+                  :readonly="!canEdit"
                   @update:model-value="itemChanged(item)"
                 >
                 </ItemSelect>
@@ -210,6 +233,7 @@
               <v-col
                 cols="4"
                 md="2"
+                class="d-flex"
               >
                 <v-text-field
                   v-model="item.quantity"
@@ -217,8 +241,30 @@
                   type="number"
                   min="1"
                   hide-details
+                  :readonly="!canEdit"
                   @update:model-value="itemInfoChanged(item)"
                 />
+                <v-btn
+                  v-if="canFill"
+                  icon
+                  size="small"
+                  :color="item.orderFilled ? 'success' : 'warning'"
+                  :variant="item.orderFilled ? 'flat' : 'outlined'"
+                  class="ml-2"
+                  @click="toggleOrderFilled(item)"
+                >
+                  <v-icon
+                    v-if="item.orderFilled"
+                    size="22"
+                    >mdi-check</v-icon
+                  >
+                  <v-icon
+                    v-else
+                    size="22"
+                    class="pt-1"
+                    >mdi-cart-plus</v-icon
+                  >
+                </v-btn>
               </v-col>
               <v-col
                 cols="4"
@@ -228,6 +274,7 @@
                   v-model="item.unitPrice"
                   density="compact"
                   hide-details
+                  :readonly="!canEdit"
                   @update:model-value="itemInfoChanged(item)"
                 />
               </v-col>
@@ -243,6 +290,7 @@
                   hide-details
                 />
                 <v-btn
+                  v-if="canEdit"
                   class="ml-1 mt-1"
                   icon="mdi-close"
                   size="x-small"
@@ -276,7 +324,7 @@
         <div v-else>No items found</div>
 
         <div
-          v-if="isAgent || isSystemAdmin"
+          v-if="canEdit"
           class="text-left"
         >
           <v-btn
@@ -349,7 +397,7 @@ import FiscalYearSelect from "@/components/common/FiscalYearSelect.vue"
 import GroupSelect from "@/components/groups/GroupSelect.vue"
 
 const snack = useSnack()
-const { isAgent, isSystemAdmin } = useCurrentUser()
+const { currentUser, isAgent, isSystemAdmin } = useCurrentUser()
 
 const props = defineProps<{ id: string }>()
 const recoverId = computed(() => {
@@ -360,9 +408,19 @@ const { recovery, save, fetch } = useRecovery(recoverId)
 const { employees } = useEmployees()
 const { itemCategories } = useItemCategories()
 
+watch(
+  () => recovery.value,
+  (newValue) => {
+    if (newValue) {
+      requestor.value = `${newValue.firstName} ${newValue.lastName}`
+    }
+  }
+)
+
 useBreadcrumbs("Recovery", [{ title: "Recovery", to: { name: "RecoveryAddPage" }, disabled: true }])
 
 const requestor = ref<string | null>(null)
+const actionMenu = ref<InstanceType<typeof RecoveryActionMenu> | null>(null)
 
 const isValid = computed(() => {
   if (isNil(recovery.value)) {
@@ -399,6 +457,28 @@ const itemTotalCost = computed(() => {
   }
 
   return 0
+})
+
+const canEdit = computed(() => {
+  if (!recovery.value || !currentUser.value) return false
+
+  if (isAgent.value || isSystemAdmin.value) {
+    return recovery.value.status == "Draft"
+  }
+  return false
+})
+
+const canFill = computed(() => {
+  if (!recovery.value || !currentUser.value) return false
+
+  if (isAgent.value || isSystemAdmin.value) {
+    return (
+      recovery.value.status == "Purchase Approved" ||
+      recovery.value.status == "Partially Fullfilled" ||
+      recovery.value.status == "Fullfilled"
+    )
+  }
+  return false
 })
 
 watch(
@@ -469,6 +549,27 @@ function addItemClick() {
 function removeItemClick(item: object, idx: number) {
   if (recovery.value) {
     recovery.value.recoveryItems?.splice(idx, 1)
+  }
+}
+
+async function toggleOrderFilled(item: RecoveryItem | Partial<RecoveryItem>) {
+  if (recovery.value) {
+    item.orderFilled = !item.orderFilled
+
+    const allFullfilled = recovery.value.recoveryItems?.every((item) => item.orderFilled)
+    const allUnFullfilled = recovery.value.recoveryItems?.every((item) => item.orderFilled == false)
+
+    recovery.value.action = item.orderFilled ? "Marked item Fullfilled" : "Marked item Unfullfilled"
+
+    console.log("item.orderFilled", allFullfilled, allUnFullfilled)
+
+    if (allFullfilled) recovery.value.status = "Fullfilled"
+    else if (allUnFullfilled) recovery.value.status = "Purchase Approved"
+    else recovery.value.status = "Partially Fullfilled"
+
+    await save()
+    actionMenu.value?.fetch()
+    snack.success("Item Saved")
   }
 }
 </script>

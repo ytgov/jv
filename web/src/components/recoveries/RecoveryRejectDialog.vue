@@ -31,10 +31,19 @@
           {{ extraText }}
         </p>
 
+        <v-textarea
+          v-model="reason"
+          label="Rejection reason"
+          rows="3"
+          hide-details
+          class="mt-4"
+        />
+
         <div class="d-flex mt-6">
           <v-btn
             :color="getType()"
             :text="confirmButtonText"
+            :disabled="!reason"
             variant="flat"
             @click="confirmClick"
           />
@@ -57,6 +66,8 @@
 import { ref } from "vue"
 
 const modelValue = ref(false)
+
+const reason = ref("")
 
 const emit = defineEmits(["on-confirm"])
 const props = defineProps({
@@ -90,7 +101,7 @@ function getButtonVariant(): "outlined" | "flat" | "text" | "tonal" | undefined 
 }
 
 function confirmClick() {
-  emit("on-confirm")
+  emit("on-confirm", reason.value)
   modelValue.value = false
 }
 </script>

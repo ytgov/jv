@@ -2,6 +2,7 @@
   <SimpleCard>
     <div class="d-flex mb-4">
       <v-btn
+        v-if="isSystemAdmin || isAgent"
         :to="{ name: 'RecoveryAddPage' }"
         style="height: 44px"
         class="mr-4"
@@ -16,6 +17,15 @@
         prepend-inner-icon="mdi-magnify"
         density="compact"
         style="width: 300px"
+      />
+      <GroupSelect
+        v-model="branch"
+        class="mr-4"
+        label="Supplier"
+        prepend-inner-icon="mdi-magnify"
+        density="compact"
+        style="width: 300px"
+        clearable
       />
       <v-spacer />
       <div class="text-right">
@@ -90,7 +100,7 @@
                 >
               </v-btn-toggle>
 
-              <v-label class="mb-2">Department:</v-label>
+              <v-label class="mb-2">Client department:</v-label>
               <v-autocomplete
                 v-model="departmentFilter"
                 :items="departments"
@@ -198,8 +208,9 @@ import SimpleCard from "@/components/common/SimpleCard.vue"
 import AssignedRecoveryTable from "@/modules/recoveries/views/TechRecovery/AssignedRecoveryTable.vue"
 import useRecoveries, { Recovery } from "@/use/use-recoveries"
 import useItemCategories from "@/use/use-item-categories"
+import GroupSelect from "@/components/groups/GroupSelect.vue"
 
-const { currentUser } = useCurrentUser()
+const { currentUser, isAgent, isSystemAdmin } = useCurrentUser()
 const { itemCategories } = useItemCategories(ref({}))
 
 const { recoveries } = useRecoveries(ref({}))
@@ -209,17 +220,21 @@ useBreadcrumbs("Dashboard", [])
 const { departments } = useDepartments()
 
 const search = ref<string>("")
+const branch = ref<string>("")
 const statusFilter = ref<string[]>(["Draft"])
 const departmentFilter = ref<string[]>([])
 const assignFilter = ref<string[]>([])
 
 const selectedHeaders = ref<string[]>([])
 const allHeaders = [
+  { title: "Fiscal Year", value: "fiscal_year" },
   { title: "Create Date", value: "createDate" },
-  { title: "Department", value: "department" },
+  { title: "Client Dept", value: "department" },
+  { title: "Client", value: "requestor" },
+  { title: "Supplier", value: "supplier" },
+  { title: "Agent", value: "modUser" },
   { title: "Reference", value: "refNum" },
   { title: "Items", value: "recoveryItems" },
-  { title: "Requestee", value: "requestor" },
   { title: "Status", value: "status" },
   { title: "Cost", value: "totalPrice" },
 ]
@@ -276,6 +291,11 @@ const filteredRecoveries = computed(() => {
         getRecoveryItems(recovery).toLowerCase().includes(search.value.toLowerCase())
     }
 
+    let supplierMatch = true
+    if (branch.value) {
+      supplierMatch = (recovery.supplier ?? "").startsWith(branch.value)
+    }
+
     let assignMatch = true
     if (assignFilter.value.length > 0) {
       if (assignFilter.value.includes("Created by me")) {
@@ -294,7 +314,7 @@ const filteredRecoveries = computed(() => {
 
     const departmentMatch =
       departmentFilter.value.length === 0 || departmentFilter.value.includes(recovery.department)
-    return statusMatch && departmentMatch && searchMatch && assignMatch
+    return statusMatch && departmentMatch && searchMatch && assignMatch && supplierMatch
   })
 })
 </script>

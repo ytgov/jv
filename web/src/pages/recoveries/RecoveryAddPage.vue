@@ -10,7 +10,7 @@
       >
         <EmployeeSelect
           v-model="requestor"
-          label="Requestor name"
+          label="Client name"
           hide-details
         />
       </v-col>
@@ -21,7 +21,7 @@
       >
         <v-text-field
           v-model="recovery.requastorEmail"
-          label="Requestor email"
+          label="Client email"
           hide-details
         />
       </v-col>
@@ -31,7 +31,7 @@
       >
         <v-text-field
           v-model="recovery.mailcode"
-          label="Requestor mail code"
+          label="Client mail code"
           hide-details
         />
       </v-col>
@@ -41,7 +41,7 @@
       >
         <DepartmentSelect
           v-model="recovery.department"
-          label="Requestor department"
+          label="Client department"
           hide-details
         />
       </v-col>
@@ -51,7 +51,7 @@
       >
         <v-text-field
           v-model="recovery.branch"
-          label="Requestor branch"
+          label="Client branch"
           hide-details
         />
       </v-col>
@@ -61,7 +61,7 @@
       >
         <v-text-field
           v-model="recovery.employeeUnit"
-          label="Requestor unit"
+          label="Client unit"
           hide-details
         />
       </v-col>
@@ -77,11 +77,29 @@
       </v-col>
       <v-col
         cols="12"
-        md="8"
+        md="4"
       >
         <v-text-field
           v-model="recovery.description"
           label="Request description"
+          hide-details
+        />
+      </v-col>
+      <v-col
+        cols="12"
+        md="4"
+      >
+        <FiscalYearSelect
+          v-model="recovery.fiscal_year"
+          label="Fiscal year"
+          hide-details
+        />
+      </v-col>
+      <v-col>
+        <GroupSelect
+          v-model="recovery.supplier"
+          label="Supplier"
+          hide-details
         />
       </v-col>
     </v-row>
@@ -128,6 +146,7 @@
           >
             <ItemSelect
               v-model="item.itemCatID"
+              :supplier="recovery.supplier"
               density="compact"
               hide-details
               :expanded-selection="true"
@@ -231,7 +250,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from "vue"
+import { computed, onMounted, ref, watch } from "vue"
 import { useRouter } from "vue-router"
 import { isNil, isNumber } from "lodash"
 
@@ -240,6 +259,8 @@ import EmployeeSelect from "@/components/employees/EmployeeSelect.vue"
 import DepartmentSelect from "@/components/departments/DepartmentSelect.vue"
 import ItemSelect from "@/components/items/ItemSelect.vue"
 import CurrencyField from "@/components/common/CurrencyField.vue"
+import FiscalYearSelect from "@/components/common/FiscalYearSelect.vue"
+import GroupSelect from "@/components/groups/GroupSelect.vue"
 
 import useBreadcrumbs from "@/use/use-breadcrumbs"
 import useRecovery from "@/use/use-recovery"
@@ -247,11 +268,17 @@ import useEmployees from "@/use/use-employees"
 import useItemCategories from "@/use/use-item-categories"
 import { RecoveryItem } from "@/api/recoveries-api"
 import formatCurrency from "@/utils/format-currency"
+import useCurrentUser from "@/use/use-current-user"
 
 const router = useRouter()
 const { recovery, create } = useRecovery(ref(0))
 const { employees } = useEmployees()
 const { itemCategories } = useItemCategories()
+const { currentUser } = useCurrentUser()
+
+onMounted(() => {
+  if (recovery.value) recovery.value.supplier = currentUser.value?.branch ?? ""
+})
 
 useBreadcrumbs("Create New Recovery", [
   { title: "Create New Recovery", to: { name: "RecoveryAddPage" }, disabled: true },
@@ -270,7 +297,8 @@ const isValid = computed(() => {
     isNil(recovery.value.requastorEmail) ||
     isNil(recovery.value.department) ||
     isNil(recovery.value.refNum) ||
-    isNil(recovery.value.description)
+    isNil(recovery.value.description) ||
+    isNil(recovery.value.supplier)
   )
     return false
 
@@ -322,8 +350,6 @@ function itemChanged(item: RecoveryItem | Partial<RecoveryItem>) {
     if (category) {
       item.unitPrice = category.price
     }
-
-    console.log("DOCS", category?.documents)
   }
 
   if (item.quantity && item.unitPrice)

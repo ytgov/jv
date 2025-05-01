@@ -27,7 +27,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: "profile",
         name: "ProfilePage",
-        component: () => import("@/pages/UserProfilePage.vue"),
+        component: () => import("@/modules/home/views/Profile.vue"),
         meta: { title: "My Profile" },
       },
     ],

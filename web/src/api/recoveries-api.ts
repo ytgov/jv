@@ -39,6 +39,7 @@ export type Recovery = {
   journalID: number
   firstName: string
   lastName: string
+  supplier: string
   department: string
   branch: string
   refNum: string
@@ -58,6 +59,7 @@ export type Recovery = {
   employeeUnit: string
   requastorEmail: string
   glCode: string
+  fiscal_year: string
 
   docName: RecoveryDocument[]
   recoveryAudits: RecoverAudit[]

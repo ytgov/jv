@@ -2,6 +2,7 @@ import { type Ref, reactive, toRefs, unref, watch } from "vue"
 import { isNil, isNull } from "lodash"
 
 import recoverysApi, { type Recovery } from "@/api/recoveries-api"
+import { getCurrentFiscalYear } from "@/utils/format-date"
 
 export { type Recovery }
 
@@ -85,7 +86,10 @@ export function useRecovery(id: Ref<number | null | undefined>) {
     () => unref(id),
     async (newId) => {
       if (isNull(newId) || newId == 0) {
-        state.recovery = { recoveryItems: [] }
+        state.recovery = {
+          fiscal_year: getCurrentFiscalYear(),
+          recoveryItems: [],
+        }
         return
       }
 

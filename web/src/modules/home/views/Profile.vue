@@ -1,81 +1,63 @@
 <template>
-    <div>
-        <h1>My Profile</h1>
-        <p>** This information is all read-only</p>
+  <SimpleCard
+    v-if="currentUser"
+    title="My Profile"
+  >
+    <p class="mb-4">** This information is all read-only</p>
 
-        <div class="row">
-            <div class="col-md-6 mb-3">
-                <v-text-field
-                    v-model="firstName"
-                    outlined
-                    label="First name"
-                    readonly
-                    hide-details
-                ></v-text-field>
-            </div>
-            <div class="col-md-6 mb-3">
-                <v-text-field
-                    v-model="lastName"
-                    outlined
-                    label="Last name"
-                    readonly
-                    hide-details
-                ></v-text-field>
-            </div>
+    <v-row>
+      <v-col>
+        <v-text-field
+          v-model="currentUser.first_name"
+          outlined
+          label="First name"
+          readonly
+          hide-details
+        ></v-text-field>
+      </v-col>
+      <v-col>
+        <v-text-field
+          v-model="currentUser.last_name"
+          outlined
+          label="Last name"
+          readonly
+          hide-details
+        ></v-text-field>
+      </v-col>
 
-            <div class="col-md-6 mb-3">
-                <v-text-field
-                    v-model="email"
-                    outlined
-                    label="Email"
-                    readonly
-                    hide-details
-                ></v-text-field>
-            </div>
-            <div class="col-md-6 mb-3">
-                <v-text-field
-                    v-model="username"
-                    outlined
-                    label="Username"
-                    readonly
-                    hide-details
-                ></v-text-field>
-            </div>
-        </div>
-        <v-divider class="mt-0 mb-4"></v-divider>
-
-        <h2>My teams</h2>
-        <div class="row">
-            <div class="col-md-6" v-for="team in teams" v-bind:key="team.name">
-                <v-card color="#fff2d5">
-                    <v-card-title> {{ team.name }}</v-card-title>
-                    <v-card-text>Role: {{ team.role }}</v-card-text>
-                </v-card>
-            </div>
-        </div>
-    </div>
+      <v-col>
+        <v-text-field
+          v-model="currentUser.email"
+          outlined
+          label="Email"
+          readonly
+          hide-details
+        ></v-text-field>
+      </v-col>
+      <v-col>
+        <v-text-field
+          v-model="currentUser.roles"
+          outlined
+          label="Roles"
+          readonly
+          hide-details
+        ></v-text-field>
+      </v-col>
+    </v-row>
+  </SimpleCard>
 </template>
 
-<script>
-import { mapActions, mapState } from "vuex";
+<script lang="ts" setup>
+import SimpleCard from "@/components/common/SimpleCard.vue"
+import useBreadcrumbs from "@/use/use-breadcrumbs"
+import useCurrentUser from "@/use/use-current-user"
 
-export default {
-    name: "Profile",
-    computed: {
-        ...mapState("profile", [
-            "firstName",
-            "lastName",
-            "username",
-            "email",
-            "teams",
-        ]),
-    },
-    data: () => ({}),
-    methods: {
-        ...mapActions("profile", ["loadProfile"]),
-    },
-    async created() {
-        await this.loadProfile();
-    },
-};
+const { currentUser } = useCurrentUser()
+
+useBreadcrumbs("My Profile", [
+  {
+    title: "My Profile",
+    to: { name: "ProfilePage" },
+  },
+])
 </script>

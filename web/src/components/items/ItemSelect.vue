@@ -14,14 +14,27 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue"
+import { computed } from "vue"
 
 import useItemCategories from "@/use/use-item-categories"
 
-const { itemCategories } = useItemCategories(ref({}))
+const props = defineProps({
+  supplier: {
+    type: String,
+    default: null,
+  },
+})
+
+const { itemCategories } = useItemCategories()
 
 const items = computed(() => {
-  return itemCategories.value.map((e) => ({
+  let filteredItems = itemCategories.value
+
+  if (props.supplier && props.supplier.length > 0) {
+    filteredItems = filteredItems.filter((item) => item.branch.startsWith(props.supplier))
+  }
+
+  return filteredItems.map((e) => ({
     itemCatID: e.itemCatID,
     category: e.category,
     subtitle: `${e.description ? `${e.description} (${e.branch})` : e.branch}`,

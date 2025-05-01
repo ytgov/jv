@@ -14,6 +14,13 @@
         dark
         ><strong>Agent:</strong>&nbsp;{{ recovery?.createUser }}</v-chip
       >
+      <v-chip
+        color="success"
+        class="mr-3"
+        variant="flat"
+        dark
+        ><strong>Supplier:</strong>&nbsp;{{ recovery?.supplier }}</v-chip
+      >
     </div>
 
     <v-spacer />
@@ -38,24 +45,24 @@
         class="pt-3"
       >
         <v-row>
-          <!--  <v-col
-        cols="12"
-        md="4"
-      >
-        <EmployeeSelect
-          v-model="requestor"
-          label="Requestor name"
-          hide-details
-        />
-      </v-col>
- -->
           <v-col
             cols="12"
-            md="8"
+            md="4"
+          >
+            <EmployeeSelect
+              v-model="requestor"
+              label="Client name"
+              hide-details
+            />
+          </v-col>
+
+          <v-col
+            cols="12"
+            md="4"
           >
             <v-text-field
               v-model="recovery.requastorEmail"
-              label="Requestor email"
+              label="Client email"
               hide-details
             />
           </v-col>
@@ -65,7 +72,7 @@
           >
             <v-text-field
               v-model="recovery.mailcode"
-              label="Requestor mail code"
+              label="Client mail code"
               hide-details
             />
           </v-col>
@@ -75,7 +82,7 @@
           >
             <DepartmentSelect
               v-model="recovery.department"
-              label="Requestor department"
+              label="Client department"
               hide-details
             />
           </v-col>
@@ -85,7 +92,7 @@
           >
             <v-text-field
               v-model="recovery.branch"
-              label="Requestor branch"
+              label="Client branch"
               hide-details
             />
           </v-col>
@@ -95,7 +102,7 @@
           >
             <v-text-field
               v-model="recovery.employeeUnit"
-              label="Requestor unit"
+              label="Client unit"
               hide-details
             />
           </v-col>
@@ -111,17 +118,37 @@
           </v-col>
           <v-col
             cols="12"
-            md="8"
+            md="4"
           >
             <v-text-field
               v-model="recovery.description"
               label="Request description"
+              hide-details
+            />
+          </v-col>
+          <v-col
+            cols="12"
+            md="4"
+          >
+            <FiscalYearSelect
+              v-model="recovery.fiscal_year"
+              label="Fiscal year"
+              hide-details
+            />
+          </v-col>
+          <v-col v-if="!recovery.supplier">
+            <GroupSelect
+              v-model="recovery.supplier"
+              label="Supplier"
+              hide-details
             />
           </v-col>
         </v-row>
 
         <v-btn
+          v-if="isAgent || isSystemAdmin"
           :disabled="!isValid"
+          class="mt-5"
           @click="saveClick"
           >Update Recovery</v-btn
         >
@@ -129,7 +156,12 @@
         <v-divider class="my-5" />
         <v-card-subtitle class="mb-3 px-0">Recovery Items</v-card-subtitle>
 
-        <v-list v-if="recovery.recoveryItems && recovery.recoveryItems.length > 0">
+        <RecoveryItemListStatic
+          v-if="!(isAgent || isSystemAdmin)"
+          :items="recovery.recoveryItems ?? []"
+        />
+
+        <v-list v-else-if="recovery.recoveryItems && recovery.recoveryItems.length > 0">
           <v-list-item>
             <v-row>
               <v-col
@@ -140,7 +172,7 @@
               <v-col
                 cols="2"
                 class="pl-5"
-                >Quantity (lock?)</v-col
+                >Quantity</v-col
               >
               <v-col
                 cols="2"
@@ -167,6 +199,7 @@
               >
                 <ItemSelect
                   v-model="item.itemCatID"
+                  :supplier="recovery.supplier"
                   density="compact"
                   hide-details
                   :expanded-selection="true"
@@ -177,7 +210,6 @@
               <v-col
                 cols="4"
                 md="2"
-                class="d-flex"
               >
                 <v-text-field
                   v-model="item.quantity"
@@ -186,13 +218,6 @@
                   min="1"
                   hide-details
                   @update:model-value="itemInfoChanged(item)"
-                />
-                <v-checkbox
-                  v-model="item.changeQuantity"
-                  density="compact"
-                  false-icon="mdi-lock"
-                  true-icon="mdi-lock-open"
-                  hide-details
                 />
               </v-col>
               <v-col
@@ -250,7 +275,10 @@
         </v-list>
         <div v-else>No items found</div>
 
-        <div class="text-left">
+        <div
+          v-if="isAgent || isSystemAdmin"
+          class="text-left"
+        >
           <v-btn
             class="mt-5"
             color="info"
@@ -314,8 +342,14 @@ import useSnack from "@/use/use-snack"
 import { RecoveryItem } from "@/api/recoveries-api"
 import formatCurrency from "@/utils/format-currency"
 import { formatDateTime } from "@/utils/format-date"
+import RecoveryItemListStatic from "@/components/recoveries/RecoveryItemListStatic.vue"
+import EmployeeSelect from "@/components/employees/EmployeeSelect.vue"
+import useCurrentUser from "@/use/use-current-user"
+import FiscalYearSelect from "@/components/common/FiscalYearSelect.vue"
+import GroupSelect from "@/components/groups/GroupSelect.vue"
 
 const snack = useSnack()
+const { isAgent, isSystemAdmin } = useCurrentUser()
 
 const props = defineProps<{ id: string }>()
 const recoverId = computed(() => {

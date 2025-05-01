@@ -38,7 +38,7 @@ export type ItemCategory = {
 }
 
 export type ItemCategoryWhereOptions = {
-  email?: string
+  supplier?: string
 }
 
 export type ItemCategoryFiltersOptions = {}

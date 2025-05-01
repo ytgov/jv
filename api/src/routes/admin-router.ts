@@ -246,6 +246,69 @@ adminRouter.post(
   }
 )
 
+adminRouter.get("/groups", async function (req: Request, res: Response) {
+  const groups = await db("Group").select("*")
+  res.status(200).json({ groups: groups, totalCount: groups.length })
+})
+adminRouter.post(
+  "/groups",
+  RequiresRoleAdmin,
+  async function (req: AuthorizationRequest, res: Response) {
+    const newGroup = req.body
+    try {
+      await db.transaction(async (trx) => {
+        await trx("Group").insert(newGroup)
+      })
+      res.status(200).json("successful")
+    } catch (error: any) {
+      console.log(error)
+      res.status(500).json("Insert failed")
+    }
+  }
+)
+adminRouter.get(
+  "/groups/:id",
+  RequiresRoleAdmin,
+  async function (req: AuthorizationRequest, res: Response) {
+    const id = Number(req.params.id)
+    res.json({ group: await db("Group").where({ id }).first() })
+  }
+)
+adminRouter.put(
+  "/groups/:id",
+  RequiresRoleAdmin,
+  async function (req: AuthorizationRequest, res: Response) {
+    const id = Number(req.params.id)
+    const newGroup = req.body
+    delete newGroup.id
+    try {
+      await db.transaction(async (trx) => {
+        await trx("Group").where({ id }).update(newGroup)
+      })
+      res.status(200).json("successful")
+    } catch (error: any) {
+      console.log(error)
+      res.status(500).json("Insert failed")
+    }
+  }
+)
+adminRouter.delete(
+  "/groups/:id",
+  RequiresRoleAdmin,
+  async function (req: AuthorizationRequest, res: Response) {
+    const id = Number(req.params.id)
+    try {
+      await db.transaction(async (trx) => {
+        await trx("Group").where({ id }).delete()
+      })
+      res.status(200).json("successful")
+    } catch (error: any) {
+      console.log(error)
+      res.status(500).json("Insert failed")
+    }
+  }
+)
+
 //___AUDIT___
 async function addItemCategoryAudit(itemCatID: number, user: string, action: string, myDb = db) {
   const newItemCategoryAudit = {

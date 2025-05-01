@@ -1,6 +1,6 @@
 import express, { Request, Response } from "express"
 import knex from "knex"
-import { isArray } from "lodash"
+import { isArray, isNil, isNumber } from "lodash"
 
 import { ReturnValidationErrors } from "@/middleware"
 import { DB_SCHEMA, DB_CONFIG } from "@/config"
@@ -42,44 +42,44 @@ recoveriesRouter.post(
     const recoveryID = parseInt(req.params.recoveryID)
     const user = req.currentUser?.display_name ?? ""
 
-    if (files) {
-      const fileList = isArray(files.files) ? files.files : [files.files]
+    if (isNil(files)) return res.status(400).send("No files found")
 
-      try {
-        await db.transaction(async (trx) => {
-          for (const file of fileList) {
-            const backupDoc = await trx("BackUpDocs")
-              .select("documentID")
-              .where("recoveryID", recoveryID)
-              .where("docName", file.name)
-              .first()
+    const fileList = isArray(files.files) ? files.files : [files.files]
 
-            if (backupDoc) {
-              await trx("BackUpDocs")
-                .update({
-                  document: file.data,
-                })
-                .where({ recoveryID: recoveryID, docName: file.name })
-            } else {
-              const newDocument = {
-                recoveryID: recoveryID,
-                docName: file.name,
+    try {
+      await db.transaction(async (trx) => {
+        for (const file of fileList) {
+          const backupDoc = await trx("BackUpDocs")
+            .select("documentID")
+            .where("recoveryID", recoveryID)
+            .where("docName", file.name)
+            .first()
+
+          if (backupDoc) {
+            await trx("BackUpDocs")
+              .update({
                 document: file.data,
-              }
-              await trx("BackUpDocs").insert(newDocument)
+              })
+              .where({ recoveryID: recoveryID, docName: file.name })
+          } else {
+            const newDocument = {
+              recoveryID: recoveryID,
+              docName: file.name,
+              document: file.data,
             }
+            await trx("BackUpDocs").insert(newDocument)
           }
+        }
 
-          const action = "Added Back-up: " + fileList.map((f) => f.name).join(", ")
+        const action = "Added Back-up: " + fileList.map((f) => f.name).join(", ")
 
-          await addRecoveryAudit(recoveryID, user, action)
+        await addRecoveryAudit(recoveryID, user, action)
 
-          return res.status(200).json("Successful")
-        })
-      } catch (error: any) {
-        console.log(error)
-        return res.status(500).json("Insert failed")
-      }
+        return res.status(200).json("Successful")
+      })
+    } catch (error: any) {
+      console.log(error)
+      return res.status(500).json("Insert failed")
     }
   }
 )
@@ -376,10 +376,11 @@ recoveriesRouter.get(
       .select("documentID", "docName", "itemCatName")
       .where("recoveryID", recovery.recoveryID)
 
-    res.status(200).json(recovery)
+    res.json({ recovery })
   }
 )
 
+// this needs security of some sort
 recoveriesRouter.get("/", async function (req: Request, res: Response) {
   const itemState = {
     itemCategoryErr: false,
@@ -431,7 +432,7 @@ recoveriesRouter.post("/", async function (req: AuthorizationRequest, res: Respo
   const roles = (req.currentUser?.roles ?? "").split(",")
 
   if (
-    !(roles.includes("Admin") || roles.includes("BranchAdmin") || roles.includes("BranchAgent"))
+    !(roles.includes("Admin")  || roles.includes("Agent"))
   ) {
     return res.status(401).send("You are not an authorized person!")
   }
@@ -441,18 +442,20 @@ recoveriesRouter.post("/", async function (req: AuthorizationRequest, res: Respo
       const newRecoveryItems = req.body.recoveryItems
       delete req.body.recoveryItems
 
-      const action = req.body.action
+      const action = req.body.action ?? "Create New Recovery"
+      req.body.status = req.body.status ?? "Draft"
       delete req.body.action
 
-      var id = []
       const newRecovery = req.body
 
       newRecovery.createUser = userEmail
       newRecovery.modUser = userEmail
 
-      id = await trx("Recovery").insert(newRecovery, "recoveryID")
+      newRecovery.totalPrice = calculateItemTotal(newRecoveryItems)
 
-      let recoveryID = id[0].recoveryID
+      var createdRecovery = await trx("Recovery").insert(newRecovery).returning("*")
+
+      let recoveryID = createdRecovery[0].recoveryID
 
       if (newRecovery.requastorEmail) {
         let requestorUser = await userService.getByEmail(newRecovery.requastorEmail)
@@ -515,13 +518,9 @@ recoveriesRouter.post("/", async function (req: AuthorizationRequest, res: Respo
         else await trx("RecoveryItem").insert(newRecoveryItem)
       }
 
-      const emailSent = await sendEmail(newRecovery, user, recoveryID, trx)
+      await sendEmail(newRecovery, user, recoveryID, trx)
 
-      console.log("EMAILER", emailSent)
-
-      //if (!emailSent) throw Error("Email failed");
-
-      res.status(200).json({ recoveryID: recoveryID })
+      res.status(200).json({ recovery: createdRecovery[0] })
     })
   } catch (error: any) {
     console.log(error)
@@ -547,7 +546,7 @@ recoveriesRouter.put(
       if (!recovery) return res.status(400).json("Recovery Not Found!")
     } else {
       if (
-        !(roles.includes("Admin") || roles.includes("BranchAdmin") || roles.includes("BranchAgent"))
+        !(roles.includes("Admin")  || roles.includes("Agent"))
       ) {
         return res.status(401).send("You are not an authorized person!")
       }
@@ -561,20 +560,16 @@ recoveriesRouter.put(
         const action = req.body.action
         delete req.body.action
 
-        var id = []
         const newRecovery = req.body
-        if (recoveryID > 0) {
-          if (newRecovery.status != "Purchase Approved" && newRecovery.status != "Re-Draft")
-            newRecovery.modUser = userEmail
-          id = await trx("Recovery")
-            .update(newRecovery, "recoveryID")
-            .where("recoveryID", recoveryID)
-        } else {
-          newRecovery.createUser = userEmail
+        delete newRecovery.recoveryAudits
+        delete newRecovery.docName
+        delete newRecovery.recoveryID
+
+        if (newRecovery.status != "Purchase Approved" && newRecovery.status != "Re-Draft")
           newRecovery.modUser = userEmail
-          id = await trx("Recovery").insert(newRecovery, "recoveryID")
-        }
-        recoveryID = id[0].recoveryID
+
+        newRecovery.totalPrice = calculateItemTotal(newRecoveryItems)
+        await trx("Recovery").update(newRecovery).where("recoveryID", recoveryID)
 
         if (newRecovery.requastorEmail) {
           let requestorUser = await userService.getByEmail(newRecovery.requastorEmail)
@@ -640,11 +635,7 @@ recoveriesRouter.put(
           else await trx("RecoveryItem").insert(newRecoveryItem)
         }
 
-        const emailSent = await sendEmail(newRecovery, user, recoveryID, trx)
-
-        console.log("EMAILER", emailSent)
-
-        //if (!emailSent) throw Error("Email failed");
+        await sendEmail(newRecovery, user, recoveryID, trx)
       })
 
       res.status(200).json({ recoveryID: recoveryID })
@@ -775,9 +766,7 @@ function recoveryRoleCheck(req: any) {
   const adminQuery = function (queryBuilder: any) {
     if (user.roles?.indexOf("Admin") >= 0) queryBuilder.select("*")
     else if (user.roles?.indexOf("IctFinance") >= 0) queryBuilder.select("*")
-    else if (user.roles?.indexOf("BranchAdmin") >= 0)
-      queryBuilder.whereLike("branch", `%${user.branch}%`).select("*")
-    else if (user.roles?.indexOf("BranchAgent") >= 0)
+    else if (user.roles?.indexOf("Agent") >= 0)
       queryBuilder.whereLike("branch", `%${user.branch}%`).select("*")
     else if (user.roles?.indexOf("DeptFinance") >= 0)
       queryBuilder.where("department", user.department).select("*")
@@ -797,7 +786,7 @@ async function sendEmail(newRecovery: any, user: any, recoveryID: number, myDb =
     newRecovery.status == "Re-Draft" ||
     newRecovery.status == "Routed For Approval"
   ) {
-    const recovery = await myDb("Recovery").select("*").where("recoveryID", recoveryID).first()
+    const recovery = await myDb("Recovery").where("recoveryID", recoveryID).first()
 
     const sender =
       newRecovery.status == "Routed For Approval" ? recovery.modUser : recovery.requastorEmail
@@ -818,7 +807,8 @@ async function sendEmail(newRecovery: any, user: any, recoveryID: number, myDb =
         sender,
         recipient,
         recipientName,
-        recovery.department
+        recovery.department,
+        recoveryID
       )
     } else {
       const approved = newRecovery.status == "Purchase Approved"
@@ -829,7 +819,8 @@ async function sendEmail(newRecovery: any, user: any, recoveryID: number, myDb =
         recipient,
         recovery.refNum,
         recovery.department,
-        recovery.reasonForDecline
+        recovery.reasonForDecline,
+        recoveryID
       )
     }
 
@@ -848,4 +839,17 @@ async function sendEmail(newRecovery: any, user: any, recoveryID: number, myDb =
   }
 
   return true
+}
+
+function calculateItemTotal(recoveryItems: { totalPrice: number }[]) {
+  let total = 0
+
+  if (recoveryItems && recoveryItems.length > 0) {
+    return recoveryItems.reduce(
+      (acc, item) => acc + (isNumber(item.totalPrice) ? item.totalPrice : 0),
+      0
+    )
+  }
+
+  return 0
 }

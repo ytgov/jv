@@ -31,8 +31,7 @@ httpClient.interceptors.request.use(async (config) => {
 
 // Any status codes that falls outside the range of 2xx causes this function to trigger
 httpClient.interceptors.response.use(null, async (error) => {
-
-  console.log("ERR rror", error.message) 
+  console.log("HTTP ERROR", error.message)
 
   if (error?.error === "login_required") {
     throw new Error("You must be logged in to access this endpoint")

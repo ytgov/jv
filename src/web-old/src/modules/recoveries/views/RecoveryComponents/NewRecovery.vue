@@ -668,7 +668,7 @@ export default {
     };
   },
   mounted() {},
-  ...mapGetters(["isSystemAdmin", "isBranchAdmin",  "isICTFinance"]),
+  ...mapGetters(["isSystemAdmin", "isICTFinance"]),
 
   methods: {
     isReadOnly() {
@@ -683,7 +683,7 @@ export default {
     async initForm() {
       this.loadingData = true;
       this.admin = this.isSystemAdmin;
-      this.supervisor =this.isBranchAdmin;
+      //this.supervisor =this.isBranchAdmin;
       this.readonly = this.isReadOnly();
       this.approveBtn = this.type == "Approve";
       this.revertBtn = this.type == "Approve";

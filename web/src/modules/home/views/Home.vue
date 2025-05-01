@@ -34,27 +34,13 @@ import { mapGetters, mapActions, mapState } from "vuex";
 import * as config from "@/config";
 
 export default {
-  name: "Home",
   data: () => ({
     title: `Welcome to ${config.applicationName}`,
     isLoading: false,
   }),
   computed: {
     ...mapState("home", ["departments"]),
-    ...mapGetters(["isAuthenticated", "isBranchUser", "isBranchAgent", "isDepartmentalFinance", "isICTFinance"]),
-
-    routes() {
-      let routes = [];
-
-      if (this.isBranchUser) routes.push({ title: "Dashboard", role: "User", route: "/recoveries/user" });
-      if (this.isBranchAgent) routes.push({ title: "Dashboard", role: "Agent", route: "/recoveries/agent" });
-      if (this.isDepartmentalFinance)
-        routes.push({ title: "Dashboard", role: "Dept. Finance", route: "/recoveries/finance" });
-
-      if (this.isICTFinance) routes.push({ title: "Recovery List", role: "ICT Finance", route: "/recoveries" });
-
-      return routes;
-    },
+    ...mapGetters(["isAuthenticated", "isClient", "isAgent", "isDepartmentalFinance", "isICTFinance"]),
   },
   async mounted() {
     this.isLoading = true;

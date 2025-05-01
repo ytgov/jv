@@ -4,8 +4,8 @@ import { type Policy } from "@/api/base-api"
 /** Keep in sync with api/src/models/user.ts */
 export enum UserRoles {
   ADMIN = "Admin",
-  BRANCH_USER = "BranchUser",
-  USER = "user",
+  CLIENT = "Client",
+  AGENT = "Agent",
 }
 
 export type User = {

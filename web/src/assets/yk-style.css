@@ -149,3 +149,7 @@ table.table {
   border-bottom: none;
   border-radius: 4px;
 }
+
+.v-data-table.striped tbody tr:nth-of-type(even) {
+  background-color: rgba(0, 0, 0, 0.05);
+}

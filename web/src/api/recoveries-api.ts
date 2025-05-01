@@ -62,6 +62,8 @@ export type Recovery = {
   docName: RecoveryDocument[]
   recoveryAudits: RecoverAudit[]
   recoveryItems: Array<RecoveryItem | Partial<RecoveryItem>>
+  journal: { jvNum: string }
+  action?: string
 
   // Associations
   // add as needed
@@ -71,6 +73,8 @@ export type RecoveryDocument = {
   documentID: number
   docName: string
   itemCatName: string
+
+  document?: { data: number[] }
 }
 
 export type RecoveryWhereOptions = {
@@ -115,12 +119,24 @@ export const recoveriesApi = {
   ): Promise<{
     recovery: Recovery
   }> {
-    const { data } = await http.patch(`/api/recoveries/${recoveryId}`, attributes)
+    const { data } = await http.put(`/api/recoveries/${recoveryId}`, attributes)
     return data
   },
   async delete(recoveryId: number): Promise<void> {
     const { data } = await http.delete(`/api/recoveries/${recoveryId}`)
     return data
+  },
+
+  async upload(recoveryId: number, body: object): Promise<void> {
+    await http.post(`/api/recoveries/backup-documents/${recoveryId}`, body, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    })
+  },
+
+  async deleteUpload(recoveryId: number, docId: number): Promise<void> {
+    await http.delete(`/api/recoveries/${recoveryId}/backup-documents/${docId}`)
   },
 }
 

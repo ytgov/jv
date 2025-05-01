@@ -14,13 +14,13 @@ const routes = [
         name: "Agent",
         path: "agent",
         component: () => import("../views/TechRecoveryDashboard.vue"),
-        meta: { requiresRole: ["Admin", "BranchAgent", "BranchAdmin"] },
+        meta: { requiresRole: ["Admin", "Agent",] },
       },
       {
         name: "UserDashboard",
         path: "user",
         component: () => import("../views/UserRecoveryDashboard.vue"),
-        meta: { requiresRole: ["Admin", "BranchUser"] },
+        meta: { requiresRole: ["Admin", "Client"] },
       },
       {
         name: "FinanceDashboard",

@@ -3,7 +3,7 @@
     <v-row v-if="item">
       <v-col
         cols="12"
-        md="6"
+        md="3"
       >
         <EmployeeSelect
           v-if="!item.id"
@@ -20,8 +20,7 @@
           append-inner-icon="mdi-lock"
         />
       </v-col>
-
-      <v-col cols="6">
+      <v-col cols="3">
         <v-text-field
           v-model="item.email"
           label="Email"
@@ -30,15 +29,14 @@
           append-inner-icon="mdi-lock"
         />
       </v-col>
-      <v-col cols="6">
+      <v-col cols="3">
         <DepartmentSelect
           v-model="item.department"
           label="Department"
           hide-details
         />
       </v-col>
-
-      <v-col cols="6">
+      <v-col cols="3">
         <v-select
           v-model="item.status"
           :items="['Active', 'Inactive']"
@@ -46,21 +44,7 @@
           hide-details
         />
       </v-col>
-      <v-col cols="6">
-        <ICTBranchSelect
-          v-model="item.branch"
-          label="Branch"
-          hide-details
-        />
-      </v-col>
-      <v-col cols="6">
-        <ICTUnitSelect
-          v-model="item.unit"
-          label="Branch"
-          :branch="item.branch ? item.branch : undefined"
-          hide-details
-        />
-      </v-col>
+
       <v-col cols="12">
         <v-select
           v-model="userRoles"
@@ -70,6 +54,15 @@
           multiple
           label="Roles"
           hide-details
+        />
+      </v-col>
+      <v-col
+        v-if="isAgent"
+        cols="12"
+      >
+        <GroupSelect
+          v-model="item.branch"
+          label="Agent group"
         />
       </v-col>
     </v-row>
@@ -86,18 +79,18 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue"
 import { useRouter } from "vue-router"
+import { isNil } from "lodash"
 
 import SimpleCard from "@/components/common/SimpleCard.vue"
-import ICTBranchSelect from "@/components/departments/ICTBranchSelect.vue"
 import DepartmentSelect from "@/components/departments/DepartmentSelect.vue"
-import ICTUnitSelect from "@/components/departments/ICTUnitSelect.vue"
 import EmployeeSelect from "@/components/employees/EmployeeSelect.vue"
+import GroupSelect from "@/components/groups/GroupSelect.vue"
 
 import useUser from "@/use/use-user"
 import useBreadcrumbs from "@/use/use-breadcrumbs"
 import useEmployees from "@/use/use-employees"
 import useRoles from "@/use/use-roles"
-import { isNil } from "lodash"
+import useSnack from "@/use/use-snack"
 
 const props = defineProps({
   id: {
@@ -109,9 +102,16 @@ const props = defineProps({
 const { roles } = useRoles(ref({}))
 const { employees } = useEmployees(ref({}))
 const userRoles = ref<string[]>([])
+const snack = useSnack()
 
 const router = useRouter()
 const { user: item, save } = useUser(ref(parseInt(props.id)))
+
+const isAgent = computed(() => {
+  if (isNil(item.value) || isNil(userRoles.value)) return false
+
+  return userRoles.value.includes("Agent") ?? false
+})
 
 const isValid = computed(() => {
   if (isNil(item) || isNil(item.value)) {
@@ -173,8 +173,19 @@ watch(
 )
 
 async function saveClick() {
-  await save()
+  if (isNil(item.value)) return
+  if (!isAgent.value) item.value.branch = null
+  item.value.unit = null
 
-  router.push({ name: "administration/UserListPage" })
+  await save()
+    .then(() => {
+      console.log("User saved successfully")
+      snack.success("User saved")
+      router.push({ name: "administration/UserListPage" })
+    })
+    .catch((error) => {
+      snack.error("Error saving user")
+      console.error("Error saving user:", error)
+    })
 }
 </script>

@@ -38,28 +38,16 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true },
     children: [
       {
-        name: "RecoveryHome",
-        path: "",
-        component: () => import("@/pages/recoveries/Recoveries.vue"),
-        meta: { requiresRole: ["Admin", "IctFinance"] },
+        name: "RecoveryDetailsPage",
+        path: ":id",
+        component: () => import("@/pages/recoveries/RecoveryDetailsPage.vue"),
+        props: true,
       },
       {
         name: "RecoveryAddPage",
         path: "add",
         component: () => import("@/pages/recoveries/RecoveryAddPage.vue"),
-        meta: { requiresRole: ["Admin", "BranchAgent", "BranchAdmin"] },
-      },
-      {
-        name: "Agent",
-        path: "agent",
-        component: () => import("@/pages/recoveries/TechRecoveryDashboard.vue"),
-        meta: { requiresRole: ["Admin", "BranchAgent", "BranchAdmin"] },
-      },
-      {
-        name: "UserDashboard",
-        path: "user",
-        component: () => import("@/pages/recoveries/UserRecoveryDashboard.vue"),
-        meta: { requiresRole: ["Admin", "BranchUser"] },
+        meta: { requiresRole: ["Admin", "Agent"] },
       },
       {
         name: "FinanceDashboard",
@@ -116,6 +104,19 @@ const routes: RouteRecordRaw[] = [
         name: "administration/ItemEditPage",
         meta: { requiresAuth: true, requiresAdmin: true },
         component: () => import("@/pages/administration/ItemEditPage.vue"),
+        props: true,
+      },
+      {
+        path: "/administration/groups",
+        name: "administration/GroupListPage",
+        meta: { requiresAuth: true, requiresAdmin: true },
+        component: () => import("@/pages/administration/GroupListPage.vue"),
+      },
+      {
+        path: "/administration/groups/:id",
+        name: "administration/GroupEditPage",
+        meta: { requiresAuth: true, requiresAdmin: true },
+        component: () => import("@/pages/administration/GroupEditPage.vue"),
         props: true,
       },
     ],

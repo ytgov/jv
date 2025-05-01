@@ -5,12 +5,21 @@
         <v-text-field
           v-model="search"
           label="Search"
+          style="width: 200px"
+        />
+
+        <GroupSelect
+          v-model="group"
+          class="ml-5"
+          label="Group"
+          clearable
+          style="width: 200px"
         />
 
         <v-btn
           class="ml-5"
           :height="46"
-          @click="addClick"
+          :to="{ name: 'administration/CodingEditPage', params: { departmentID: 'add' } }"
         >
           Add Coding
         </v-btn>
@@ -18,7 +27,7 @@
     </v-row>
 
     <v-data-table
-      :items="codings"
+      :items="filteredList"
       :headers="headers"
       :loading="isLoading"
       :search="search"
@@ -30,18 +39,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue"
+import { computed, ref } from "vue"
 import { useRouter } from "vue-router"
 
 import SimpleCard from "@/components/common/SimpleCard.vue"
 
 import useBreadcrumbs from "@/use/use-breadcrumbs"
 import useCodings, { Coding } from "@/use/use-codings"
+import GroupSelect from "@/components/groups/GroupSelect.vue"
+import { isEmpty, isNil } from "lodash"
 
 const { codings, isLoading } = useCodings(ref({}))
 const router = useRouter()
 
 const search = ref("")
+const group = ref("")
 
 useBreadcrumbs("Coding", [
   {
@@ -60,19 +72,23 @@ useBreadcrumbs("Coding", [
 ])
 
 const headers = [
+  { title: "Group", value: "ictBranch", width: "8%" },
   { title: "Department", value: "department", width: "18%" },
-  { title: "ICT Branch", value: "ictBranch", width: "8%" },
-  { title: "ICT Unit", value: "ictUnit", width: "14%" },
   { title: "Coding", value: "glCode", width: "17%" },
   { title: "Receiving Department", value: "recvDepartment", width: "17%" },
   { title: "Financial Contact", value: "contactName", width: "11%" },
-  { title: "Email", value: "contactEmail", width: "10%" },
-  { title: "", value: "edit", width: "5%" },
 ]
-function addClick() {
-  router.push({ name: "administration/CodingEditPage", params: { departmentID: "add" } })
-}
+
+const filteredList = computed(() => {
+  if (isNil(group.value) || isEmpty(group.value)) return codings.value
+
+  return codings.value.filter((item) => item.ictBranch.startsWith(group.value))
+})
+
 function editClick(_event: PointerEvent, { item }: { item: Coding }) {
-  router.push({ name: "administration/CodingEditPage", params: { departmentID: item.departmentID } })
+  router.push({
+    name: "administration/CodingEditPage",
+    params: { departmentID: item.departmentID },
+  })
 }
 </script>

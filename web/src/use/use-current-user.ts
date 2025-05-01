@@ -34,46 +34,38 @@ export function useCurrentUser<IsLoaded extends boolean = false>() {
   const isReady = computed(() => state.isCached && !state.isLoading && !state.isErrored)
 
   const isSystemAdmin = computed(() => {
-    const userRoles = state.currentUser?.roles.split(",")
+    const userRoles = (state.currentUser?.roles ?? "").split(",")
     return userRoles?.includes(UserRoles.ADMIN)
   })
 
-  const isBranchUser = computed(() => {
-    const userRoles = state.currentUser?.roles.split(",")
+  const isClient = computed(() => {
+    const userRoles = (state.currentUser?.roles ?? "").split(",")
     const admin = userRoles?.includes(UserRoles.ADMIN)
-    const role = userRoles?.includes(UserRoles.BRANCH_USER)
+    const role = userRoles?.includes(UserRoles.CLIENT)
     return admin || role
   })
 
   const isDepartmentalFinance = computed(() => {
-    const userRoles = state.currentUser?.roles.split(",")
-    const admin = userRoles?.includes("Admin")
+    const userRoles = (state.currentUser?.roles ?? "").split(",")
+    const admin = userRoles?.includes(UserRoles.ADMIN)
     const role = userRoles?.includes("DeptFinance")
     const hasRequiredRoles = admin || role
     return hasRequiredRoles
   })
 
   const isICTFinance = computed(() => {
-    const userRoles = state.currentUser?.roles.split(",")
-    const admin = userRoles?.includes("Admin")
+    const userRoles = (state.currentUser?.roles ?? "").split(",")
+    const admin = userRoles?.includes(UserRoles.ADMIN)
     const role = userRoles?.includes("IctFinance")
     const hasRequiredRoles = admin || role
     return hasRequiredRoles
   })
-  const isBranchAdmin = computed(() => {
-    const userRoles = state.currentUser?.roles.split(",")
-    const admin = userRoles?.includes("Admin")
-    const role = userRoles?.includes("BranchAdmin")
-    const hasRequiredRoles = admin || role
-    return hasRequiredRoles
-  })
 
-  const isBranchAgent = computed(() => {
-    const userRoles = state.currentUser?.roles.split(",")
-    const admin = userRoles?.includes("Admin")
-    const role1 = userRoles?.includes("BranchAgent")
-    const role2 = userRoles?.includes("BranchAdmin")
-    const hasRequiredRoles = admin || role1 || role2
+  const isAgent = computed(() => {
+    const userRoles = (state.currentUser?.roles ?? "").split(",")
+    const admin = userRoles?.includes(UserRoles.ADMIN)
+    const role1 = userRoles?.includes(UserRoles.AGENT)
+    const hasRequiredRoles = admin || role1
     return hasRequiredRoles
   })
 
@@ -136,11 +128,10 @@ export function useCurrentUser<IsLoaded extends boolean = false>() {
     save,
     // Computed properties
     isSystemAdmin,
-    isBranchUser,
+    isClient,
     isDepartmentalFinance,
     isICTFinance,
-    isBranchAdmin,
-    isBranchAgent,
+    isAgent,
   }
 }
 

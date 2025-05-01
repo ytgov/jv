@@ -1,12 +1,14 @@
 <template>
-  <div class="mt-5 mx-10 mb-5">
+  <div>
     <v-data-table
       :headers="headers"
       :items="recoveries"
       :items-per-page="10"
+      class="striped"
+      @click:row="openRecovery"
     >
       <template #item.createDate="{ item }">
-        {{ item.createDate }}
+        {{ formatDate(item.createDate) }}
       </template>
 
       <template #item.requestor="{ item }"> {{ item.firstName }} {{ item.lastName }} </template>
@@ -19,48 +21,40 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from "vue"
+import { ref } from "vue"
 
 import { useItemCategories } from "@/use/use-item-categories"
+import formatDate from "@/utils/format-date"
+import { useRouter } from "vue-router"
+import { Recovery } from "@/api/recoveries-api"
 
 const { itemCategories } = useItemCategories(ref({}))
 
-defineProps<{ recoveries: unknown[] }>()
+defineProps<{ recoveries: Recovery[] }>()
 
 const headers = [
-  { text: "Create Date", value: "createDate", class: "blue-grey lighten-4" },
-  { text: "Department", value: "department", class: "blue-grey lighten-4" },
-  { text: "Reference", value: "refNum", class: "blue-grey lighten-4" },
-  { text: "Request", value: "recoveryItems", class: "blue-grey lighten-4" },
-  { text: "Requestee", value: "requestor", class: "blue-grey lighten-4" },
-  { text: "Status", value: "status", class: "blue-grey lighten-4" },
-  { text: "At", value: "createUser", class: "blue-grey lighten-4" },
+  { title: "Create Date", value: "createDate", class: "blue-grey lighten-4" },
+  { title: "Department", value: "department", class: "blue-grey lighten-4" },
+  { title: "Reference", value: "refNum", class: "blue-grey lighten-4" },
+  { title: "Request", value: "recoveryItems", class: "blue-grey lighten-4" },
+  { title: "Requestee", value: "requestor", class: "blue-grey lighten-4" },
+  { title: "Status", value: "status", class: "blue-grey lighten-4" },
+  { title: "At", value: "createUser", class: "blue-grey lighten-4" },
 ]
 
-const itemCategoryList = {}
+const router = useRouter()
 
-onMounted(() => {
-  initItemCategory()
-})
-
-function initItemCategory() {
-  itemCategoryList.value = {}
-
-  //const itemCategoryList = itemCategories.value
-
-  for (const item of itemCategories.value) {
-    itemCategoryList.value[item.itemCatID] = item.category
-  }
+function getRecoveryItems(recovery: Recovery) {
+  const items = recovery.recoveryItems.map((rec) =>
+    itemCategories.value.find((item) => item.itemCatID == rec.itemCatID)
+  )
+  return items.map((i) => i?.category).join(", ")
 }
 
-function getRecoveryItems(recovery) {
-  const items = recovery.recoveryItems.map((rec) => itemCategoryList.value[rec.itemCatID])
-  return items.join(", ")
+function openRecovery(event: MouseEvent, { item }: { item: Recovery }) {
+  router.push({
+    name: "RecoveryDetailsPage",
+    params: { id: item.recoveryID },
+  })
 }
 </script>
-
-<style scoped>
-::v-deep(tbody tr:nth-of-type(even)) {
-  background-color: rgba(0, 0, 0, 0.05);
-}
-</style>

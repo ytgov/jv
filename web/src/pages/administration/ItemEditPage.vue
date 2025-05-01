@@ -1,52 +1,39 @@
 <template>
   <SimpleCard title="Item Details">
     <v-row v-if="item">
-      <v-col cols="6">
+      <v-col cols="4">
         <v-text-field
           v-model="item.category"
           label="Name"
           hide-details
         />
       </v-col>
-      <v-col cols="6">
+      <v-col cols="4">
         <CurrencyField
           v-model="item.price"
           label="Default cost"
           hide-details
         />
       </v-col>
-      <v-col cols="6">
+      <v-col cols="4">
         <v-text-field
           v-model="item.description"
           label="Description"
           hide-details
         />
       </v-col>
-      <v-col cols="6">
-        <ICTBranchSelect
+      <v-col cols="8">
+        <GroupSelect
           v-model="item.branch"
-          label="ICT branch"
+          label="Group"
           hide-details
         />
       </v-col>
-      <v-col
-        cols="6"
-        class="py-0"
-      >
+      <v-col cols="4">
         <v-switch
           v-model="item.active"
-          class="pl-2"
-          label="Is active?"
-        />
-      </v-col>
-      <v-col
-        cols="6"
-        class="py-0"
-      >
-        <v-switch
-          v-model="item.changeQuantity"
-          class="pl-2"
-          label="Can change quantity"
+          class="my-0"
+          label="Is Active?"
         />
       </v-col>
     </v-row>
@@ -115,18 +102,18 @@
 <script setup lang="ts">
 import { computed, ref } from "vue"
 import { useRouter } from "vue-router"
-import { isNil } from "lodash"
+import { isEmpty, isNil } from "lodash"
 
 import http from "@/api/http-client"
 import SimpleCard from "@/components/common/SimpleCard.vue"
 import CurrencyField from "@/components/common/CurrencyField.vue"
-import ICTBranchSelect from "@/components/departments/ICTBranchSelect.vue"
 import DocumentList from "@/components/documents/DocumentList.vue"
+import GroupSelect from "@/components/groups/GroupSelect.vue"
 
 import useBreadcrumbs from "@/use/use-breadcrumbs"
 import useItemCategory from "@/use/use-item-category"
-import formatDate from "@/utils/format-date"
 import useItemCategories from "@/use/use-item-categories"
+import formatDate from "@/utils/format-date"
 
 const props = defineProps({
   itemCatID: {
@@ -143,7 +130,13 @@ const isValid = computed(() => {
     return false
   }
 
-  if (isNil(item.value.category) || isNil(item.value.active)) return false
+  if (
+    isEmpty(item.value.category) ||
+    isNil(item.value.active) ||
+    isNil(item.value.branch) ||
+    isNil(item.value.price)
+  )
+    return false
 
   return true
 })

@@ -1,5 +1,5 @@
 <template>
-  <SimpleCard title="Users">
+  <SimpleCard title="Groups">
     <v-row>
       <v-col class="d-flex">
         <v-text-field
@@ -12,13 +12,13 @@
           :height="46"
           @click="addClick"
         >
-          Add User
+          Add Group
         </v-btn>
       </v-col>
     </v-row>
 
     <v-data-table
-      :items="users"
+      :items="groups"
       :headers="headers"
       :loading="isLoading"
       :search="search"
@@ -27,27 +27,28 @@
     >
     </v-data-table>
   </SimpleCard>
-
-  <UserEditDialog></UserEditDialog>
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue"
+import { onMounted, ref } from "vue"
 import { useRouter } from "vue-router"
 
-import UserEditDialog from "@/components/users/UserEditDialog.vue"
 import SimpleCard from "@/components/common/SimpleCard.vue"
 
-import { User } from "@/api/users-api"
-import useUsers from "@/use/use-users"
+import { Group } from "@/api/groups-api"
+import useGroups from "@/use/use-groups"
 import useBreadcrumbs from "@/use/use-breadcrumbs"
 
-const { users, isLoading } = useUsers(ref({}))
+const { groups, isLoading, fetch } = useGroups()
 const router = useRouter()
+
+onMounted(async () => {
+  await fetch()
+})
 
 const search = ref("")
 
-useBreadcrumbs("Users", [
+useBreadcrumbs("Groups", [
   {
     title: "Administration",
     to: {
@@ -55,27 +56,25 @@ useBreadcrumbs("Users", [
     },
   },
   {
-    title: "Users",
+    title: "Groups",
     disabled: true,
     to: {
-      name: "administration/UserListPage",
+      name: "administration/GroupListPage",
     },
   },
 ])
 
 const headers = [
-  { title: "Email", value: "email" },
-  { title: "Department", value: "department" },
-  { title: "Roles", value: "roles" },
-  { title: "Agent For", value: "branch" },
-  { title: "Status", value: "status" },
+  { title: "Short Name", value: "short_name" },
+  { title: "Branch", value: "branch" },
+  { title: "Unit", value: "unit" },
 ]
 
 function addClick() {
-  router.push({ name: "administration/UserEditPage", params: { id: "add" } })
+  router.push({ name: "administration/GroupEditPage", params: { id: "add" } })
 }
 
-function editClick(_event: PointerEvent, { item }: { item: User }) {
-  router.push({ name: "administration/UserEditPage", params: { id: item.id } })
+function editClick(_event: PointerEvent, { item }: { item: Group }) {
+  router.push({ name: "administration/GroupEditPage", params: { id: item.id } })
 }
 </script>

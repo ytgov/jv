@@ -1,70 +1,300 @@
 <template>
-  <div v-if="routes.length == 0">Your access doesn't have any roles attached to it.</div>
+  <SimpleCard>
+    <div class="d-flex mb-4">
+      <v-btn
+        :to="{ name: 'RecoveryAddPage' }"
+        style="height: 44px"
+        class="mr-4"
+      >
+        Add Recovery
+      </v-btn>
 
-  <v-row>
-    <v-col
-      cols="12"
-      md="8"
-    >
-      <v-row>
-        <v-col
-          v-for="(route, idx) in routes"
-          :key="idx"
-          cols="12"
-          md="6"
+      <v-text-field
+        v-model="search"
+        class="mr-4"
+        label="Search"
+        prepend-inner-icon="mdi-magnify"
+        density="compact"
+        style="width: 300px"
+      />
+      <v-spacer />
+      <div class="text-right">
+        <v-menu
+          width="400"
+          offset-y
+          location="bottom end"
+          :close-on-content-click="false"
+          :scrim="true"
         >
-          <SimpleCard
-            :to="route.route"
-          >
-            <v-card-title style="word-break: normal">
-              <v-icon class="white--text text-h4">mdi-monitor</v-icon> {{ route.title }}
-            </v-card-title>
+          <template #activator="{ props: menuProps }">
+            <v-btn
+              v-bind="menuProps"
+              prepend-icon="mdi-filter"
+              append-icon="mdi-chevron-down"
+              size="small"
+              >Filters ({{ filterCount }})</v-btn
+            >
+          </template>
+          <v-card>
             <v-card-text>
-              <div class="text-center amber--text font-weight-bold font-italic">
-                Role: {{ route.role }}
-              </div>
+              <v-label class="mb-2">Status:</v-label>
+              <v-btn-toggle
+                v-model="statusFilter"
+                color="primary"
+                class="border mb-6"
+                density="compact"
+                multiple
+                style="width: 100%; height: 34px"
+              >
+                <v-btn
+                  value="Draft"
+                  size="small"
+                  style="width: 33.3%"
+                  >Draft</v-btn
+                >
+                <v-btn
+                  value="Pending"
+                  size="small"
+                  style="width: 33.3%"
+                  >Pending</v-btn
+                >
+                <v-btn
+                  value="Complete"
+                  size="small"
+                  style="width: 33.3%"
+                  >Complete</v-btn
+                >
+              </v-btn-toggle>
+
+              <v-label class="mb-2">Assignments:</v-label>
+
+              <v-btn-toggle
+                v-model="assignFilter"
+                color="primary"
+                class="border mb-6"
+                density="compact"
+                multiple
+                style="width: 100%; height: 34px"
+              >
+                <v-btn
+                  value="Created by me"
+                  size="small"
+                  style="width: 50%"
+                  >Created by me</v-btn
+                >
+                <v-btn
+                  value="Waiting on me"
+                  size="small"
+                  style="width: 50%"
+                  >Waiting on me</v-btn
+                >
+              </v-btn-toggle>
+
+              <v-label class="mb-2">Department:</v-label>
+              <v-autocomplete
+                v-model="departmentFilter"
+                :items="departments"
+                density="compact"
+                multiple
+                item-title="name"
+                item-value="name"
+              ></v-autocomplete>
             </v-card-text>
-          </SimpleCard>
-        </v-col>
-      </v-row>
-    </v-col>
-    <v-col
-      cols="12"
-      md="4"
-    >
-      <v-btn :to="{ name: 'RecoveryAddPage' }"> <v-icon>mdi-plus</v-icon> Create New Recovery </v-btn>
-    </v-col>
-  </v-row>
+          </v-card>
+        </v-menu>
+
+        <v-menu
+          width="400"
+          offset-y
+          location="bottom end"
+          :close-on-content-click="false"
+          :scrim="true"
+        >
+          <template #activator="{ props: menuProps }">
+            <v-btn
+              v-bind="menuProps"
+              icon="mdi-wrench-cog-outline"
+              class="ml-2 border"
+              size="30"
+              variant="tonal"
+            ></v-btn>
+          </template>
+          <v-card>
+            <v-card-text>
+              <v-label class="mb-2">Table columns:</v-label>
+              <v-list class="ma-0 pa-0 ml-n1">
+                <v-list-item
+                  v-for="header of allHeaders"
+                  :key="header.value"
+                  class="ma-0 pa-0"
+                >
+                  <template #prepend>
+                    <v-checkbox
+                      v-model="selectedHeaders"
+                      :value="header.value"
+                      color="primary"
+                      density="compact"
+                      hide-details
+                      :label="`&nbsp;${header.title}`"
+                    />
+                  </template>
+                </v-list-item>
+              </v-list>
+            </v-card-text>
+          </v-card>
+        </v-menu>
+
+        <div class="text-right mt-3">
+          <v-chip
+            v-for="value of statusFilter"
+            :key="value"
+            color="primary"
+            closable
+            :border="true"
+            size="small"
+            class="ml-3"
+            :text="`Status: ${value}`"
+            @click:close="statusFilter = statusFilter?.filter((s) => s !== value) ?? null"
+          />
+          <v-chip
+            v-for="value of departmentFilter"
+            :key="value"
+            color="primary"
+            closable
+            :border="true"
+            size="small"
+            class="ml-3"
+            :text="`${value}`"
+            @click:close="departmentFilter = departmentFilter?.filter((s) => s !== value) ?? null"
+          />
+          <v-chip
+            v-for="value of assignFilter"
+            :key="value"
+            color="primary"
+            closable
+            :border="true"
+            size="small"
+            class="ml-3"
+            :text="`${value}`"
+            @click:close="assignFilter = assignFilter?.filter((s) => s !== value) ?? null"
+          />
+        </div>
+      </div>
+    </div>
+    <AssignedRecoveryTable
+      :recoveries="filteredRecoveries"
+      :headers="tableHeaders"
+    />
+  </SimpleCard>
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue"
+import { computed, onMounted, ref, watch } from "vue"
 
-import { APPLICATION_NAME } from "@/config"
-//import useDepartments from "@/use/use-departments"
+import useDepartments from "@/use/use-departments"
 import useCurrentUser from "@/use/use-current-user"
 import useBreadcrumbs from "@/use/use-breadcrumbs"
 import SimpleCard from "@/components/common/SimpleCard.vue"
+import AssignedRecoveryTable from "@/modules/recoveries/views/TechRecovery/AssignedRecoveryTable.vue"
+import useRecoveries, { Recovery } from "@/use/use-recoveries"
+import useItemCategories from "@/use/use-item-categories"
 
-const title = `${APPLICATION_NAME} Home`
+const { currentUser } = useCurrentUser()
+const { itemCategories } = useItemCategories(ref({}))
 
-const { isBranchUser, isBranchAgent, isDepartmentalFinance, isICTFinance } = useCurrentUser()
+const { recoveries } = useRecoveries(ref({}))
 
 useBreadcrumbs("Dashboard", [])
 
-//const { departments } = useDepartments()
+const { departments } = useDepartments()
 
-const routes = computed(() => {
-  const items = new Array<{ title: string; role: string; route: string }>()
+const search = ref<string>("")
+const statusFilter = ref<string[]>(["Draft"])
+const departmentFilter = ref<string[]>([])
+const assignFilter = ref<string[]>([])
 
-  if (isBranchUser) items.push({ title: "Dashboard", role: "User", route: "/recoveries/user" })
-  if (isBranchAgent) items.push({ title: "Dashboard", role: "Agent", route: "/recoveries/agent" })
-  if (isDepartmentalFinance)
-    items.push({ title: "Dashboard", role: "Dept. Finance", route: "/recoveries/finance" })
+const selectedHeaders = ref<string[]>([])
+const allHeaders = [
+  { title: "Create Date", value: "createDate" },
+  { title: "Department", value: "department" },
+  { title: "Reference", value: "refNum" },
+  { title: "Items", value: "recoveryItems" },
+  { title: "Requestee", value: "requestor" },
+  { title: "Status", value: "status" },
+  { title: "Cost", value: "totalPrice" },
+]
 
-  if (isICTFinance)
-    items.push({ title: "Recovery List", role: "ICT Finance", route: "/recoveries" })
+onMounted(() => {
+  const storedHeaders = localStorage.getItem("selectedHeaders")
 
-  return items
+  if (storedHeaders) {
+    selectedHeaders.value = JSON.parse(storedHeaders)
+  } else {
+    selectedHeaders.value = allHeaders.map((header) => header.value)
+  }
+})
+
+watch(
+  () => selectedHeaders.value,
+  (newValue) => {
+    if (newValue.length > 0) {
+      localStorage.setItem("selectedHeaders", JSON.stringify(newValue))
+    }
+  },
+  { immediate: true }
+)
+
+const tableHeaders = computed(() => {
+  return allHeaders.filter((header) => {
+    return selectedHeaders.value.length === 0 || selectedHeaders.value.includes(header.value)
+  })
+})
+
+const filterCount = computed(() => {
+  let count = 0
+  if (statusFilter.value.length > 0) count++
+  if (departmentFilter.value.length > 0) count++
+  if (assignFilter.value.length > 0) count++
+  return count
+})
+
+function getRecoveryItems(recovery: Recovery) {
+  const items = recovery.recoveryItems.map((rec) =>
+    itemCategories.value.find((item) => item.itemCatID == rec.itemCatID)
+  )
+  return items.map((i) => i?.category).join(", ")
+}
+
+const filteredRecoveries = computed(() => {
+  return recoveries.value.filter((recovery) => {
+    let searchMatch = true
+    if (search.value.length > 0) {
+      searchMatch =
+        recovery.refNum.toLowerCase().includes(search.value.toLowerCase()) ||
+        recovery.firstName.toLowerCase().includes(search.value.toLowerCase()) ||
+        recovery.lastName.toLowerCase().includes(search.value.toLowerCase()) ||
+        getRecoveryItems(recovery).toLowerCase().includes(search.value.toLowerCase())
+    }
+
+    let assignMatch = true
+    if (assignFilter.value.length > 0) {
+      if (assignFilter.value.includes("Created by me")) {
+        assignMatch = recovery.createUser == currentUser.value?.email
+      }
+    }
+
+    let statusMatch = true
+    if (statusFilter.value.length > 0) {
+      statusMatch = statusFilter.value.length === 0 || statusFilter.value.includes(recovery.status)
+
+      if (!statusMatch && statusFilter.value.includes("Pending")) {
+        statusMatch = recovery.status === "Routed For Approval" || recovery.status === "Pending"
+      }
+    }
+
+    const departmentMatch =
+      departmentFilter.value.length === 0 || departmentFilter.value.includes(recovery.department)
+    return statusMatch && departmentMatch && searchMatch && assignMatch
+  })
 })
 </script>

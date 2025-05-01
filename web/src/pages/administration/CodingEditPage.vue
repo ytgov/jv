@@ -3,7 +3,7 @@
     <v-row v-if="item">
       <v-col
         cols="12"
-        md="6"
+        md="4"
       >
         <DepartmentSelect
           v-model="item.department"
@@ -14,7 +14,7 @@
 
       <v-col
         cols="12"
-        md="6"
+        md="4"
       >
         <EmployeeSelect
           v-model="item.contactName"
@@ -24,18 +24,7 @@
       </v-col>
       <v-col
         cols="12"
-        md="6"
-      >
-        <ICTBranchSelect
-          v-model="item.ictBranch"
-          label="ICT branch"
-          hide-details
-          @change="item.ictUnit = null"
-        />
-      </v-col>
-      <v-col
-        cols="12"
-        md="6"
+        md="4"
       >
         <v-text-field
           v-model="item.contactEmail"
@@ -47,13 +36,13 @@
         cols="12"
         md="6"
       >
-        <ICTUnitSelect
-          v-model="item.ictUnit"
-          :branch="item.ictBranch"
-          label="ICT unit"
+        <GroupSelect
+          v-model="item.ictBranch"
+          label="Group"
           hide-details
         />
       </v-col>
+
       <v-col
         cols="12"
         md="6"
@@ -101,6 +90,7 @@ import useBreadcrumbs from "@/use/use-breadcrumbs"
 import useCoding from "@/use/use-coding"
 import useCodings from "@/use/use-codings"
 import useEmployees from "@/use/use-employees"
+import GroupSelect from "@/components/groups/GroupSelect.vue"
 
 const props = defineProps({
   departmentID: {

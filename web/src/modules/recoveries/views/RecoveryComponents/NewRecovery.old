@@ -733,7 +733,7 @@ import { useDepartments } from "@/use/use-departments"
 import { useItemCategories } from "@/use/use-item-categories"
 import { useGLCodes } from "@/use/use-gl-codes"
 
-const { currentUser, isSystemAdmin, isBranchAdmin, isICTFinance } = useCurrentUser()
+const { currentUser, isSystemAdmin, isICTFinance } = useCurrentUser()
 
 const { employees } = useEmployees(ref({}))
 const { departments } = useDepartments(ref({}))
@@ -860,7 +860,6 @@ function handleEmployeeChanged() {
 async function initForm() {
   loadingData.value = true
   admin.value = isSystemAdmin.value ?? false
-  supervisor.value = isBranchAdmin.value ?? false
   readonly.value = isReadOnly.value
   approveBtn.value = props.type == "Approve"
   revertBtn.value = props.type == "Approve"

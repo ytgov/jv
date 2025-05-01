@@ -95,12 +95,24 @@
         <v-row>
           <v-col
             cols="12"
-            md="7"
+            md="6"
             >Item: Description
           </v-col>
-          <v-col cols="2">Quantity (lock?)</v-col>
-          <v-col cols="1">Unit Price</v-col>
-          <v-col cols="2">Cost</v-col>
+          <v-col
+            cols="2"
+            class="pl-5"
+            >Quantity (lock?)</v-col
+          >
+          <v-col
+            cols="2"
+            class="pl-5"
+            >Unit Price</v-col
+          >
+          <v-col
+            cols="2"
+            class="pl-5"
+            >Cost</v-col
+          >
         </v-row>
       </v-list-item>
 
@@ -112,7 +124,7 @@
         <v-row>
           <v-col
             cols="12"
-            md="7"
+            md="6"
           >
             <ItemSelect
               v-model="item.itemCatID"
@@ -124,7 +136,8 @@
             </ItemSelect>
           </v-col>
           <v-col
-            cols="4" md="2"
+            cols="4"
+            md="2"
             class="d-flex"
           >
             <v-text-field
@@ -143,7 +156,10 @@
               hide-details
             />
           </v-col>
-          <v-col cols="4" md="1">
+          <v-col
+            cols="4"
+            md="2"
+          >
             <CurrencyField
               v-model="item.unitPrice"
               density="compact"
@@ -152,7 +168,8 @@
             />
           </v-col>
           <v-col
-            cols="4" md="2"
+            cols="4"
+            md="2"
             class="d-flex"
           >
             <v-text-field
@@ -216,7 +233,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue"
 import { useRouter } from "vue-router"
-import { isEmpty, isNil, isNumber } from "lodash"
+import { isNil, isNumber } from "lodash"
 
 import SimpleCard from "@/components/common/SimpleCard.vue"
 import EmployeeSelect from "@/components/employees/EmployeeSelect.vue"
@@ -243,7 +260,7 @@ useBreadcrumbs("Create New Recovery", [
 const requestor = ref<string | null>(null)
 
 const isValid = computed(() => {
-  if (isNil(recovery) || isNil(recovery.value)) {
+  if (isNil(recovery.value)) {
     return false
   }
 
@@ -252,15 +269,15 @@ const isValid = computed(() => {
     isNil(recovery.value.lastName) ||
     isNil(recovery.value.requastorEmail) ||
     isNil(recovery.value.department) ||
-    isNil(recovery.value.branch) ||
     isNil(recovery.value.refNum) ||
     isNil(recovery.value.description)
   )
     return false
+
   if (recovery.value.recoveryItems?.length == 0) return false
 
   for (const item of recovery.value.recoveryItems ?? []) {
-    if (isNil(item.itemCatID) || isEmpty(item.quantity) || isEmpty(item.unitPrice)) {
+    if (isNil(item.itemCatID) || isNil(item.quantity) || isNil(item.unitPrice)) {
       return false
     }
   }
@@ -335,7 +352,7 @@ function addItemClick() {
   }
 }
 
-function removeItemClick(item: RecoveryItem, idx: number) {
+function removeItemClick(item: object, idx: number) {
   if (recovery.value) {
     recovery.value.recoveryItems?.splice(idx, 1)
   }

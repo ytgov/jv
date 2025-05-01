@@ -1,22 +1,22 @@
 import { type Ref, reactive, toRefs, unref, watch } from "vue"
-import { isNil, isNull } from "lodash"
+import { isNaN, isNil } from "lodash"
 
-import recoverysApi, { type Recovery } from "@/api/recoveries-api"
+import groupsApi, { type Group } from "@/api/groups-api"
 
-export { type Recovery }
+export { type Group }
 
-export function useRecovery(id: Ref<number | null | undefined>) {
+export function useGroup(id: Ref<number | null | undefined>) {
   const state = reactive<{
-    recovery: Partial<Recovery> | Recovery | null
+    group: Partial<Group> | Group | null
     isLoading: boolean
     isErrored: boolean
   }>({
-    recovery: null,
+    group: null,
     isLoading: false,
     isErrored: false,
   })
 
-  async function fetch(): Promise<Recovery> {
+  async function fetch(): Promise<Group> {
     const staticId = unref(id)
     if (isNil(staticId)) {
       throw new Error("id is required")
@@ -24,12 +24,12 @@ export function useRecovery(id: Ref<number | null | undefined>) {
 
     state.isLoading = true
     try {
-      const { recovery } = await recoverysApi.get(staticId)
+      const { group } = await groupsApi.get(staticId)
       state.isErrored = false
-      state.recovery = recovery
-      return recovery
+      state.group = group
+      return group
     } catch (error) {
-      console.error("Failed to fetch recovery:", error)
+      console.error("Failed to fetch group:", error)
       state.isErrored = true
       throw error
     } finally {
@@ -37,19 +37,19 @@ export function useRecovery(id: Ref<number | null | undefined>) {
     }
   }
 
-  async function create(): Promise<Recovery> {
-    if (isNil(state.recovery)) {
-      throw new Error("No recovery to save")
+  async function create(): Promise<Group> {
+    if (isNil(state.group)) {
+      throw new Error("No group to save")
     }
 
     state.isLoading = true
     try {
-      const { recovery } = await recoverysApi.create(state.recovery)
+      const { group } = await groupsApi.create(state.group)
       state.isErrored = false
-      state.recovery = recovery
-      return recovery
+      state.group = group
+      return group
     } catch (error) {
-      console.error("Failed to create recovery:", error)
+      console.error("Failed to save group:", error)
       state.isErrored = true
       throw error
     } finally {
@@ -57,23 +57,24 @@ export function useRecovery(id: Ref<number | null | undefined>) {
     }
   }
 
-  async function save(): Promise<Recovery> {
+  async function save(): Promise<Group> {
     const staticId = unref(id)
     if (isNil(staticId)) {
       throw new Error("id is required")
     }
 
-    if (isNil(state.recovery)) {
-      throw new Error("No recovery to save")
+    if (isNil(state.group)) {
+      throw new Error("No group to save")
     }
 
     state.isLoading = true
     try {
-      await recoverysApi.update(staticId, state.recovery)
+      const { group } = await groupsApi.update(staticId, state.group)
       state.isErrored = false
-      return fetch()
+      state.group = group
+      return group
     } catch (error) {
-      console.error("Failed to save recovery:", error)
+      console.error("Failed to save group:", error)
       state.isErrored = true
       throw error
     } finally {
@@ -84,8 +85,8 @@ export function useRecovery(id: Ref<number | null | undefined>) {
   watch(
     () => unref(id),
     async (newId) => {
-      if (isNull(newId) || newId == 0) {
-        state.recovery = { recoveryItems: [] }
+      if (isNaN(newId)) {
+        state.group = {}
         return
       }
 
@@ -105,4 +106,4 @@ export function useRecovery(id: Ref<number | null | undefined>) {
   }
 }
 
-export default useRecovery
+export default useGroup

@@ -70,8 +70,8 @@ RUN echo "GIT_COMMIT_HASH=${GIT_COMMIT_HASH}" >> VERSION
 
 EXPOSE 3000
 
-COPY --from=api-build-stage --chown=node:node /usr/src/api/bin/boot-app.sh ./bin/
+#COPY --from=api-build-stage --chown=node:node /usr/src/api/bin/boot-app.sh ./bin/
 
-RUN chmod +x ./bin/boot-app.sh
+#RUN chmod +x ./bin/boot-app.sh
 
-CMD ["./bin/boot-app.sh"]
+CMD ["node", "./dist/index.js"]

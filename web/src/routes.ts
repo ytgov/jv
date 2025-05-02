@@ -49,12 +49,6 @@ const routes: RouteRecordRaw[] = [
         component: () => import("@/pages/recoveries/RecoveryAddPage.vue"),
         meta: { requiresRole: ["Admin", "Agent"] },
       },
-      {
-        name: "FinanceDashboard",
-        path: "finance",
-        component: () => import("@/pages/recoveries/FinanceUserDashboard.vue"),
-        meta: { requiresRole: ["Admin", "DeptFinance"] },
-      },
     ],
   },
   {

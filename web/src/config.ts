@@ -11,7 +11,7 @@ const devConfig = {
 }
 
 const uatConfig = {
-  API_BASE_URL: "http://localhost:3000",
+  API_BASE_URL: window.location.origin,
   AUTH0_DOMAIN: "https://dev-0tc6bn14.eu.auth0.com",
   AUTH0_CLIENT_ID: "WgvhGi9FQvvdZvCGZp07OyRfqqhhnWAV",
   AUTH0_AUDIENCE: "testing",

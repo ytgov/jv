@@ -13,26 +13,19 @@ export const up = async function (knex: knex.Knex, Promise: any) {
   const branches = [
     {
       name: "Corporate Information Management",
-      units: ["ATIPP Office", "Records and Information Management"],
+      units: [],
     },
     {
       name: "Data and Application Support",
-      units: ["Application Platforms", "Database Administration", "Storage and Virtualization"],
+      units: [],
     },
     {
       name: "Electronic Services",
-      units: ["Geomatics Yukon"],
+      units: [],
     },
     {
       name: "Information Technology and Client Services",
-      units: [
-        "Client Services Liaison",
-        "Client Solutions and Project Development",
-        "Client Technical Solutions",
-        "End User Computing",
-        "Information Management",
-        "Shared Technology Services",
-      ],
+      units: [],
     },
     {
       name: "Office of the CIO",
@@ -48,15 +41,11 @@ export const up = async function (knex: knex.Knex, Promise: any) {
     },
     {
       name: "Service Innovation and Support",
-      units: [
-        "Business Analysts Office",
-        "Functional Analysts Office",
-        "Project Management Office",
-      ],
+      units: [],
     },
     {
       name: "Technology Infrastructure",
-      units: ["Security"],
+      units: [],
     },
   ]
 
@@ -73,18 +62,18 @@ export const up = async function (knex: knex.Knex, Promise: any) {
     })
 
     // Insert each unit into the group table
-    for (let unit of units) {
+    /* for (let unit of units) {
       if (isNil(unit) || isEmpty(unit)) continue
 
-      const short_name =`${branchName.replace(/[^A-Z]/g, "")}-${unit.replace(/[^A-Z]/g, "")}`
+      const short_name = `${branchName.replace(/[^A-Z]/g, "")}-${unit.replace(/[^A-Z]/g, "")}`
 
       await knex("group").insert({
         branch: branchName,
         unit: unit,
-        short_name ,
+        short_name,
         long_name: `${branchName} : ${unit}`,
       })
-    }
+    } */
   }
 }
 

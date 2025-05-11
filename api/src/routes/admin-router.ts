@@ -257,6 +257,7 @@ adminRouter.post(
     const newGroup = req.body
     try {
       await db.transaction(async (trx) => {
+        newGroup.long_name = `${newGroup.branch}${newGroup.unit ? ` : ${newGroup.unit}` : ""}`
         await trx("Group").insert(newGroup)
       })
       res.status(200).json("successful")
@@ -283,6 +284,7 @@ adminRouter.put(
     delete newGroup.id
     try {
       await db.transaction(async (trx) => {
+        newGroup.long_name = `${newGroup.branch}${newGroup.unit ? ` : ${newGroup.unit}` : ""}`
         await trx("Group").where({ id }).update(newGroup)
       })
       res.status(200).json("successful")

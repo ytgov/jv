@@ -164,61 +164,6 @@ useBreadcrumbs("Coding Details", [
 
 async function saveClick() {
   await save()
-  const { fetch } = useCodings(ref({}))
-  await fetch()
-
   router.push({ name: "administration/CodingListPage" })
 }
-
-/* 
- const rules: {
-   // const pattern= /^[0-9]{3}-[0-9]{6}-[0-9]{4}-[0-9]{4}-[0-9]{5}$/
-   glcode1: (value:string) => {
-     const pattern = /^[0-9]{1,3}$/;
-     return pattern.test(value) || "Invalid code.";
-   },
-   glcode2: (value:string) => {
-     const pattern = /^[0-9]{1,6}$/;
-     return pattern.test(value) || "Invalid code.";
-   },
-   glcode3: (value:string) => {
-     const pattern = /^[0-9]{1,4}$/;
-     return pattern.test(value) || "Invalid code.";
-   },
-   glcode4: (value:string) => {
-     const pattern = /^[0-9]{1,4}$/;
-     return pattern.test(value) || "Invalid code.";
-   },
-   glcode5: (value:string) => {
-     const pattern = /^[0-9]{1,5}$/;
-     return pattern.test(value) || "Invalid code.";
-   },
- } */
-
-/* function saveDepartment() {
-   if (this.checkFields()) {
-     this.alertMsg = "";
-     const glCode = this.glCodes.join("-");
-     const body = {
-       department: this.department,
-       ictBranch: this.ictBranch,
-       ictUnit: this.ictUnit,
-       glCode: glCode,
-       contactName: this.contactName,
-       contactEmail: this.contactEmail,
-       recvDepartment: this.recvDepartment,
-     };
-     const id = this.currentItem?.departmentID ? this.currentItem.departmentID : 0;
-     return axios
-       .post(`${ADMIN_URL}/department-info/${id}`, body)
-       .then(async () => {
-         this.departmentDialog = false;
-         await this.updateTable();
-       })
-       .catch((e) => {
-         console.log(e);
-         this.alertMsg = e.response.data;
-       });
-   }
- } */
 </script>

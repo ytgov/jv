@@ -49,7 +49,8 @@ import useCodings, { Coding } from "@/use/use-codings"
 import GroupSelect from "@/components/groups/GroupSelect.vue"
 import { isEmpty, isNil } from "lodash"
 
-const { codings, isLoading } = useCodings(ref({}))
+const { codings, isLoading, fetch } = useCodings(ref({}))
+fetch()
 const router = useRouter()
 
 const search = ref("")

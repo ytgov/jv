@@ -368,6 +368,7 @@
       </div>
     </v-tabs-window-item>
   </TabCard>
+  {{ recovery }}
 </template>
 
 <script setup lang="ts">
@@ -437,7 +438,7 @@ const isValid = computed(() => {
   )
     return false
 
-  if (recovery.value.recoveryItems?.length == 0) return false
+  if (recovery.value.status != "Draft" && recovery.value.recoveryItems?.length == 0) return true
 
   for (const item of recovery.value.recoveryItems ?? []) {
     if (isNil(item.itemCatID) || isNil(item.quantity) || isNil(item.unitPrice)) {

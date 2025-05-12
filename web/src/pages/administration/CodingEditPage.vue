@@ -80,15 +80,12 @@ import { useRouter } from "vue-router"
 import { isNil } from "lodash"
 
 import DepartmentSelect from "@/components/departments/DepartmentSelect.vue"
-import ICTBranchSelect from "@/components/departments/ICTBranchSelect.vue"
-import ICTUnitSelect from "@/components/departments/ICTUnitSelect.vue"
 import EmployeeSelect from "@/components/employees/EmployeeSelect.vue"
 import CodingTextField from "@/components/coding/CodingTextField.vue"
 import SimpleCard from "@/components/common/SimpleCard.vue"
 
 import useBreadcrumbs from "@/use/use-breadcrumbs"
 import useCoding from "@/use/use-coding"
-import useCodings from "@/use/use-codings"
 import useEmployees from "@/use/use-employees"
 import GroupSelect from "@/components/groups/GroupSelect.vue"
 

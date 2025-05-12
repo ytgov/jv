@@ -3,7 +3,7 @@ import knex from "knex"
 
 import { DB_CONFIG } from "../config"
 import { AuthorizationRequest, RequiresRoleAdmin } from "@/middleware/authorization-middleware"
-import { isNaN, isNil, isNumber } from "lodash"
+import { isArray, isNaN, isNil, isNumber } from "lodash"
 const db = knex(DB_CONFIG)
 
 export const userRouter = express.Router()
@@ -14,7 +14,7 @@ userRouter.get("/current-user", async (req: AuthorizationRequest, res: Response)
   if (isNil(user)) return res.status(401).json("Not Authenticated")
 
   const roles = await db("Role")
-  const userRoles = user.roles.split(",")
+  const userRoles = (user.roles ?? "").split(",")
   user.teams = roles.filter((role) => userRoles.includes(role.role))
 
   res.json({ user })
@@ -101,21 +101,24 @@ userRouter.post("/:id", RequiresRoleAdmin, async (req: Request, res: Response) =
     req.body
 
   try {
-    const newUserInfo = req.body
-    newUserInfo.auth0_subject = `SUB_MISSING-${newUserInfo.email}`
-
     if (!isNaN(parseInt(id))) {
-      await db("user").where({ id }).update({
-        department,
-        branch,
-        unit,
-        status,
-        roles,
-        mailcode,
-        preferredBulding,
-        employeeBranch,
-      })
+      await db("user")
+        .where({ id })
+        .update({
+          department,
+          branch,
+          unit,
+          status,
+          roles: isArray(roles) ? roles.join(",") : roles,
+          mailcode,
+          preferredBulding,
+          employeeBranch,
+        })
     } else {
+      const newUserInfo = req.body
+      if (isArray(roles)) newUserInfo.roles = roles.join(",")
+      newUserInfo.auth0_subject = `SUB_MISSING-${newUserInfo.email}`
+
       newUserInfo.create_date = new Date()
       await db("user").insert(newUserInfo)
     }

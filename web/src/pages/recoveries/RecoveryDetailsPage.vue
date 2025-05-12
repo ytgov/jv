@@ -461,10 +461,9 @@ const itemTotalCost = computed(() => {
 
 const canEdit = computed(() => {
   if (!recovery.value || !currentUser.value) return false
+  if (isSystemAdmin.value) return true
+  if (isAgent.value && recovery.value.status == "Draft") return true
 
-  if (isAgent.value || isSystemAdmin.value) {
-    return recovery.value.status == "Draft"
-  }
   return false
 })
 

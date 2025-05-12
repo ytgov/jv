@@ -368,7 +368,6 @@
       </div>
     </v-tabs-window-item>
   </TabCard>
-  {{ recovery }}
 </template>
 
 <script setup lang="ts">

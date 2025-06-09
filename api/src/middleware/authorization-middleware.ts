@@ -81,7 +81,7 @@ export function RequiresRoleAdminOrTech(
   next: NextFunction
 ) {
   const roles = (req.currentUser?.roles || "").split(",")
-  if (roles.includes("Admin")  || roles.includes("Agent")) {
+  if (roles.includes("Admin") || roles.includes("Agent")) {
     next()
   } else return res.status(401).send("You are not an authorized person!")
 }

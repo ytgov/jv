@@ -205,7 +205,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue"
+import { computed, onBeforeMount, onMounted, ref, watch } from "vue"
 
 import useDepartments from "@/use/use-departments"
 import useCurrentUser from "@/use/use-current-user"
@@ -245,6 +245,11 @@ const allHeaders = [
   { title: "Cost", value: "totalPrice" },
 ]
 
+onBeforeMount(() => {
+  // Ensure the current user is loaded before proceeding
+  loadSavedFilters()
+})
+
 onMounted(() => {
   const storedHeaders = localStorage.getItem("selectedHeaders")
 
@@ -254,6 +259,32 @@ onMounted(() => {
     selectedHeaders.value = allHeaders.map((header) => header.value)
   }
 })
+
+const filterString = computed(() => {
+  return JSON.stringify({
+    statusFilter: statusFilter.value,
+    departmentFilter: departmentFilter.value,
+    assignFilter: assignFilter.value,
+  })
+})
+
+function saveFilters() {
+  localStorage.setItem("filters", filterString.value)
+}
+
+function loadSavedFilters() {
+  const savedFilters = localStorage.getItem("filters")
+  if (savedFilters) {
+    const filters = JSON.parse(savedFilters)
+    statusFilter.value = filters.statusFilter || []
+    departmentFilter.value = filters.departmentFilter || []
+    assignFilter.value = filters.assignFilter || []
+  } else {
+    statusFilter.value = []
+    departmentFilter.value = []
+    assignFilter.value = ["Waiting on me"]
+  }
+}
 
 watch(
   () => selectedHeaders.value,
@@ -287,6 +318,10 @@ function getRecoveryItems(recovery: Recovery) {
 }
 
 const filteredRecoveries = computed(() => {
+  if (filterString.value != localStorage.getItem("filters")) {
+    saveFilters()
+  }
+
   return recoveries.value.filter((recovery) => {
     let searchMatch = true
     if (search.value.length > 0) {

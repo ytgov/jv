@@ -776,6 +776,9 @@ function recoveryRoleCheck(req: any) {
     else {
       queryBuilder.where("requastorEmail", userEmail).select("*")
     }
+
+    queryBuilder.orderBy("fiscal_year", "desc")
+    queryBuilder.orderBy("recoveryID", "asc")
   }
 
   return adminQuery

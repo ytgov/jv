@@ -347,7 +347,7 @@
             { title: 'User', value: 'user' },
             { title: 'Action', value: 'action' },
           ]"
-          :items-per-page="5"
+          :items-per-page="10"
         >
           <template #item.date="{ item }">
             <span>{{ formatDateTime(item.date) }}</span>

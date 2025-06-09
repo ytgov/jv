@@ -160,6 +160,15 @@
           </v-card>
         </v-menu>
 
+        <v-btn
+          icon="mdi-table-arrow-down"
+          class="ml-2 border"
+          size="30"
+          title="Export to CSV"
+          variant="tonal"
+          @click="csvExportClick"
+        ></v-btn>
+
         <div class="text-right mt-3">
           <v-chip
             v-for="value of statusFilter"
@@ -215,6 +224,7 @@ import AssignedRecoveryTable from "@/modules/recoveries/views/TechRecovery/Assig
 import useRecoveries, { Recovery } from "@/use/use-recoveries"
 import useItemCategories from "@/use/use-item-categories"
 import GroupSelect from "@/components/groups/GroupSelect.vue"
+import formatDate from "@/utils/format-date"
 
 const { currentUser, isAgent, isSystemAdmin } = useCurrentUser()
 const { itemCategories } = useItemCategories(ref({}))
@@ -374,4 +384,46 @@ const filteredRecoveries = computed(() => {
     return statusMatch && departmentMatch && searchMatch && assignMatch && supplierMatch
   })
 })
+
+function csvExportClick() {
+  const headers = tableHeaders.value.map((header) => header.title)
+  const rows = filteredRecoveries.value.map((recovery) => {
+    return tableHeaders.value.map((header) => {
+      switch (header.value) {
+        case "fiscal_year":
+          return recovery.fiscal_year
+        case "createDate":
+          return formatDate(recovery.createDate)
+        case "department":
+          return recovery.department
+        case "requestor":
+          return `${recovery.firstName} ${recovery.lastName}`
+        case "supplier":
+          return recovery.supplier
+        case "modUser":
+          return recovery.modUser
+        case "refNum":
+          return recovery.refNum
+        case "recoveryItems":
+          return getRecoveryItems(recovery)
+        case "status":
+          return recovery.status
+        case "totalPrice":
+          return `$${recovery.totalPrice.toFixed(2)}`
+        default:
+          return ""
+      }
+    })
+  })
+
+  const csvContent = [headers.join(","), ...rows.map((row) => row.join(","))].join("\n")
+
+  const blob = new Blob([csvContent], { type: "text/csv" })
+  const link = document.createElement("a")
+  link.href = URL.createObjectURL(blob)
+  link.setAttribute("download", `recoveries_${new Date().toISOString()}.csv`)
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+}
 </script>

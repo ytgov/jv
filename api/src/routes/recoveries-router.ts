@@ -590,13 +590,6 @@ recoveriesRouter.put(
           }
         }
 
-        console.log("ADDING AUDIT", {
-          date: new Date(),
-          recoveryID,
-          user,
-          action,
-        })
-
         await trx("RecoveryAudit").insert({
           date: new Date(),
           recoveryID,

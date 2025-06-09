@@ -59,8 +59,8 @@ function getRecoveryItems(recovery: Recovery) {
 function isFillPhase(item: Recovery) {
   if (
     item.status == "Purchase Approved" ||
-    item.status == "Partially Fullfilled" ||
-    item.status == "Fullfilled"
+    item.status == "Partially Fulfilled" ||
+    item.status == "Fulfilled"
   )
     return true
   return false

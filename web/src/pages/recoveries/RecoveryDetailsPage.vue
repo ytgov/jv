@@ -473,8 +473,8 @@ const canFill = computed(() => {
   if (isAgent.value || isSystemAdmin.value) {
     return (
       recovery.value.status == "Purchase Approved" ||
-      recovery.value.status == "Partially Fullfilled" ||
-      recovery.value.status == "Fullfilled"
+      recovery.value.status == "Partially Fulfilled" ||
+      recovery.value.status == "Fulfilled"
     )
   }
   return false
@@ -532,8 +532,8 @@ function getActionType(status: string) {
   if (status == "Routed For Approval") return "Routed For Approval"
   if (status == "Re-Draft") return `Request Declined (${reasonForDecline.value.slice(0, 25)}...)`
   if (status == "Purchase Approved") return "Purchase Approved"
-  if (status == "Partially Fullfilled") return "Partially Filled Items"
-  if (status == "Fullfilled") return "Filled Items"
+  if (status == "Partially Fulfilled") return "Partially Filled Items"
+  if (status == "Fulfilled") return "Filled Items"
   if (status == "Complete") return "Completed Request"
   return "Updated Request"
 }
@@ -555,16 +555,16 @@ async function toggleOrderFilled(item: RecoveryItem | Partial<RecoveryItem>) {
   if (recovery.value) {
     item.orderFilled = !item.orderFilled
 
-    const allFullfilled = recovery.value.recoveryItems?.every((item) => item.orderFilled)
-    const allUnFullfilled = recovery.value.recoveryItems?.every((item) => item.orderFilled == false)
+    const allFulfilled = recovery.value.recoveryItems?.every((item) => item.orderFilled)
+    const allUnFulfilled = recovery.value.recoveryItems?.every((item) => item.orderFilled == false)
 
-    recovery.value.action = item.orderFilled ? "Marked item Fullfilled" : "Marked item Unfullfilled"
+    recovery.value.action = item.orderFilled ? "Marked item Fulfilled" : "Marked item Unfulfilled"
 
-    console.log("item.orderFilled", allFullfilled, allUnFullfilled)
+    console.log("item.orderFilled", allFulfilled, allUnFulfilled)
 
-    if (allFullfilled) recovery.value.status = "Fullfilled"
-    else if (allUnFullfilled) recovery.value.status = "Purchase Approved"
-    else recovery.value.status = "Partially Fullfilled"
+    if (allFulfilled) recovery.value.status = "Fulfilled"
+    else if (allUnFulfilled) recovery.value.status = "Purchase Approved"
+    else recovery.value.status = "Partially Fulfilled"
 
     await save()
     actionMenu.value?.fetch()

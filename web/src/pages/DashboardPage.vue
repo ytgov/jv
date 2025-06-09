@@ -59,19 +59,25 @@
                 <v-btn
                   value="Draft"
                   size="small"
-                  style="width: 33.3%"
+                  style="width: 25%"
                   >Draft</v-btn
                 >
                 <v-btn
                   value="Pending"
                   size="small"
-                  style="width: 33.3%"
+                  style="width: 25%"
                   >Pending</v-btn
+                >
+                <v-btn
+                  value="Fulfilled"
+                  size="small"
+                  style="width: 25%"
+                  >Fulfilled</v-btn
                 >
                 <v-btn
                   value="Complete"
                   size="small"
-                  style="width: 33.3%"
+                  style="width: 25%"
                   >Complete</v-btn
                 >
               </v-btn-toggle>
@@ -307,8 +313,8 @@ const filteredRecoveries = computed(() => {
           const relevantStatuses = [
             "Draft",
             "Purchase Approved",
-            "Partially Fullfilled",
-            "Fullfilled",
+            "Partially Fulfilled",
+            "Fulfilled",
           ]
           assignMatch =
             relevantStatuses.includes(recovery.status) &&

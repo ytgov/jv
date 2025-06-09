@@ -15,7 +15,7 @@ export const up = function (knex: knex.Knex, Promise: any) {
 		t.date('createDate').notNullable().defaultTo(knex.fn.now());
 		t.string('createUser', 100).notNullable();
 		t.string('modUser', 100)
-		t.string('status', 50);//Draft, Routed For Approval, Re-Draft, Purchase Approved, Partially Fullfilled, Fullfilled, Complete
+		t.string('status', 50);//Draft, Routed For Approval, Re-Draft, Purchase Approved, Partially Fulfilled, Fulfilled, Complete
 		t.date('submissionDate');
 		t.date('completeDate');
 		t.string('completeUser', 100);

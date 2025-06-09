@@ -138,7 +138,7 @@ const canComplete = computed(() => {
 
   return (
     (isSystemAdmin.value || currentUser.value?.email == recovery.value?.createUser) &&
-    recovery.value?.status == "Fullfilled"
+    recovery.value?.status == "Fulfilled"
   )
 })
 
@@ -226,8 +226,8 @@ function getActionType(status: string) {
   if (status == "Routed For Approval") return "Routed For Approval"
   if (status == "Re-Draft") return `Request Declined (${reasonForDecline.value.slice(0, 25)}...)`
   if (status == "Purchase Approved") return "Purchase Approved"
-  if (status == "Partially Fullfilled") return "Partially Filled Items"
-  if (status == "Fullfilled") return "Filled Items"
+  if (status == "Partially Fulfilled") return "Partially Filled Items"
+  if (status == "Fulfilled") return "Filled Items"
   if (status == "Complete") return "Completed Request"
   return "Updated Request"
 }

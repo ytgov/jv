@@ -63,7 +63,10 @@ export class UserService {
     return await this.db("user").withSchema(DB_SCHEMA).where({ auth0_subject }).first()
   }
   async getByEmail(email: string): Promise<any | undefined> {
-    return await this.db("user").withSchema(DB_SCHEMA).where({ email }).first()
+    return await this.db("user")
+      .withSchema(DB_SCHEMA)
+      .whereRaw(`LOWER(email) = '${email.toLowerCase()}'`)
+      .first()
   }
 
   async getById(id: string): Promise<any | undefined> {

@@ -44,9 +44,11 @@ export const auth0Integration = {
 
     const firstName = data.given_name || data.user_metadata?.first_name || "UNKNOWN"
     const lastName = data.family_name || data.user_metadata?.last_name || "UNKNOWN"
-    const fallbackEmail = `${firstName}.${lastName}@richter-no-email.ca`
+    const fallbackEmail = `${firstName}.${lastName}@yukon-no-email.ca`
     const email = data.email || fallbackEmail
     const phoneNumber = data.phone_number
+
+    console.log("auth0/userinfo", email)
 
     // for external (non AzureAD) users, the oid is not in the userinfo response
     // this ensures that something makes it into that field to stop the app from constantly checking

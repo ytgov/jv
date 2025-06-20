@@ -583,6 +583,7 @@ recoveriesRouter.put(
                 display_name: reqEmployee.full_name,
                 roles: "BranchUser",
                 department: reqEmployee.department,
+                auth0_subject: `SUB_MISSING_${newRecovery.requastorEmail}`,
                 status: "Active",
                 create_date: new Date(),
               })

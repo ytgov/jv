@@ -394,8 +394,8 @@ recoveriesRouter.get("/", async function (req: Request, res: Response) {
   let tmpId = 1000
 
   const adminQuery = recoveryRoleCheck(req)
-
   const recoveries = await db("Recovery").modify(adminQuery)
+
   for (const recovery of recoveries) {
     const recoveryItems = await db("RecoveryItem")
       .select("*")
@@ -743,30 +743,21 @@ async function insertIntoTable(table: string, data: any, myDb = db) {
 }
 
 function recoveryRoleCheck(req: any) {
-  // console.log(req.user)
-  let user = req.currentUser
-  let userLastName = ""
-  let userFirstName = ""
-  const userEmail = req.currentUser.email
-
-  if (user.first_name && user.last_name) {
-    userFirstName = user.first_name
-    userLastName = user.last_name
-  } else {
-    const fullname = user.display_name.split("@")
-    const names = fullname[0]?.split(".")
-    userFirstName = names[0]
-    userLastName = names[1] ? names[1] : ""
-  }
+  const user = req.currentUser
+  const userEmail = user.email
 
   const adminQuery = function (queryBuilder: any) {
-    if (user.roles?.indexOf("Admin") >= 0) queryBuilder.select("*")
-    else if (user.roles?.indexOf("IctFinance") >= 0) queryBuilder.select("*")
-    else if (user.roles?.indexOf("Agent") >= 0)
-      queryBuilder.whereLike("branch", `${user.branch}%`).select("*")
-    else if (user.roles?.indexOf("DeptFinance") >= 0)
+    const roleArray = (user.roles ?? "").split(",")
+
+    if (roleArray.includes("Admin")) {
+      queryBuilder.select("*")
+    } else if (roleArray.includes("IctFinance")) {
+      queryBuilder.select("*")
+    } else if (roleArray.includes("Agent")) {
+      queryBuilder.whereLike("supplier", `${user.branch}%`).select("*")
+    } else if (roleArray.includes("DeptFinance")) {
       queryBuilder.where("department", user.department).select("*")
-    else {
+    } else {
       queryBuilder.where("requastorEmail", userEmail).select("*")
     }
 

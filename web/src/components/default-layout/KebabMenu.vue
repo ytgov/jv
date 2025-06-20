@@ -17,6 +17,12 @@
         prepend-icon="mdi-account"
       />
       <v-list-item
+        v-if="isSystemAdmin || isICTFinance"
+        title="Journals"
+        :to="{ name: 'JournalsPage' }"
+        prepend-icon="mdi-invoice-text-send-outline"
+      />
+      <v-list-item
         v-if="isSystemAdmin"
         title="Administration"
         :to="{ name: 'AdministrationPage' }"
@@ -39,7 +45,7 @@ import useCurrentUser from "@/use/use-current-user"
 
 const { logout } = useAuth0()
 
-const { currentUser, isSystemAdmin } = useCurrentUser()
+const { currentUser, isSystemAdmin, isICTFinance } = useCurrentUser()
 
 const username = computed(() => {
   if (currentUser.value === null) return "loading..."

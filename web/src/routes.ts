@@ -52,6 +52,29 @@ const routes: RouteRecordRaw[] = [
     ],
   },
   {
+    path: "/journals",
+    component: () => import("@/layouts/Layout.vue"),
+    meta: { requiresAuth: true, requiresRole: ["Admin", "IctFinance"] },
+    children: [
+      {
+        name: "JournalsPage",
+        path: "",
+        component: () => import("@/pages/journals/JournalsPage.vue"),
+        props: true,
+      },
+      {
+        name: "JournalCreatePage",
+        path: "add",
+        component: () => import("@/pages/journals/JournalCreatePage.vue"),
+      },
+      {
+        name: "JournalPage",
+        path: ":id",
+        component: () => import("@/pages/journals/JournalPage.vue"),
+      },
+    ],
+  },
+  {
     path: "/administration",
     component: () => import("@/layouts/Layout.vue"),
     children: [

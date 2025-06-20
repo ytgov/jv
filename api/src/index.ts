@@ -15,6 +15,7 @@ import {
   adminRouter,
   pdfRouter,
   migrationRouter,
+  journalsRouter,
 } from "@/routes"
 import { emailCronjob } from "@/services/emailcronjob"
 import jwtMiddleware from "@/middleware/jwt-middleware"
@@ -70,6 +71,7 @@ app.use("/api/admin", adminRouter)
 app.use("/api/data", dataRouter)
 app.use("/api/lookup", lookupRouter)
 app.use("/api/recoveries", recoveriesRouter)
+app.use("/api/journals", journalsRouter)
 app.use("/api/pdf", pdfRouter)
 app.use("/api/migrate", migrationRouter)
 

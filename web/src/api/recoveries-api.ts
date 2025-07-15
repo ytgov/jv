@@ -140,6 +140,13 @@ export const recoveriesApi = {
   async deleteUpload(recoveryId: number, docId: number): Promise<void> {
     await http.delete(`/api/recoveries/${recoveryId}/backup-documents/${docId}`)
   },
+
+  async getUpload(recoveryId: number, docId: number): Promise<ArrayBuffer | null> {
+    const { data } = await http.get(`/api/recoveries/backup-documents/${recoveryId}/${docId}`, {
+      responseType: "arraybuffer",
+    })
+    return data
+  },
 }
 
 export default recoveriesApi

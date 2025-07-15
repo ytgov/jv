@@ -20,16 +20,24 @@ const userService = new UserService()
 
 //____Recovery_DOCUMENTS____
 recoveriesRouter.get(
-  "/backup-documents/:recoveryID/:docName",
+  "/backup-documents/:recoveryID/:documentID",
   ReturnValidationErrors,
   async function (req, res) {
-    const { recoveryID, docName } = req.params
-    const doc = await db("BackUpDocs").where({ recoveryID: recoveryID, docName: docName }).first()
+    const { recoveryID, documentID } = req.params
+    const doc = await db("BackUpDocs").where({ recoveryID, documentID }).first()
 
     if (!doc) return res.status(404).send("Document not found")
+
+    let pdfBuffer = doc.document
+
+    // If the document is stored as a base64 string in the database
+    if (typeof doc.document === "string") {
+      pdfBuffer = Buffer.from(doc.document, "base64")
+    }
+
     res.setHeader("Content-disposition", `attachment; filename="${doc.docName}"`)
     res.setHeader("Content-type", "application/pdf")
-    return res.send(doc.document)
+    return res.send(pdfBuffer)
   }
 )
 

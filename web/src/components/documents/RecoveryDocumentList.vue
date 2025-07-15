@@ -50,6 +50,7 @@
 
 <script setup lang="ts">
 import recoveriesApi, { RecoveryDocument } from "@/api/recoveries-api"
+import { isNil } from "lodash"
 import { ref } from "vue"
 
 const emit = defineEmits(["refresh"])
@@ -89,10 +90,12 @@ function handleSelectedFile(event: Event) {
   saveBackUPFile()
 }
 
-function downloadDocument(itemDocument: RecoveryDocument) {
-  if (!itemDocument.document) return
+async function downloadDocument(itemDocument: RecoveryDocument) {
+  const t = await recoveriesApi.getUpload(props.recoveryId, itemDocument.documentID)
 
-  const byteArray = new Uint8Array(itemDocument.document.data)
+  if (isNil(t)) return
+
+  const byteArray = new Uint8Array(t)
   const newBlob = new Blob([byteArray])
 
   const objUrl = window.URL.createObjectURL(newBlob)

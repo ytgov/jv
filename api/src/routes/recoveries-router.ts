@@ -131,10 +131,6 @@ recoveriesRouter.post(
 //____RECOVERIES___
 // this needs security of some sort
 recoveriesRouter.get("/", async function (req: Request, res: Response) {
-  console.log("GET /recoveries")
-  console.log({ query: req.query })
-  console.log({ params: req.params })
-  console.log({ body: req.body })
   const whereQuery = buildRecoveriesWhereQuery(req.query)
 
   const itemState = {

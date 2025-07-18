@@ -1,6 +1,5 @@
 export * from "./admin-router"
 export * from "./data"
-export * from "./journal-documents-router"
 export * from "./journals-router"
 export * from "./lookup-router"
 export * from "./migration-router"

@@ -11,7 +11,11 @@ import {
 
 import { CreateService, UpdateService } from "@/services/journals"
 
+import { journalDocumentsRouter } from "@/routes/journals/journal-documents-router"
+
 export const journalsRouter = express.Router()
+
+journalsRouter.use("/journal-documents", journalDocumentsRouter)
 
 journalsRouter.get(
   "/",

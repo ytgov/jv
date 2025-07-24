@@ -154,6 +154,22 @@
             </v-row>
           </v-list-item>
         </div>
+        <v-list-item style="background-color: #ddd">
+          <v-row>
+            <v-col
+              cols="8"
+              style="font-weight: bold; font-size: 1.1rem"
+            >
+              Total
+            </v-col>
+            <v-col
+              cols="4"
+              class="pl-9"
+              style="font-weight: bold; font-size: 1.1rem"
+              >{{ formatCurrency(itemTotalCost) }}
+            </v-col>
+          </v-row>
+        </v-list-item>
       </v-list>
     </div>
     <div v-else>No recoveries found</div>
@@ -163,7 +179,7 @@
 </template>
 
 <script lang="ts" setup>
-import { isNil } from "lodash"
+import { isNil, isNumber } from "lodash"
 import { computed, toRefs } from "vue"
 
 import formatCurrency from "@/utils/format-currency"
@@ -190,5 +206,16 @@ const recoveriesQueryOptions = computed(() => ({
 
 const { recoveries, totalCount: totalRecoveries } = useRecoveries(recoveriesQueryOptions, {
   skipWatchIf: () => isNil(journal.value),
+})
+
+const itemTotalCost = computed(() => {
+  if (recoveries.value?.length > 0) {
+    return recoveries.value.reduce(
+      (acc, item) => acc + (isNumber(item.totalPrice) ? item.totalPrice : 0),
+      0
+    )
+  }
+
+  return 0
 })
 </script>

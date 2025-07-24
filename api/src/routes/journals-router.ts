@@ -92,7 +92,7 @@ journalsRouter.get(
     const journalAudits = await db("JournalAudit").select("*").where("journalID", journal.journalID)
     journal.journalAudits = journalAudits
 
-    res.status(200).json(journal)
+    res.status(200).json({ journal })
   }
 )
 

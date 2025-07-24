@@ -80,6 +80,7 @@ export type RecoveryDocument = {
 }
 
 export type RecoveryWhereOptions = {
+  journalID?: number
   department?: string
 }
 

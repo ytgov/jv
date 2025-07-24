@@ -28,7 +28,7 @@ import JournalsDataTableServer from "@/components/journals/JournalsDataTableServ
 const router = useRouter()
 
 function openJournal(_event: MouseEvent, { item }: { item: Journal }) {
-  router.push({ name: "JournalPage", params: { id: item.journalID } })
+  router.push({ name: "JournalPage", params: { journalId: item.journalID } })
 }
 
 useBreadcrumbs("Journals", [{ title: "Journals", to: { name: "JournalsPage" }, disabled: true }])

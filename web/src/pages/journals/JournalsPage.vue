@@ -169,8 +169,6 @@ import { useRouter } from "vue-router"
 import formatDate from "@/utils/format-date"
 import formatMoney from "@/utils/format-currency"
 
-import { JournalStatuses } from "@/api/journals-api"
-
 import useBreadcrumbs from "@/use/use-breadcrumbs"
 import useJournals, { type Journal } from "@/use/use-journals"
 import useDepartments from "@/use/use-departments"

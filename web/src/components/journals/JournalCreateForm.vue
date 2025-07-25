@@ -31,9 +31,8 @@
 
     <v-row>
       <v-col cols="4">
-        <v-text-field
+        <JournalStatusSelect
           v-model="journal.status"
-          label="Status"
           :rules="[required]"
         />
       </v-col>
@@ -133,6 +132,7 @@ import StringDateInput from "@/components/common/StringDateInput.vue"
 import FiscalYearSelect from "@/components/common/FiscalYearSelect.vue"
 import DepartmentSelectString from "@/components/departments/DepartmentSelectString.vue"
 import RecoveriesSearchableAutocomplete from "@/components/recoveries/RecoveriesSearchableAutocomplete.vue"
+import JournalStatusSelect from "@/components/journals/JournalStatusSelect.vue"
 
 const emit = defineEmits<{ created: [journalId: number] }>()
 

@@ -33,4 +33,4 @@ export type Recovery = {
   supplier: string | null
 }
 
-export const RECOVERY_WHERE_OPTIONS = Object.freeze(["journalID", "department"])
+export const RECOVERY_WHERE_OPTIONS = Object.freeze(["journalID", "department", "fiscal_year", "status"])

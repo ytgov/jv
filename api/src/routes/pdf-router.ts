@@ -106,6 +106,8 @@ pdfRouter.post(
 
 //______________________
 //______________________
+
+// This generates a blank PDF file, so it needs fixed
 async function generatePdfFile(requestBodyData: any[]) {
   const pdfsToMerge: any[] = []
 

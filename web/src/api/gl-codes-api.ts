@@ -14,7 +14,7 @@ export type GLCode = {
 }
 
 export type GLCodeWhereOptions = {
-  email?: string
+  department?: string
 }
 
 export type GLCodeFiltersOptions = {}

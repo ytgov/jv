@@ -80,8 +80,10 @@ export type RecoveryDocument = {
 }
 
 export type RecoveryWhereOptions = {
-  journalID?: number
-  department?: string
+  journalID?: number | null
+  department?: string | null
+  fiscal_year?: string | null
+  status?: string
 }
 
 // eslint-disable-next-line @typescript-eslint/ban-types

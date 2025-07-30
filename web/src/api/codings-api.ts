@@ -18,7 +18,8 @@ export type Coding = {
 }
 
 export type CodingWhereOptions = {
-  email?: string
+  department?: string
+  ictBranch?: string
 }
 
 export type CodingFiltersOptions = {

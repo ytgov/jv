@@ -1,5 +1,5 @@
-import { isNumber } from "lodash"
-import express, { Request, Response } from "express"
+import { isNil, isNumber } from "lodash"
+import express, { query, Request, Response } from "express"
 
 import db from "@/data/db-client"
 
@@ -40,7 +40,8 @@ recoveriesRouter.get("/", async function (req: Request, res: Response) {
 
   for (const recovery of recoveries) {
     const recoveryItems = await db("RecoveryItem")
-      .select("*")
+      .innerJoin("ItemCategory", "RecoveryItem.itemCatID", "ItemCategory.itemCatID")
+      .select("RecoveryItem.*", "ItemCategory.category")
       .where("recoveryID", recovery.recoveryID)
     for (const recoveryItem of recoveryItems) {
       recoveryItem.tmpId = tmpId
@@ -509,8 +510,13 @@ function buildRecoveriesWhereQuery(queryParams: any) {
 
   return function (queryBuilder: any) {
     whereOptions.forEach((key) => {
+      console.log(`Checking where option: ${key} = ${queryParams.where[key]}`)
+
       if (RECOVERY_WHERE_OPTIONS.includes(key)) {
-        queryBuilder.where(key, queryParams.where[key])
+        if (isNil(queryParams.where[key]) || queryParams.where[key] === "")
+          queryBuilder.whereNull(key)
+        else queryBuilder.where(key, queryParams.where[key])
+
         console.log(`Valid where option: ${key} = ${queryParams.where[key]}`)
       } else {
         console.log(`Invalid where option: ${key}`)

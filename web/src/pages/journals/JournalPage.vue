@@ -18,6 +18,7 @@
       :tabs="[
         { value: 0, title: 'Journal Details', icon: 'mdi-file-document' },
         { value: 1, title: 'Audit History', icon: 'mdi-history' },
+        { value: 2, title: 'Backup', icon: 'mdi-file-document' },
       ]"
       :default-tab="0"
     >
@@ -26,6 +27,15 @@
           class="mt-5"
           :journal-id="journalIdNumber"
         />
+
+
+
+        <v-btn>Generate Journal</v-btn>
+        this will create the XLS and combine all backup into a single PDF
+        * put the Recoveries Ref# into Ref3
+        <br>
+      The two files are downloaded
+
       </v-tabs-window-item>
 
       <v-tabs-window-item value="1">

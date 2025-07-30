@@ -100,7 +100,25 @@ adminRouter.get(
   "/department-info",
   ReturnValidationErrors,
   async function (req: Request, res: Response) {
-    const departmentsInfo = await db("DepartmentInfo").orderBy("glCode")
+    const { where } = req.query
+
+    console.log("Fetching department info with where:", where)
+
+    const departmentsInfoQuery = db("DepartmentInfo").orderBy("glCode")
+
+    if (where && typeof where == "object") {
+      const whereObj = where as Record<string, any>
+      const whereOptions = Object.keys(whereObj)
+
+      whereOptions.forEach((key) => {
+        if (whereObj[key] !== undefined && whereObj[key] !== null) {
+          departmentsInfoQuery.where(key, whereObj[key])
+        }
+      })
+    }
+
+    const departmentsInfo = await departmentsInfoQuery
+
     res.status(200).json({ codings: departmentsInfo, totalCount: departmentsInfo.length })
   }
 )

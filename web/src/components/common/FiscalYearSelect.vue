@@ -1,8 +1,7 @@
 <template>
-  <v-select
+  <v-autocomplete
     :items="fiscalYears"
     label="Select Fiscal Year"
-    hide-details
   />
 </template>
 

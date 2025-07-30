@@ -2,7 +2,7 @@
   <SimpleCard title="Journal Details">
     <template #rightTitle>
       <v-btn
-        color="error"
+        color="warning"
         variant="outlined"
         text="Go Back"
         @click="goToJournalsPage"

@@ -16,7 +16,7 @@ const { employees } = useEmployees(ref({}))
 
 const items = computed(() => {
   return employees.value.map((e) => ({
-    fullName: `${e.firstName} ${e.lastName}`,
+    fullName: `${e.firstName} ${e.lastName} - ${e.email}`,
     id: e.fullName,
     subtitle: `${e.department} ${e.branch ? `(${e.branch})` : ""}`,
   }))

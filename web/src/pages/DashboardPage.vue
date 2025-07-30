@@ -27,6 +27,14 @@
         style="width: 300px"
         clearable
       />
+      <FiscalYearSelect
+        v-model="fiscalYear"
+        class="mr-4"
+        label="Fiscal year"
+        density="compact"
+        style="width: 150px"
+        clearable
+      />
       <v-spacer />
       <div class="text-right">
         <v-menu
@@ -225,6 +233,7 @@ import useRecoveries, { Recovery } from "@/use/use-recoveries"
 import useItemCategories from "@/use/use-item-categories"
 import GroupSelect from "@/components/groups/GroupSelect.vue"
 import formatDate from "@/utils/format-date"
+import FiscalYearSelect from "@/components/common/FiscalYearSelect.vue"
 
 const { currentUser, isAgent, isSystemAdmin } = useCurrentUser()
 const { itemCategories } = useItemCategories(ref({}))
@@ -237,6 +246,7 @@ const { departments } = useDepartments()
 
 const search = ref<string>("")
 const branch = ref<string>("")
+const fiscalYear = ref<string>("")
 const statusFilter = ref<string[]>([])
 const departmentFilter = ref<string[]>([])
 const assignFilter = ref<string[]>(["Waiting on me"])
@@ -244,6 +254,7 @@ const assignFilter = ref<string[]>(["Waiting on me"])
 const selectedHeaders = ref<string[]>([])
 const allHeaders = [
   { title: "Fiscal Year", value: "fiscal_year" },
+  { title: "JV Num", value: "journal.jvNum" },
   { title: "Create Date", value: "createDate" },
   { title: "Client Dept", value: "department" },
   { title: "Client", value: "requestor" },
@@ -342,6 +353,11 @@ const filteredRecoveries = computed(() => {
         getRecoveryItems(recovery).toLowerCase().includes(search.value.toLowerCase())
     }
 
+    let fiscalMatch = true
+    if (fiscalYear.value) {
+      fiscalMatch = recovery.fiscal_year == fiscalYear.value
+    }
+
     let supplierMatch = true
     if (branch.value) {
       supplierMatch = (recovery.supplier ?? "").startsWith(branch.value)
@@ -381,7 +397,9 @@ const filteredRecoveries = computed(() => {
 
     const departmentMatch =
       departmentFilter.value.length === 0 || departmentFilter.value.includes(recovery.department)
-    return statusMatch && departmentMatch && searchMatch && assignMatch && supplierMatch
+    return (
+      statusMatch && departmentMatch && searchMatch && assignMatch && supplierMatch && fiscalMatch
+    )
   })
 })
 

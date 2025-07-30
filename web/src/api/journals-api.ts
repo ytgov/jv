@@ -21,12 +21,12 @@ export type Journal = {
   journalID: number
   submissionDate: string
   jvNum: string
-  department: string
+  department: string | null
   period: number
   jvAmount: number
   status: JournalStatuses
   jvDate: string
-  fiscalYear: string
+  fiscalYear: string | null
   description: string
   orgDepartment: string
   odCompletedBy: string

@@ -16,12 +16,16 @@ import { createVuetify } from "vuetify"
 import * as components from "vuetify/components"
 import * as directives from "vuetify/directives"
 import * as labsComponents from "vuetify/labs/components"
+import { StringDateAdapter } from "vuetify/date/adapters/string"
 
 // https://vuetifyjs.com/en/introduction/why-vuetify/#feature-guides
 export default createVuetify({
   components: {
     ...components,
     ...labsComponents,
+  },
+  date: {
+    adapter: StringDateAdapter,
   },
   theme: {
     defaultTheme: "light",
@@ -63,6 +67,18 @@ export default createVuetify({
       variant: "outlined",
       density: "comfortable",
       color: "primary",
+    },
+    VNumberInput: {
+      variant: "outlined",
+      density: "comfortable",
+      color: "primary",
+    },
+    VDateInput: {
+      variant: "outlined",
+      density: "comfortable",
+      color: "primary",
+      prependInnerIcon: "mdi-calendar",
+      prependIcon: "",
     },
     VFileInput: {
       variant: "outlined",

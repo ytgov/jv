@@ -9,6 +9,8 @@
     <template #item.submissionDate="{ item }">
       {{ formatDate(item.submissionDate) }}
     </template>
+    <template #item.test="{ item }">THERELJKS
+    </template>
 
     <template #item.jvAmount="{ item }">
       {{ formatMoney(item.jvAmount) }}
@@ -18,11 +20,11 @@
 
 <script lang="ts">
 export const DEFAULT_HEADERS = [
-  { title: "Date", key: "submissionDate" },
+  { title: "Date", key: "submissionDate", },
   { title: "JV Number", key: "jvNum" },
   { title: "Department", key: "department" },
   { title: "Period", key: "period" },
-  { title: "Affiliated Recoveries", key: "refRecoveries" },
+  { title: "Test", key: "test" },
   { title: "Description", key: "description" },
   { title: "Amount", key: "jvAmount" },
   { title: "Status", key: "status" },

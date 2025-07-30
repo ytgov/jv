@@ -1,38 +1,25 @@
 <template>
-  <div>
-    <div class="d-flex">
-      <v-spacer />
-      <!-- <new-recovery
-        type="Add New"
-        title="Create"
-        max-width="80%"
-        :recovery="{}"
-        @update-table="updateTable"
-      /> -->
-    </div>
+  <v-data-table
+    :headers="headers"
+    :items="recoveries"
+    :items-per-page="10"
+    class="striped"
+    @click:row="openRecovery"
+  >
+    <template #item.createDate="{ item }">
+      {{ formatDate(item.createDate) }}
+    </template>
+    <template #item.requestor="{ item }"> {{ item.firstName }} {{ item.lastName }} </template>
+    <template #item.recoveryItems="{ item }">{{ getRecoveryItems(item) }}</template>
 
-    <v-data-table
-      :headers="headers"
-      :items="recoveries"
-      :items-per-page="10"
-      class="striped"
-      @click:row="openRecovery"
-    >
-      <template #item.createDate="{ item }">
-        {{ formatDate(item.createDate) }}
-      </template>
-      <template #item.requestor="{ item }"> {{ item.firstName }} {{ item.lastName }} </template>
-      <template #item.recoveryItems="{ item }">{{ getRecoveryItems(item) }}</template>
+    <template #item.totalPrice="{ item }">
+      {{ formatMoney(item.totalPrice) }}
+    </template>
 
-      <template #item.totalPrice="{ item }">
-        {{ formatMoney(item.totalPrice) }}
-      </template>
-
-      <template #item.jvNum="{ item }">
-        <div v-if="item.journal && item.journal.jvNum">{{ item.journal.jvNum }}</div>
-      </template>
-    </v-data-table>
-  </div>
+    <template #item.jvNum="{ item }">
+      <div v-if="item.journal && item.journal.jvNum">{{ item.journal.jvNum }}</div>
+    </template>
+  </v-data-table>
 </template>
 
 <script setup lang="ts">

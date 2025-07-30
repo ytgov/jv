@@ -5,24 +5,28 @@
     :items="recoveries"
     item-value="recoveryID"
     :item-title="formatRecoveryTitle"
+    :item-props="true"
     label="Click here to select"
     auto-select-first
     chips
     hide-selected
     clearable
     multiple
-    @update:model-value="emit('update:modelValue', $event)"
+    @update:model-value="
+      emit('update:modelValue', $event);
+      handleChange()
+    "
   />
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue"
+import { computed, nextTick } from "vue"
 
 import { MAX_PER_PAGE } from "@/api/base-api"
 import useRecoveries, { Recovery, type RecoveryWhereOptions } from "@/use/use-recoveries"
 import formatCurrency from "@/utils/format-currency"
 
-const propss = withDefaults(
+const props = withDefaults(
   defineProps<{
     modelValue: number[] | null | undefined
     where?: RecoveryWhereOptions
@@ -34,13 +38,14 @@ const propss = withDefaults(
 
 const emit = defineEmits<{
   "update:modelValue": [number[] | null | undefined]
+  itemsTotal: [number]
 }>()
 
 const recoveriesQuery = computed<{
   where?: RecoveryWhereOptions
 }>(() => {
   return {
-    where: propss.where,
+    where: props.where,
     perPage: MAX_PER_PAGE,
   }
 })
@@ -48,6 +53,19 @@ const recoveriesQuery = computed<{
 const { recoveries, isLoading } = useRecoveries(recoveriesQuery)
 
 function formatRecoveryTitle(item: Recovery) {
-  return `${item.branch} (${formatCurrency(item.totalPrice)}) - ${item.description}`
+  return `${item.branch} / ${item.refNum} (${item.recoveryItems?.map((item) => item.category).join(", ")}) = ${formatCurrency(item.totalPrice)}`
+}
+
+function handleChange() {
+  nextTick(() => {
+    const selectedRecoveries = recoveries.value.filter((r) =>
+      props.modelValue?.includes(r.recoveryID)
+    )
+
+    emit(
+      "itemsTotal",
+      selectedRecoveries.reduce((acc, r) => acc + r.totalPrice, 0)
+    )
+  })
 }
 </script>

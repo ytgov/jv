@@ -90,8 +90,6 @@
       </v-col>
     </v-row>
 
-    <v-btn class="mt-5">Save Journal</v-btn>
-
     <v-divider class="mb-5" />
 
     <h3 class="mb-3">Recoveries</h3>
@@ -102,7 +100,7 @@
           <v-row no-gutters>
             <v-col
               cols="7"
-              class="pl-11 text-no-wrap"
+              class="text-no-wrap"
             >
               Reference / Branch / Items
             </v-col>
@@ -125,22 +123,14 @@
                 cols="7"
                 class="pt-1"
               >
-                <v-btn
-                  icon="mdi-delete"
-                  size="x-small"
-                  color="warning"
-                  class="mr-2"
-                />
                 {{ recovery.refNum }} / {{ recovery.supplier }} /
                 {{ recovery.recoveryItems.map((r) => r.category).join(", ") }}
               </v-col>
               <v-col cols="3">
-                <CodingSelect
+                <v-text-field
                   v-model="recovery.glCode"
-                  label=""
                   hide-details
-                  density="compact"
-                  :where="{ department: recovery.department, ictBranch: recovery.supplier }"
+                  readonly
                 />
               </v-col>
               <v-col
@@ -185,7 +175,6 @@ import formatCurrency from "@/utils/format-currency"
 import useJournal from "@/use/use-journal"
 import useRecoveries, { type RecoveryWhereOptions } from "@/use/use-recoveries"
 import formatDate from "@/utils/format-date"
-import CodingSelect from "../coding/CodingSelect.vue"
 
 const props = defineProps<{ journalId: number }>()
 const { journalId } = toRefs(props)

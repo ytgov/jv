@@ -99,7 +99,7 @@ journalsRouter.get(
         .where("recoveryID", recovery.recoveryID)
       recovery.recoveryAudits = recoveryAudits
       const recoveryDocument = await db("BackUpDocs")
-        .select("docName")
+        .select("documentID", "docName")
         .where("recoveryID", recovery.recoveryID)
       recovery.docName = recoveryDocument?.length > 0 ? recoveryDocument : ""
     }

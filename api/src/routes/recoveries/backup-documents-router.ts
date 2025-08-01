@@ -9,7 +9,7 @@ import {
   RequiresRoleAdminOrTech,
 } from "@/middleware/authorization-middleware"
 
-export const backupDocumentsRouter = express.Router()
+export const backupDocumentsRouter = express.Router({ mergeParams: true })
 
 backupDocumentsRouter.get("/:documentID", ReturnValidationErrors, async function (req, res) {
   const { recoveryID, documentID } = req.params
@@ -35,7 +35,7 @@ backupDocumentsRouter.post(
   ReturnValidationErrors,
   async function (req: AuthorizationRequest, res: Response) {
     const files = req.files
-    const recoveryID = parseInt(req.params.recoveryID)
+    const recoveryID = Number(req.params.recoveryID)
     const user = req.currentUser?.display_name ?? ""
 
     if (isNil(files)) return res.status(400).send("No files found")
@@ -84,8 +84,8 @@ backupDocumentsRouter.delete(
   "/:documentID",
   ReturnValidationErrors,
   async function (req: AuthorizationRequest, res: Response) {
-    let recoveryID = Number(req.params.recoveryID)
-    let documentID = Number(req.params.documentID)
+    const recoveryID = Number(req.params.recoveryID)
+    const documentID = Number(req.params.documentID)
 
     const document = await db("BackUpDocs").where({ documentID, recoveryID }).first()
 

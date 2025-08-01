@@ -233,7 +233,9 @@ recoveriesRouter.put(
     }
 
     try {
-      const newRecoveryItems = Array.isArray(req.body.recoveryItems) ? req.body.recoveryItems : []
+      const newRecoveryItems: any[] | null = Array.isArray(req.body.recoveryItems)
+        ? req.body.recoveryItems
+        : null
 
       const sanitizedRecoveryAttributes = sanitizeRecoveryAttributes(recovery)
       const sanitizedUpdateAttributes = sanitizeRecoveryUpdateAttributes(req.body)

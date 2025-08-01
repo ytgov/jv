@@ -13,7 +13,7 @@ export class UpdateService extends BaseService {
     private recovery: Recovery,
     private attributes: RecoveryUpdateAttributes,
     private currentUser: any,
-    private newRecoveryItems: any[]
+    private newRecoveryItems: any[] | null
   ) {
     super()
   }
@@ -26,16 +26,13 @@ export class UpdateService extends BaseService {
     const currentUserDisplayName = this.currentUser.display_name ?? ""
     const currentUserEmail = this.currentUser.email
 
-    await db.transaction(async (trx) => {
+    return db.transaction(async (trx) => {
       if (
         this.attributes.status != RecoveryStatuses.PURCHASE_APPROVED &&
         this.attributes.status != RecoveryStatuses.RE_DRAFT
       ) {
         this.attributes.modUser = currentUserEmail
       }
-
-      this.attributes.totalPrice = this.calculateItemTotal(this.newRecoveryItems)
-      await trx("Recovery").update(this.attributes).where("recoveryID", this.recovery.recoveryID)
 
       if (this.attributes.requastorEmail) {
         let requestorUser = await new UserService().getByEmail(this.attributes.requastorEmail)
@@ -69,6 +66,18 @@ export class UpdateService extends BaseService {
         user: currentUserDisplayName,
         action,
       })
+
+      this.attributes.totalPrice = this.calculateItemTotal()
+      const [updatedRecovery] = await trx("Recovery")
+        .update(this.attributes)
+        .where("recoveryID", this.recovery.recoveryID)
+        .returning("*")
+
+      await this.sendEmail(this.attributes, currentUserDisplayName, this.recovery.recoveryID, trx)
+
+      if (isNil(this.newRecoveryItems)) {
+        return updatedRecovery
+      }
 
       await trx("RecoveryItem").delete().where("recoveryID", this.recovery.recoveryID)
       await trx("BackUpDocs")
@@ -109,19 +118,19 @@ export class UpdateService extends BaseService {
         }
       }
 
-      await this.sendEmail(this.attributes, currentUserDisplayName, this.recovery.recoveryID, trx)
+      return updatedRecovery
     })
   }
 
-  private calculateItemTotal(recoveryItems: { totalPrice: number }[]) {
-    if (recoveryItems && recoveryItems.length > 0) {
-      return recoveryItems.reduce(
-        (acc, item) => acc + (isNumber(item.totalPrice) ? item.totalPrice : 0),
-        0
-      )
+  private calculateItemTotal(): number {
+    if (isNil(this.newRecoveryItems)) {
+      return this.recovery.totalPrice ?? 0
     }
 
-    return 0
+    return this.newRecoveryItems.reduce(
+      (acc, item) => acc + (isNumber(item.totalPrice) ? item.totalPrice : 0),
+      0
+    )
   }
 
   private async insertIntoTable(table: string, data: any, myDb = db) {
@@ -145,61 +154,67 @@ export class UpdateService extends BaseService {
 
   private async sendEmail(newRecovery: any, user: any, recoveryID: number, myDb = db) {
     if (
-      newRecovery.status == "Purchase Approved" ||
-      newRecovery.status == "Re-Draft" ||
-      newRecovery.status == "Routed For Approval"
+      newRecovery.status != RecoveryStatuses.PURCHASE_APPROVED &&
+      newRecovery.status != RecoveryStatuses.RE_DRAFT &&
+      newRecovery.status != RecoveryStatuses.ROUTED_FOR_APPROVAL
     ) {
-      const recovery = await myDb("Recovery").where("recoveryID", recoveryID).first()
-
-      const sender =
-        newRecovery.status == "Routed For Approval" ? recovery.modUser : recovery.requastorEmail
-      const recipient =
-        newRecovery.status == "Routed For Approval" ? recovery.requastorEmail : recovery.modUser
-      const recipientName =
-        newRecovery.status == "Routed For Approval"
-          ? recovery.firstName + " " + recovery.lastName
-          : "Recovery Agent"
-
-      let emailSent = null
-
-      if (newRecovery.status == "Routed For Approval") {
-        const reminder = false
-        emailSent = await sendPendingApprovalEmail(
-          reminder,
-          user,
-          sender,
-          recipient,
-          recipientName,
-          recovery.department,
-          recoveryID
-        )
-      } else {
-        const approved = newRecovery.status == "Purchase Approved"
-        emailSent = await sendPurchaseApprovedEmail(
-          approved,
-          user,
-          sender,
-          recipient,
-          recovery.refNum,
-          recovery.department,
-          recovery.reasonForDecline,
-          recoveryID
-        )
-      }
-
-      if (!emailSent) return false
-
-      await myDb("RecoveryEmail").insert({
-        recoveryID: recoveryID,
-        emailType: newRecovery.status,
-        sentDate: new Date(),
-        sendingUser: sender,
-        recipients: recipient,
-      })
-
-      const action = `Notification emailed to ${recipient}.`
-      await this.addRecoveryAudit(recoveryID, user, action.slice(0, 49), myDb)
+      return true
     }
+
+    const recovery = await myDb("Recovery").where("recoveryID", recoveryID).first()
+
+    const sender =
+      newRecovery.status == RecoveryStatuses.ROUTED_FOR_APPROVAL
+        ? recovery.modUser
+        : recovery.requastorEmail
+    const recipient =
+      newRecovery.status == RecoveryStatuses.ROUTED_FOR_APPROVAL
+        ? recovery.requastorEmail
+        : recovery.modUser
+    const recipientName =
+      newRecovery.status == RecoveryStatuses.ROUTED_FOR_APPROVAL
+        ? recovery.firstName + " " + recovery.lastName
+        : "Recovery Agent"
+
+    let emailSent = null
+
+    if (newRecovery.status == RecoveryStatuses.ROUTED_FOR_APPROVAL) {
+      const reminder = false
+      emailSent = await sendPendingApprovalEmail(
+        reminder,
+        user,
+        sender,
+        recipient,
+        recipientName,
+        recovery.department,
+        recoveryID
+      )
+    } else {
+      const approved = newRecovery.status == RecoveryStatuses.PURCHASE_APPROVED
+      emailSent = await sendPurchaseApprovedEmail(
+        approved,
+        user,
+        sender,
+        recipient,
+        recovery.refNum,
+        recovery.department,
+        recovery.reasonForDecline,
+        recoveryID
+      )
+    }
+
+    if (!emailSent) return false
+
+    await myDb("RecoveryEmail").insert({
+      recoveryID: recoveryID,
+      emailType: newRecovery.status,
+      sentDate: new Date(),
+      sendingUser: sender,
+      recipients: recipient,
+    })
+
+    const action = `Notification emailed to ${recipient}.`
+    await this.addRecoveryAudit(recoveryID, user, action.slice(0, 49), myDb)
 
     return true
   }

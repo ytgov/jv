@@ -1,15 +1,18 @@
-import { isNil, isNumber } from "lodash"
-import express, { query, Request, Response } from "express"
+import { isNil, isNumber, isNaN } from "lodash"
+import express, { Request, Response } from "express"
 
 import db from "@/data/db-client"
 
 import { DB_SCHEMA } from "@/config"
-import { RECOVERY_WHERE_OPTIONS } from "@/models/recovery"
+import { Recovery, RecoveryUpdateAttributes, RECOVERY_WHERE_OPTIONS } from "@/models/recovery"
 
 import { ReturnValidationErrors } from "@/middleware"
 import { AuthorizationRequest } from "@/middleware/authorization-middleware"
 import { sendPendingApprovalEmail, sendPurchaseApprovedEmail } from "@/services/email"
 import { UserService } from "@/services"
+import { UpdateService } from "@/services/recoveries"
+
+import { sanitizeRecoveryUpdateAttributes, sanitizeRecoveryAttributes } from "@/models/recovery"
 
 import { backupDocumentsRouter } from "@/routes/recoveries/backup-documents-router"
 import { recoverableRouter } from "@/routes/recoveries/recoverable-router"
@@ -68,51 +71,6 @@ recoveriesRouter.get("/", async function (req: Request, res: Response) {
 
   res.json({ recoveries, totalCount: recoveries.length })
 })
-
-recoveriesRouter.get(
-  "/:recoveryID",
-  ReturnValidationErrors,
-  async function (req: Request, res: Response) {
-    const itemState = {
-      itemCategoryErr: false,
-      descriptionErr: false,
-      quantityErr: false,
-      unitPriceErr: false,
-      approvedCostErr: false,
-      clientChangeErr: false,
-    }
-
-    const recoveryID = Number(req.params.recoveryID)
-
-    let tmpId = 2000
-
-    const adminQuery = recoveryRoleCheck(req)
-
-    const recovery = await db("Recovery").modify(adminQuery).where("recoveryID", recoveryID).first()
-    if (!recovery) return res.status(400).json("Recovery Not Found!")
-
-    const recoveryItems = await db("RecoveryItem")
-      .select("*")
-      .where("recoveryID", recovery.recoveryID)
-    for (const recoveryItem of recoveryItems) {
-      recoveryItem.tmpId = tmpId
-      recoveryItem.state = itemState
-      tmpId++
-    }
-    recovery.recoveryItems = recoveryItems
-
-    const recoveryAudits = await db("RecoveryAudit")
-      .select("*")
-      .where("recoveryID", recovery.recoveryID)
-    recovery.recoveryAudits = recoveryAudits
-
-    recovery.docName = await db("BackUpDocs")
-      .select("documentID", "docName", "itemCatName")
-      .where("recoveryID", recovery.recoveryID)
-
-    res.json({ recovery })
-  }
-)
 
 recoveriesRouter.post("/", async function (req: AuthorizationRequest, res: Response) {
   const user = req.currentUser?.display_name ?? ""
@@ -214,116 +172,80 @@ recoveriesRouter.post("/", async function (req: AuthorizationRequest, res: Respo
   }
 })
 
+recoveriesRouter.get(
+  "/:recoveryID",
+  ReturnValidationErrors,
+  async function (req: Request, res: Response) {
+    const itemState = {
+      itemCategoryErr: false,
+      descriptionErr: false,
+      quantityErr: false,
+      unitPriceErr: false,
+      approvedCostErr: false,
+      clientChangeErr: false,
+    }
+
+    const recoveryID = Number(req.params.recoveryID)
+
+    let tmpId = 2000
+
+    const adminQuery = recoveryRoleCheck(req)
+
+    const recovery = await db("Recovery").modify(adminQuery).where("recoveryID", recoveryID).first()
+    if (!recovery) return res.status(400).json("Recovery Not Found!")
+
+    const recoveryItems = await db("RecoveryItem")
+      .select("*")
+      .where("recoveryID", recovery.recoveryID)
+    for (const recoveryItem of recoveryItems) {
+      recoveryItem.tmpId = tmpId
+      recoveryItem.state = itemState
+      tmpId++
+    }
+    recovery.recoveryItems = recoveryItems
+
+    const recoveryAudits = await db("RecoveryAudit")
+      .select("*")
+      .where("recoveryID", recovery.recoveryID)
+    recovery.recoveryAudits = recoveryAudits
+
+    recovery.docName = await db("BackUpDocs")
+      .select("documentID", "docName", "itemCatName")
+      .where("recoveryID", recovery.recoveryID)
+
+    res.json({ recovery })
+  }
+)
+
 recoveriesRouter.put(
   "/:recoveryID",
   ReturnValidationErrors,
   async function (req: AuthorizationRequest, res: Response) {
-    let recoveryID = Number(req.params.recoveryID)
-    const user = req.currentUser?.display_name ?? ""
-    const userEmail = req.currentUser?.email
-    const roles = (req.currentUser?.roles ?? "").split(",")
+    const recoveryID = Number(req.params.recoveryID)
+    if (isNaN(recoveryID)) {
+      return res.status(400).json("Recovery ID is required")
+    }
 
-    if (recoveryID > 0) {
-      const adminQuery = recoveryRoleCheck(req)
-      const recovery = await db("Recovery")
-        .modify(adminQuery)
-        .where("recoveryID", recoveryID)
-        .first()
-      if (!recovery) return res.status(400).json("Recovery Not Found!")
-    } else {
-      if (!(roles.includes("Admin") || roles.includes("Agent"))) {
-        return res.status(401).send("You are not an authorized person!")
-      }
+    const adminQuery = recoveryRoleCheck(req)
+    const recovery = await db("Recovery").modify(adminQuery).where("recoveryID", recoveryID).first()
+    if (isNil(recovery)) {
+      return res.status(404).json("Recovery Not Found!")
     }
 
     try {
-      await db.transaction(async (trx) => {
-        const newRecoveryItems = req.body.recoveryItems
-        delete req.body.recoveryItems
+      const newRecoveryItems = Array.isArray(req.body.recoveryItems) ? req.body.recoveryItems : []
 
-        const action = req.body.action
-        delete req.body.action
+      const sanitizedRecoveryAttributes = sanitizeRecoveryAttributes(recovery)
+      const sanitizedUpdateAttributes = sanitizeRecoveryUpdateAttributes(req.body)
 
-        const newRecovery = req.body
-        delete newRecovery.recoveryAudits
-        delete newRecovery.docName
-        delete newRecovery.recoveryID
+      const updatedRecovery = await UpdateService.perform(
+        sanitizedRecoveryAttributes,
+        sanitizedUpdateAttributes,
+        req.currentUser,
+        newRecoveryItems
+      )
 
-        if (newRecovery.status != "Purchase Approved" && newRecovery.status != "Re-Draft")
-          newRecovery.modUser = userEmail
-
-        newRecovery.totalPrice = calculateItemTotal(newRecoveryItems)
-        await trx("Recovery").update(newRecovery).where("recoveryID", recoveryID)
-
-        if (newRecovery.requastorEmail) {
-          let requestorUser = await userService.getByEmail(newRecovery.requastorEmail)
-
-          if (!requestorUser) {
-            let reqEmployee = await trx("Employees")
-              .where({ email: newRecovery.requastorEmail })
-              .first()
-
-            if (reqEmployee) {
-              await trx("user").insert({
-                email: newRecovery.requastorEmail,
-                first_name: reqEmployee.first_name,
-                last_name: reqEmployee.last_name,
-                display_name: reqEmployee.full_name,
-                roles: "BranchUser",
-                department: reqEmployee.department,
-                auth0_subject: `SUB_MISSING_${newRecovery.requastorEmail}`,
-                status: "Active",
-                create_date: new Date(),
-              })
-            }
-          }
-        }
-
-        await trx("RecoveryAudit").insert({
-          date: new Date(),
-          recoveryID,
-          user,
-          action,
-        })
-
-        await trx("RecoveryItem").delete().where("recoveryID", recoveryID)
-        await trx("BackUpDocs").delete().where({ recoveryID: recoveryID }).whereNotNull("itemCatID")
-
-        for (const newRecoveryItem of newRecoveryItems) {
-          if (
-            newRecoveryItem.originalQuantity &&
-            Number(newRecoveryItem.originalQuantity) != Number(newRecoveryItem.quantity)
-          ) {
-            await trx("RecoveryAudit").insert({
-              date: new Date(),
-              recoveryID,
-              user,
-              action: `Changing Quantity of ${newRecoveryItem.category} from ${newRecoveryItem.originalQuantity} to ${newRecoveryItem.quantity}`,
-            })
-          }
-
-          await trx.raw(`INSERT INTO BackUpDocs (recoveryID, docName, document, itemCatName, itemCatID)
-            SELECT ${recoveryID}, docName, document, ItemCategory.category, ItemCategory.itemCatID
-            FROM ItemCategory INNER JOIN ItemCategoryDocs ON ItemCategory.itemCatID = ItemCategoryDocs.itemCatID
-            WHERE ItemCategory.itemCatID = ${newRecoveryItem.itemCatID}`)
-
-          delete newRecoveryItem.state
-          delete newRecoveryItem.tmpId
-          delete newRecoveryItem.revisedCost
-          delete newRecoveryItem.originalQuantity
-          delete newRecoveryItem.category
-
-          newRecoveryItem.recoveryID = recoveryID
-
-          if (newRecoveryItem.itemID > 0)
-            await insertIntoTable("RecoveryItem", newRecoveryItem, trx)
-          else await trx("RecoveryItem").insert(newRecoveryItem)
-        }
-
-        await sendEmail(newRecovery, user, recoveryID, trx)
-      })
-
-      res.status(200).json({ recoveryID: recoveryID })
+      res.status(200).json({ recovery: updatedRecovery })
     } catch (error: any) {
       console.log(error)
       res.status(500).json("Insert failed")

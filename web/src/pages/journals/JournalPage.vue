@@ -23,19 +23,24 @@
       :default-tab="0"
     >
       <v-tabs-window-item value="0">
-        <JournalViewForm
-          class="mt-5"
-          :journal-id="journalIdNumber"
-        />
-
-
+        <div v-if="journal.status === JournalStatuses.DRAFT">
+          <JournalEditForm
+            class="mt-5"
+            :journal-id="journalIdNumber"
+          />
+        </div>
+        <div v-else>
+          <JournalViewForm
+            class="mt-5"
+            :journal-id="journalIdNumber"
+          />
+        </div>
 
         <v-btn>Generate Journal</v-btn>
-        this will create the XLS and combine all backup into a single PDF
-        * put the Recoveries Ref# into Ref3
-        <br>
-      The two files are downloaded
-
+        this will create the XLS and combine all backup into a single PDF * put the Recoveries Ref#
+        into Ref3
+        <br />
+        The two files are downloaded
       </v-tabs-window-item>
 
       <v-tabs-window-item value="1">
@@ -64,9 +69,10 @@ import { computed } from "vue"
 import { formatDateTime } from "@/utils/format-date"
 
 import useBreadcrumbs from "@/use/use-breadcrumbs"
-import useJournal from "@/use/use-journal"
+import useJournal, { JournalStatuses } from "@/use/use-journal"
 
 import TabCard from "@/components/common/TabCard.vue"
+import JournalEditForm from "@/components/journals/JournalEditForm.vue"
 import JournalViewForm from "@/components/journals/JournalViewForm.vue"
 
 const journalId = defineProps<{ journalId: string }>()

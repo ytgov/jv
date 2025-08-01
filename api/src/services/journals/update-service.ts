@@ -19,15 +19,49 @@ export class UpdateService extends BaseService {
 
     const currentUserDisplayName = this.currentUser.display_name
 
+    const {
+      submissionDate,
+      jvNum,
+      period,
+      jvAmount,
+      status,
+      jvDate,
+      description,
+      orgDepartment,
+      odCompletedBy,
+      recvDepartment,
+      rdCompletedBy,
+      explanation,
+    } = this.attributes
+
     if (isNil(this.attributes.journalID)) {
       throw new Error("Journal ID is required")
     }
 
+    const safeAttributes = {
+      submissionDate,
+      jvNum,
+      period,
+      jvAmount,
+      status,
+      jvDate,
+      description,
+      orgDepartment,
+      odCompletedBy,
+      recvDepartment,
+      rdCompletedBy,
+      explanation,
+    }
+
     return db.transaction(async (trx) => {
-      const updatedJournal = await trx("JournalVoucher")
-        .update(this.attributes)
+      const [updatedJournal] = await trx("JournalVoucher")
+        .where("journalID", this.attributes.journalID)
+        .update(safeAttributes)
         .returning("*")
-        .first()
+
+      if (isNil(updatedJournal)) {
+        throw new Error("Journal update failed or not found")
+      }
 
       if (this.recoveryIDs) {
         // Remove association of recoveries that are not recoveryIDs

@@ -145,41 +145,10 @@
           v-for="(recovery, index) of recoveries"
           :key="index"
         >
-          <v-list-item>
-            <v-row no-gutters>
-              <v-col
-                cols="7"
-                class="pt-1"
-              >
-                <v-btn
-                  icon="mdi-delete"
-                  size="x-small"
-                  color="warning"
-                  class="mr-2"
-                  :loading="isLoading"
-                  :disabled="isLoading"
-                  @click="removeRecovery(recovery.recoveryID)"
-                />
-                {{ recovery.refNum }} / {{ recovery.supplier }} /
-                {{ recovery.recoveryItems.map((r) => r.category).join(", ") }}
-              </v-col>
-              <v-col cols="3">
-                <CodingSelect
-                  v-model="recovery.glCode"
-                  label=""
-                  hide-details
-                  density="compact"
-                  :where="{ department: recovery.department, ictBranch: recovery.supplier }"
-                />
-              </v-col>
-              <v-col
-                cols="2"
-                class="text-right pt-3"
-              >
-                {{ formatCurrency(recovery.totalPrice) }}
-              </v-col>
-            </v-row>
-          </v-list-item>
+          <RecoveryListItem
+            :recovery="recovery"
+            @click:remove="removeRecovery(recovery.recoveryID)"
+          />
         </div>
         <v-list-item style="background-color: #ddd">
           <v-row no-gutters>
@@ -220,7 +189,7 @@ import useJournal from "@/use/use-journal"
 import useRecoveries, { type RecoveryWhereOptions } from "@/use/use-recoveries"
 
 import RecoveriesSearchableAutocomplete from "@/components/recoveries/RecoveriesSearchableAutocomplete.vue"
-import CodingSelect from "@/components/coding/CodingSelect.vue"
+import RecoveryListItem from "@/components/recoveries/RecoveryListItem.vue"
 
 const emit = defineEmits<{ saved: [journalId: number] }>()
 

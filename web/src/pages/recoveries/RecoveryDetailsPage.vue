@@ -374,35 +374,33 @@
 import { computed, ref, watch } from "vue"
 import { isNil, isNumber } from "lodash"
 
-//import EmployeeSelect from "@/components/employees/EmployeeSelect.vue"
-import DepartmentSelect from "@/components/departments/DepartmentSelect.vue"
-import ItemSelect from "@/components/items/ItemSelect.vue"
-import CurrencyField from "@/components/common/CurrencyField.vue"
-import RecoveryDocumentList from "@/components/documents/RecoveryDocumentList.vue"
-import TabCard from "@/components/common/TabCard.vue"
-import RecoveryActionMenu from "@/components/RecoveryActionMenu.vue"
+import formatCurrency from "@/utils/format-currency"
+import { formatDateTime } from "@/utils/format-date"
+
+import { RecoveryItem, RecoveryStatuses } from "@/api/recoveries-api"
 
 import useBreadcrumbs from "@/use/use-breadcrumbs"
+import useSnack from "@/use/use-snack"
+import useCurrentUser from "@/use/use-current-user"
 import useRecovery from "@/use/use-recovery"
 import useEmployees from "@/use/use-employees"
 import useItemCategories from "@/use/use-item-categories"
-import useSnack from "@/use/use-snack"
-import { RecoveryItem } from "@/api/recoveries-api"
-import formatCurrency from "@/utils/format-currency"
-import { formatDateTime } from "@/utils/format-date"
-import RecoveryItemListStatic from "@/components/recoveries/RecoveryItemListStatic.vue"
-import EmployeeSelect from "@/components/employees/EmployeeSelect.vue"
-import useCurrentUser from "@/use/use-current-user"
-import FiscalYearSelect from "@/components/common/FiscalYearSelect.vue"
-import GroupSelect from "@/components/groups/GroupSelect.vue"
 
-const snack = useSnack()
-const { currentUser, isAgent, isSystemAdmin } = useCurrentUser()
+import TabCard from "@/components/common/TabCard.vue"
+import CurrencyField from "@/components/common/CurrencyField.vue"
+import FiscalYearSelect from "@/components/common/FiscalYearSelect.vue"
+import DepartmentSelect from "@/components/departments/DepartmentSelect.vue"
+import ItemSelect from "@/components/items/ItemSelect.vue"
+import RecoveryDocumentList from "@/components/documents/RecoveryDocumentList.vue"
+import EmployeeSelect from "@/components/employees/EmployeeSelect.vue"
+import RecoveryItemListStatic from "@/components/recoveries/RecoveryItemListStatic.vue"
+import GroupSelect from "@/components/groups/GroupSelect.vue"
+import RecoveryActionMenu from "@/components/RecoveryActionMenu.vue"
 
 const props = defineProps<{ id: string }>()
-const recoverId = computed(() => {
-  return parseInt(props.id)
-})
+const recoverId = computed(() => parseInt(props.id))
+
+const { currentUser, isAgent, isSystemAdmin } = useCurrentUser()
 
 const { recovery, save, fetch } = useRecovery(recoverId)
 const { employees } = useEmployees()
@@ -416,8 +414,6 @@ watch(
     }
   }
 )
-
-useBreadcrumbs("Recovery", [{ title: "Recovery", to: { name: "RecoveryAddPage" }, disabled: true }])
 
 const requestor = ref<string | null>(null)
 const actionMenu = ref<InstanceType<typeof RecoveryActionMenu> | null>(null)
@@ -519,6 +515,8 @@ function itemInfoChanged(item: RecoveryItem | Partial<RecoveryItem>) {
   else item.totalPrice = 0
 }
 
+const snack = useSnack()
+
 async function saveClick() {
   if (!recovery.value) return
   recovery.value.action = getActionType(recovery.value.status ?? "")
@@ -562,13 +560,19 @@ async function toggleOrderFilled(item: RecoveryItem | Partial<RecoveryItem>) {
 
     console.log("item.orderFilled", allFulfilled, allUnFulfilled)
 
-    if (allFulfilled) recovery.value.status = "Fulfilled"
-    else if (allUnFulfilled) recovery.value.status = "Purchase Approved"
-    else recovery.value.status = "Partially Fulfilled"
+    if (allFulfilled) {
+      recovery.value.status = RecoveryStatuses.FULFILLED
+    } else if (allUnFulfilled) {
+      recovery.value.status = RecoveryStatuses.PURCHASE_APPROVED
+    } else {
+      recovery.value.status = RecoveryStatuses.PARTIALLY_FULFILLED
+    }
 
     await save()
     actionMenu.value?.fetch()
     snack.success("Item Saved")
   }
 }
+
+useBreadcrumbs("Recovery", [{ title: "Recovery", to: { name: "RecoveryAddPage" }, disabled: true }])
 </script>

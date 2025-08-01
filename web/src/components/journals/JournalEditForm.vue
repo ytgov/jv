@@ -91,13 +91,37 @@
     <v-btn
       class="my-5"
       text="Save Journal"
+      :loading="isLoading"
+      :disabled="isLoading"
       @click="validateAndSave"
     />
 
     <v-divider class="mb-5" />
 
-    <h3 class="mb-3">Recoveries</h3>
+    <h3 class="mb-3">Add Recoveries</h3>
 
+    <RecoveriesSearchableAutocomplete
+      v-model="recoveryIds"
+      :disabled="isNil(journal.department) || isNil(journal.fiscalYear)"
+      :where="{
+        department: journal.department,
+        fiscal_year: journal.fiscalYear,
+        journalID: null,
+        status: 'Complete',
+      }"
+      label="Recovery (Branch / Reference (Items) = Value)"
+      @items-total="journal.jvAmount = $event"
+    />
+
+    <v-btn
+      class="mb-5"
+      text="Add Recoveries"
+      :loading="isLoading"
+      :disabled="isLoading"
+      @click="addRecoveries"
+    />
+
+    <h3 class="mb-3">Recoveries</h3>
     <div v-if="totalRecoveries > 0">
       <v-list>
         <v-list-item>
@@ -132,6 +156,9 @@
                   size="x-small"
                   color="warning"
                   class="mr-2"
+                  :loading="isLoading"
+                  :disabled="isLoading"
+                  @click="removeRecovery(recovery.recoveryID)"
                 />
                 {{ recovery.refNum }} / {{ recovery.supplier }} /
                 {{ recovery.recoveryItems.map((r) => r.category).join(", ") }}
@@ -186,10 +213,13 @@ import { VForm } from "vuetify/components"
 import formatCurrency from "@/utils/format-currency"
 import formatDate from "@/utils/format-date"
 
+import recoveriesApi from "@/api/recoveries-api"
+
 import useSnack from "@/use/use-snack"
 import useJournal from "@/use/use-journal"
 import useRecoveries, { type RecoveryWhereOptions } from "@/use/use-recoveries"
 
+import RecoveriesSearchableAutocomplete from "@/components/recoveries/RecoveriesSearchableAutocomplete.vue"
 import CodingSelect from "@/components/coding/CodingSelect.vue"
 
 const emit = defineEmits<{ saved: [journalId: number] }>()
@@ -198,6 +228,8 @@ const props = defineProps<{ journalId: number }>()
 const { journalId } = toRefs(props)
 
 const { journal, save } = useJournal(journalId)
+
+const recoveryIds = ref<number[]>([])
 
 const recoveriesWhereOptions = computed<RecoveryWhereOptions>(() => {
   if (isNil(journal.value)) return {}
@@ -211,7 +243,11 @@ const recoveriesQueryOptions = computed(() => ({
   where: recoveriesWhereOptions.value,
 }))
 
-const { recoveries, totalCount: totalRecoveries } = useRecoveries(recoveriesQueryOptions, {
+const {
+  recoveries,
+  totalCount: totalRecoveries,
+  refresh: refreshRecoveries,
+} = useRecoveries(recoveriesQueryOptions, {
   skipWatchIf: () => isNil(journal.value),
 })
 
@@ -226,6 +262,13 @@ const itemTotalCost = computed(() => {
   return 0
 })
 
+const isLoading = ref(false)
+
+function refresh() {
+  refreshRecoveries()
+  recoveryIds.value = []
+}
+
 const formRef = ref<InstanceType<typeof VForm> | null>(null)
 
 const snack = useSnack()
@@ -237,6 +280,8 @@ async function validateAndSave() {
   if (!valid) return
 
   try {
+    isLoading.value = true
+
     if (isNil(journal.value)) return
     await save()
     snack.success("Journal saved!")
@@ -244,6 +289,52 @@ async function validateAndSave() {
   } catch (error) {
     console.error(error)
     snack.error("Failed to save journal")
+  } finally {
+    isLoading.value = false
+  }
+}
+
+async function addRecoveries() {
+  if (isNil(formRef.value)) return
+
+  const { valid } = await formRef.value.validate()
+  if (!valid) return
+
+  try {
+    isLoading.value = true
+
+    if (isNil(journal.value)) return
+
+    for (const recoveryId of recoveryIds.value) {
+      await recoveriesApi.update(recoveryId, { journalID: journal.value.journalID })
+    }
+
+    await refresh()
+
+    snack.success("Recoveries added!")
+    emit("saved", journal.value.journalID)
+  } catch (error) {
+    console.error(error)
+    snack.error("Failed to add recoveries")
+  } finally {
+    isLoading.value = false
+  }
+}
+
+async function removeRecovery(recoveryId: number) {
+  try {
+    isLoading.value = true
+
+    if (isNil(journal.value)) return
+
+    await recoveriesApi.update(recoveryId, { journalID: null })
+    await refresh()
+    snack.success("Recovery removed!")
+  } catch (error) {
+    console.error(error)
+    snack.error("Failed to remove recovery")
+  } finally {
+    isLoading.value = false
   }
 }
 </script>

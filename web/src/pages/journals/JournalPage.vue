@@ -36,11 +36,7 @@
           />
         </div>
 
-        <v-btn>Generate Journal</v-btn>
-        this will create the XLS and combine all backup into a single PDF * put the Recoveries Ref#
-        into Ref3
-        <br />
-        The two files are downloaded
+        <v-btn @click="generateJournal">Generate Journal</v-btn>
       </v-tabs-window-item>
 
       <v-tabs-window-item value="1">
@@ -69,7 +65,9 @@
         >
           <h3 class="font-medium mb-2">{{ makeRecoveryTitle(recovery) }}</h3>
 
-          <v-list>
+          <div v-if="recovery.docName.length == 0">None found</div>
+
+          <v-list v-else>
             <v-list-item
               v-for="(docName, docNameIndex) in recovery.docName"
               :key="docNameIndex"
@@ -103,6 +101,20 @@
   </div>
 </template>
 
+<script lang="ts">
+// Legacy code for generate pdf
+export function printPdf(html: string, title: string, footer: string, header: string): string {
+  return `
+    <div class="pdf-wrapper">
+      <header>${header}</header>
+      <h1>${title}</h1>
+      ${html}
+      <footer>${footer}</footer>
+    </div>
+  `
+}
+</script>
+
 <script lang="ts" setup>
 import { isNil } from "lodash"
 import { computed, ref } from "vue"
@@ -110,8 +122,11 @@ import { computed, ref } from "vue"
 import { formatDateTime } from "@/utils/format-date"
 
 import recoveriesApi, { Recovery, RecoveryDocument } from "@/api/recoveries-api"
+import pdfApi from "@/api/pdf-api"
+import itemCategoriesApi from "@/api/item-categories-api"
 
 import useBreadcrumbs from "@/use/use-breadcrumbs"
+import useSnack from "@/use/use-snack"
 import useJournal, { JournalStatuses } from "@/use/use-journal"
 
 import TabCard from "@/components/common/TabCard.vue"
@@ -168,6 +183,106 @@ async function deleteDocument(recovery: Recovery, recoveryDocument: RecoveryDocu
     console.error(error)
   } finally {
     isDeletingDocument.value = false
+  }
+}
+
+async function downloadExcelFile() {
+  const blob = await pdfApi.getExcel(journalIdNumber.value)
+
+  const url = window.URL.createObjectURL(blob)
+  const link = document.createElement("a")
+  link.href = url
+  link.download = `journal_${journalIdNumber.value}.xlsx`
+  link.click()
+  window.URL.revokeObjectURL(url)
+}
+
+async function downloadPdfFile() {
+  if (isNil(journal.value)) return
+
+  /*
+  Legacy code to generate the PDF
+  */
+  const data = []
+  const currentTime = new Date().toLocaleString()
+  const jvNum = journal.value.jvNum
+
+  //JOURNAL
+  const jvEl = document.getElementById("journal-print")
+  const footerText = "Journal Voucher " + jvNum + "; Printed on " + currentTime
+  const jvHtml = printPdf(jvEl?.innerHTML || "", "Journal Voucher", footerText, "")
+  const journalDocNames = []
+  for (const doc of journal.value.docName) {
+    journalDocNames.push({
+      docName: doc.docName,
+      id: journal.value.journalID,
+      itemCategory: false,
+      journal: true,
+    })
+  }
+  data.push({ html: jvHtml, backupDocs: journalDocNames })
+
+  //RECOVERIES
+  const { itemCategories } = await itemCategoriesApi.list()
+
+  journal.value.recoveries.forEach((recovery, inx) => {
+    const recNum = recovery.refNum
+    const recEl = document.getElementById(`recovery-print-${inx}`)
+    const footerText = "Recovery " + recNum + "; Printed on " + currentTime
+    const recHtml = printPdf(recEl?.innerHTML || "", "Recovery", footerText, "")
+    const docNames = []
+    for (const doc of recovery.docName) {
+      docNames.push({
+        docName: doc.docName,
+        id: recovery.recoveryID,
+        itemCategory: false,
+        journal: false,
+      })
+    }
+
+    const recoveryItems = recovery.recoveryItems
+    recoveryItems.forEach((item) => {
+      const index = itemCategories.findIndex((category) => category.itemCatID == item.itemCatID)
+      if (index > -1) {
+        const docs = itemCategories[index].docName
+        for (const doc of docs) {
+          console.log(doc)
+          docNames.push({
+            docName: doc.docName,
+            id: item.itemCatID,
+            itemCategory: true,
+            journal: false,
+          })
+        }
+      }
+    })
+
+    data.push({ html: recHtml, backupDocs: docNames })
+  })
+
+  const blob = await pdfApi.merge(journalIdNumber.value, data)
+
+  const url = window.URL.createObjectURL(blob)
+  const link = document.createElement("a")
+  link.href = url
+  link.download = `journal_${journalIdNumber.value}.pdf`
+  link.click()
+  window.URL.revokeObjectURL(url)
+}
+
+const snack = useSnack()
+
+async function generateJournal() {
+  try {
+    console.log("Generating journal...")
+
+    await downloadExcelFile()
+    await downloadPdfFile()
+
+    snack.success("Journal generated successfully")
+  } catch (error) {
+    console.error(error)
+    snack.error("Failed to generate journal")
   }
 }
 

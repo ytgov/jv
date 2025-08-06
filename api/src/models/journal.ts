@@ -1,6 +1,6 @@
 export enum JournalStatuses {
-  DRAFT = "Draft",
-  COMPLETE = "Complete",
+  DRAFT = "JV Draft",
+  ROUTED = "Routed",
 }
 
 export type Journal = {

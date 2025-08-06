@@ -19,7 +19,7 @@ export type Coding = {
 
 export type CodingWhereOptions = {
   department?: string
-  ictBranch?: string
+  ictBranch?: string | null
 }
 
 export type CodingFiltersOptions = {

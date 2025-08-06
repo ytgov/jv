@@ -1,9 +1,9 @@
 import { type Ref, reactive, toRefs, unref, watch } from "vue"
 import { isNil } from "lodash"
 
-import journalsApi, { type Journal } from "@/api/journals-api"
+import journalsApi, { type Journal, JournalStatuses } from "@/api/journals-api"
 
-export { type Journal }
+export { type Journal, JournalStatuses }
 
 export function useJournal(id: Ref<number | null | undefined>) {
   const state = reactive<{

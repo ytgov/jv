@@ -1,8 +1,11 @@
 export enum RecoveryStatuses {
-  draft = "Draft",
-  purchaseApproved = "Purchase Approved",
-  reDraft = "Re-Draft",
-  routedForApproval = "Routed For Approval",
+  DRAFT = "Draft",
+  RE_DRAFT = "Re-Draft",
+  FULFILLED = "Fulfilled",
+  PARTIALLY_FULFILLED = "Partially Fulfilled",
+  PURCHASE_APPROVED = "Purchase Approved",
+  ROUTED_FOR_APPROVAL = "Routed For Approval",
+  COMPLETE = "Complete",
 }
 
 export type Recovery = {
@@ -33,4 +36,112 @@ export type Recovery = {
   supplier: string | null
 }
 
-export const RECOVERY_WHERE_OPTIONS = Object.freeze(["journalID", "department", "fiscal_year", "status"])
+export type RecoveryUpdateAttributes = Partial<
+  Pick<
+    Recovery,
+    | "journalID"
+    | "firstName"
+    | "lastName"
+    | "department"
+    | "branch"
+    | "refNum"
+    | "createDate"
+    | "createUser"
+    | "modUser"
+    | "status"
+    | "submissionDate"
+    | "completeDate"
+    | "completeUser"
+    | "totalPrice"
+    | "mailcode"
+    | "employeeBranch"
+    | "description"
+    | "declineRequest"
+    | "reasonForDecline"
+    | "employeeUnit"
+    | "requastorEmail"
+    | "glCode"
+    | "fiscal_year"
+    | "supplier"
+  >
+>
+
+export function sanitizeRecoveryAttributes(body: any): Recovery {
+  const allowedFields: (keyof Recovery)[] = [
+    "recoveryID",
+    "journalID",
+    "firstName",
+    "lastName",
+    "department",
+    "branch",
+    "refNum",
+    "createDate",
+    "createUser",
+    "modUser",
+    "status",
+    "submissionDate",
+    "completeDate",
+    "completeUser",
+    "totalPrice",
+    "mailcode",
+    "employeeBranch",
+    "description",
+    "declineRequest",
+    "reasonForDecline",
+    "employeeUnit",
+    "requastorEmail",
+    "glCode",
+    "fiscal_year",
+    "supplier",
+  ]
+
+  const sanitized: Partial<Recovery> = {}
+  for (const key of allowedFields) {
+    if (key in body) sanitized[key] = body[key]
+  }
+
+  return sanitized as Recovery
+}
+
+export function sanitizeRecoveryUpdateAttributes(body: any): RecoveryUpdateAttributes {
+  const allowedFields: (keyof RecoveryUpdateAttributes)[] = [
+    "journalID",
+    "firstName",
+    "lastName",
+    "department",
+    "branch",
+    "refNum",
+    "createDate",
+    "createUser",
+    "modUser",
+    "status",
+    "submissionDate",
+    "completeDate",
+    "completeUser",
+    "totalPrice",
+    "mailcode",
+    "employeeBranch",
+    "description",
+    "declineRequest",
+    "reasonForDecline",
+    "employeeUnit",
+    "requastorEmail",
+    "glCode",
+    "fiscal_year",
+    "supplier",
+  ]
+
+  const sanitized: RecoveryUpdateAttributes = {}
+  for (const key of allowedFields) {
+    if (key in body) sanitized[key] = body[key]
+  }
+
+  return sanitized
+}
+
+export const RECOVERY_WHERE_OPTIONS = Object.freeze([
+  "journalID",
+  "department",
+  "fiscal_year",
+  "status",
+])

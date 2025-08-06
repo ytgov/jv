@@ -1,8 +1,8 @@
 services:
-  db: 
+  db:
     image: mcr.microsoft.com/mssql/server:2019-latest
     restart: unless-stopped
-    env_file: 
+    env_file:
       - db/sqlserver.env
       - db/sapassword.env
     volumes:
@@ -11,7 +11,12 @@ services:
       - sqllog:/var/opt/sqlserver/log
       - sqlbackup:/var/opt/sqlserver/backup
     ports:
-     - "1433:1433"
+      - "1433:1433"
+
+  pdf-merger:
+    image: hassananv/weasyprint:20230521-w52.3-fillable-img
+    ports:
+      - "5001:5001"
 
 volumes:
   sqlsystem:

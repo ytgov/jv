@@ -60,6 +60,25 @@ journalsRouter.get(
   }
 )
 
+journalsRouter.post(
+  "/",
+  RequiresRoleAdminOrIctFinance,
+  ReturnValidationErrors,
+  async function (req: AuthorizationRequest, res: Response) {
+    try {
+      const recoveryIDs = req.body.recoveryIDs
+      delete req.body.recoveryIDs
+
+      const newJournal = await CreateService.perform(req.body, req.currentUser, recoveryIDs)
+
+      res.status(201).json({ journal: newJournal })
+    } catch (error: any) {
+      console.log(error)
+      res.status(500).json("Insert failed")
+    }
+  }
+)
+
 journalsRouter.get(
   "/:journalID",
   RequiresRoleAdminOrFinance,
@@ -80,7 +99,7 @@ journalsRouter.get(
         .where("recoveryID", recovery.recoveryID)
       recovery.recoveryAudits = recoveryAudits
       const recoveryDocument = await db("BackUpDocs")
-        .select("docName")
+        .select("documentID", "docName")
         .where("recoveryID", recovery.recoveryID)
       recovery.docName = recoveryDocument?.length > 0 ? recoveryDocument : ""
     }
@@ -93,25 +112,6 @@ journalsRouter.get(
     journal.journalAudits = journalAudits
 
     res.status(200).json({ journal })
-  }
-)
-
-journalsRouter.post(
-  "/",
-  RequiresRoleAdminOrIctFinance,
-  ReturnValidationErrors,
-  async function (req: AuthorizationRequest, res: Response) {
-    try {
-      const recoveryIDs = req.body.recoveryIDs
-      delete req.body.recoveryIDs
-
-      const newJournal = await CreateService.perform(req.body, req.currentUser, recoveryIDs)
-
-      res.status(201).json({ journal: newJournal })
-    } catch (error: any) {
-      console.log(error)
-      res.status(500).json("Insert failed")
-    }
   }
 )
 

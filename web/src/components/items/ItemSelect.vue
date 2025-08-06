@@ -14,24 +14,21 @@
 </template>
 
 <script setup lang="ts">
+import { isNil } from "lodash"
 import { computed } from "vue"
 
 import useItemCategories from "@/use/use-item-categories"
 
-const props = defineProps({
-  supplier: {
-    type: String,
-    default: null,
-  },
-})
+const props = defineProps<{ supplier?: string | null }>()
 
 const { itemCategories } = useItemCategories()
 
 const items = computed(() => {
   let filteredItems = itemCategories.value
 
-  if (props.supplier && props.supplier.length > 0) {
-    filteredItems = filteredItems.filter((item) => item.branch.startsWith(props.supplier))
+  if (!isNil(props.supplier)) {
+    const supplierBranch = props.supplier
+    filteredItems = filteredItems.filter((item) => item.branch.startsWith(supplierBranch))
   }
 
   return filteredItems.map((e) => ({

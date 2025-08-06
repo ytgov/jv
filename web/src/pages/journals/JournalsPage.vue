@@ -48,16 +48,16 @@
                 style="width: 100%; height: 34px"
               >
                 <v-btn
-                  value="Draft"
+                  value="JV Draft"
                   size="small"
                   style="width: 50%"
-                  text="Draft"
+                  text="JV Draft"
                 />
                 <v-btn
-                  value="Complete"
+                  value="Routed"
                   size="small"
                   style="width: 50%"
-                  text="Complete"
+                  text="Routed"
                 />
               </v-btn-toggle>
 

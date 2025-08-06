@@ -3,7 +3,10 @@
     v-if="isNil(journal)"
     type="card"
   />
-  <v-form v-else>
+  <v-form
+    v-else
+    ref="formRef"
+  >
     <v-row>
       <v-col cols="8">
         <v-text-field
@@ -11,6 +14,7 @@
           hide-details
           label="Client department"
           readonly
+          append-icon="mdi-lock"
         />
       </v-col>
       <v-col cols="4">
@@ -19,6 +23,7 @@
           hide-details
           label="Fiscal year"
           readonly
+          append-icon="mdi-lock"
         />
       </v-col>
       <v-col cols="4">
@@ -26,7 +31,6 @@
           v-model="journal.jvNum"
           hide-details
           label="Journal number"
-          readonly
         />
       </v-col>
       <v-col cols="4">
@@ -34,7 +38,6 @@
           :model-value="formatDate(journal.jvDate)"
           hide-details
           label="Journal date"
-          readonly
         />
       </v-col>
       <v-col cols="4">
@@ -42,7 +45,6 @@
           v-model="journal.period"
           hide-details
           label="Fiscal period"
-          readonly
         />
       </v-col>
       <v-col cols="12">
@@ -50,7 +52,6 @@
           v-model="journal.description"
           hide-details
           label="Description"
-          readonly
         />
       </v-col>
       <v-col cols="4">
@@ -58,7 +59,6 @@
           v-model="journal.orgDepartment"
           hide-details
           label="Originating department"
-          readonly
         />
       </v-col>
       <v-col cols="8">
@@ -66,7 +66,6 @@
           v-model="journal.odCompletedBy"
           hide-details
           label="Completed by"
-          readonly
         />
       </v-col>
       <!-- <v-col cols="4">
@@ -85,22 +84,51 @@
           v-model="journal.explanation"
           hide-details
           label="Journal explanation"
-          readonly
         />
       </v-col>
     </v-row>
 
+    <v-btn
+      class="my-5"
+      text="Save Journal"
+      :loading="isLoading"
+      :disabled="isLoading"
+      @click="validateAndSave"
+    />
+
     <v-divider class="mb-5" />
 
-    <h3 class="mb-3">Recoveries</h3>
+    <h3 class="mb-3">Add Recoveries</h3>
 
+    <RecoveriesSearchableAutocomplete
+      v-model="recoveryIds"
+      :disabled="isNil(journal.department) || isNil(journal.fiscalYear)"
+      :where="{
+        department: journal.department,
+        fiscal_year: journal.fiscalYear,
+        journalID: null,
+        status: 'Complete',
+      }"
+      label="Recovery (Branch / Reference (Items) = Value)"
+      @items-total="journal.jvAmount = $event"
+    />
+
+    <v-btn
+      class="mb-5"
+      text="Add Recoveries"
+      :loading="isLoading"
+      :disabled="isLoading"
+      @click="addRecoveries"
+    />
+
+    <h3 class="mb-3">Recoveries</h3>
     <div v-if="totalRecoveries > 0">
       <v-list>
         <v-list-item>
           <v-row no-gutters>
             <v-col
               cols="7"
-              class="text-no-wrap"
+              class="pl-11 text-no-wrap"
             >
               Reference / Branch / Items
             </v-col>
@@ -117,30 +145,10 @@
           v-for="(recovery, index) of recoveries"
           :key="index"
         >
-          <v-list-item>
-            <v-row no-gutters>
-              <v-col
-                cols="7"
-                class="pt-1"
-              >
-                {{ recovery.refNum }} / {{ recovery.supplier }} /
-                {{ recovery.recoveryItems.map((r) => r.category).join(", ") }}
-              </v-col>
-              <v-col cols="3">
-                <v-text-field
-                  v-model="recovery.glCode"
-                  hide-details
-                  readonly
-                />
-              </v-col>
-              <v-col
-                cols="2"
-                class="text-right pt-3"
-              >
-                {{ formatCurrency(recovery.totalPrice) }}
-              </v-col>
-            </v-row>
-          </v-list-item>
+          <RecoveryListItem
+            :recovery="recovery"
+            @click:remove="removeRecovery(recovery.recoveryID)"
+          />
         </div>
         <v-list-item style="background-color: #ddd">
           <v-row no-gutters>
@@ -168,18 +176,29 @@
 
 <script lang="ts" setup>
 import { isNil, isNumber } from "lodash"
-import { computed, toRefs } from "vue"
+import { ref, computed, toRefs } from "vue"
+import { VForm } from "vuetify/components"
 
 import formatCurrency from "@/utils/format-currency"
+import formatDate from "@/utils/format-date"
 
+import recoveriesApi from "@/api/recoveries-api"
+
+import useSnack from "@/use/use-snack"
 import useJournal from "@/use/use-journal"
 import useRecoveries, { type RecoveryWhereOptions } from "@/use/use-recoveries"
-import formatDate from "@/utils/format-date"
+
+import RecoveriesSearchableAutocomplete from "@/components/recoveries/RecoveriesSearchableAutocomplete.vue"
+import RecoveryListItem from "@/components/recoveries/RecoveryListItem.vue"
+
+const emit = defineEmits<{ saved: [journalId: number] }>()
 
 const props = defineProps<{ journalId: number }>()
 const { journalId } = toRefs(props)
 
-const { journal } = useJournal(journalId)
+const { journal, save } = useJournal(journalId)
+
+const recoveryIds = ref<number[]>([])
 
 const recoveriesWhereOptions = computed<RecoveryWhereOptions>(() => {
   if (isNil(journal.value)) return {}
@@ -193,7 +212,11 @@ const recoveriesQueryOptions = computed(() => ({
   where: recoveriesWhereOptions.value,
 }))
 
-const { recoveries, totalCount: totalRecoveries } = useRecoveries(recoveriesQueryOptions, {
+const {
+  recoveries,
+  totalCount: totalRecoveries,
+  refresh: refreshRecoveries,
+} = useRecoveries(recoveriesQueryOptions, {
   skipWatchIf: () => isNil(journal.value),
 })
 
@@ -207,4 +230,80 @@ const itemTotalCost = computed(() => {
 
   return 0
 })
+
+const isLoading = ref(false)
+
+function refresh() {
+  refreshRecoveries()
+  recoveryIds.value = []
+}
+
+const formRef = ref<InstanceType<typeof VForm> | null>(null)
+
+const snack = useSnack()
+
+async function validateAndSave() {
+  if (isNil(formRef.value)) return
+
+  const { valid } = await formRef.value.validate()
+  if (!valid) return
+
+  try {
+    isLoading.value = true
+
+    if (isNil(journal.value)) return
+    await save()
+    snack.success("Journal saved!")
+    emit("saved", journal.value.journalID)
+  } catch (error) {
+    console.error(error)
+    snack.error("Failed to save journal")
+  } finally {
+    isLoading.value = false
+  }
+}
+
+async function addRecoveries() {
+  if (isNil(formRef.value)) return
+
+  const { valid } = await formRef.value.validate()
+  if (!valid) return
+
+  try {
+    isLoading.value = true
+
+    if (isNil(journal.value)) return
+
+    for (const recoveryId of recoveryIds.value) {
+      await recoveriesApi.update(recoveryId, { journalID: journal.value.journalID })
+    }
+
+    await refresh()
+
+    snack.success("Recoveries added!")
+    emit("saved", journal.value.journalID)
+  } catch (error) {
+    console.error(error)
+    snack.error("Failed to add recoveries")
+  } finally {
+    isLoading.value = false
+  }
+}
+
+async function removeRecovery(recoveryId: number) {
+  try {
+    isLoading.value = true
+
+    if (isNil(journal.value)) return
+
+    await recoveriesApi.update(recoveryId, { journalID: null })
+    await refresh()
+    snack.success("Recovery removed!")
+  } catch (error) {
+    console.error(error)
+    snack.error("Failed to remove recovery")
+  } finally {
+    isLoading.value = false
+  }
+}
 </script>

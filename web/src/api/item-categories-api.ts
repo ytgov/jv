@@ -41,6 +41,7 @@ export type ItemCategoryWhereOptions = {
   supplier?: string
 }
 
+// eslint-disable-next-line @typescript-eslint/ban-types
 export type ItemCategoryFiltersOptions = {}
 
 export const itemCategoriesApi = {

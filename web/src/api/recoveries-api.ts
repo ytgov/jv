@@ -2,6 +2,15 @@ import http from "@/api/http-client"
 import { type Policy } from "@/api/base-api"
 
 /** Keep in sync with api/src/models/recovery.ts */
+export enum RecoveryStatuses {
+  DRAFT = "Draft",
+  RE_DRAFT = "Re-Draft",
+  FULFILLED = "Fulfilled",
+  PARTIALLY_FULFILLED = "Partially Fulfilled",
+  PURCHASE_APPROVED = "Purchase Approved",
+  ROUTED_FOR_APPROVAL = "Routed For Approval",
+  COMPLETE = "Complete",
+}
 
 export type RecoveryItem = {
   approvalCost?: number | null
@@ -35,31 +44,31 @@ export type RecoverAudit = {
 }
 
 export type Recovery = {
-  recoveryID: number
-  journalID: number
+  recoveryID: number // primary key
+  journalID: number | null
   firstName: string
   lastName: string
-  supplier: string
   department: string
-  branch: string
-  refNum: string
+  branch: string | null
+  refNum: string | null
   createDate: string
   createUser: string
-  modUser: string
-  status: string
-  submissionDate: string
-  completeDate: string
-  completeUser: string
-  totalPrice: number
-  mailcode: string
-  employeeBranch: string
-  description: string
-  declineRequest: boolean
-  reasonForDecline: string
-  employeeUnit: string
-  requastorEmail: string
-  glCode: string
-  fiscal_year: string
+  modUser: string | null
+  status: RecoveryStatuses | null
+  submissionDate: string | null
+  completeDate: string | null
+  completeUser: string | null
+  totalPrice: number | null
+  mailcode: string | null
+  employeeBranch: string | null
+  description: string | null
+  declineRequest: boolean | null
+  reasonForDecline: string | null
+  employeeUnit: string | null
+  requastorEmail: string | null
+  glCode: string | null
+  fiscal_year: string | null
+  supplier: string | null
 
   docName: RecoveryDocument[]
   recoveryAudits: RecoverAudit[]

@@ -20,12 +20,12 @@ const emit = defineEmits(["update:modelValue"])
 
 const JOURNAL_STATUSES = ref([
   {
-    title: "Draft",
+    title: "JV Draft",
     value: JournalStatuses.DRAFT,
   },
   {
-    title: "Complete",
-    value: JournalStatuses.COMPLETE,
+    title: "Routed",
+    value: JournalStatuses.ROUTED,
   },
 ])
 </script>

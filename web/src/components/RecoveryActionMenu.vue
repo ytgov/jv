@@ -223,12 +223,13 @@ async function deleteClick() {
 function getActionType(status: string) {
   const reasonForDecline = ref("")
 
-  if (status == "Routed For Approval") return "Routed For Approval"
-  if (status == "Re-Draft") return `Request Declined (${reasonForDecline.value.slice(0, 25)}...)`
-  if (status == "Purchase Approved") return "Purchase Approved"
-  if (status == "Partially Fulfilled") return "Partially Filled Items"
-  if (status == "Fulfilled") return "Filled Items"
-  if (status == "Complete") return "Completed Request"
+  if (status == RecoveryStatuses.ROUTED_FOR_APPROVAL) return "Routed For Approval"
+  if (status == RecoveryStatuses.RE_DRAFT)
+    return `Request Declined (${reasonForDecline.value.slice(0, 25)}...)`
+  if (status == RecoveryStatuses.PURCHASE_APPROVED) return "Purchase Approved"
+  if (status == RecoveryStatuses.PARTIALLY_FULFILLED) return "Partially Filled Items"
+  if (status == RecoveryStatuses.FULFILLED) return "Filled Items"
+  if (status == RecoveryStatuses.COMPLETE) return "Completed Request"
   return "Updated Request"
 }
 </script>

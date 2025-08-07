@@ -244,9 +244,11 @@ async function downloadPdfFile() {
     recoveryItems.forEach((item) => {
       const index = itemCategories.findIndex((category) => category.itemCatID == item.itemCatID)
       if (index > -1) {
-        const docs = itemCategories[index].docName
+        const docs = itemCategories[index].documents
+
+        if (isNil(docs)) return
+
         for (const doc of docs) {
-          console.log(doc)
           docNames.push({
             docName: doc,
             id: item.itemCatID,

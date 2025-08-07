@@ -1,4 +1,5 @@
 import { readFileSync } from "fs"
+import { join } from "path"
 import axios from "axios"
 import { PDFDocument } from "pdf-lib"
 import FormData from "form-data"
@@ -16,7 +17,7 @@ export class GeneratePdfService extends BaseService {
 
   async perform() {
     const pdfsToMerge: Buffer[] = []
-    const logoBlob = readFileSync(LOGO_FILEPATH, "binary")
+    const logoBlob = readFileSync(join(__dirname, LOGO_FILEPATH), "binary")
 
     for (const recovery of this.requestBodyData) {
       const bodyFormData = new FormData()
@@ -47,7 +48,7 @@ export class GeneratePdfService extends BaseService {
           doc = await db("ItemCategoryDocs")
             .select("document")
             .where("itemCatID", backupDoc.id)
-            .where("docName", backupDoc.docName)
+            .where("docName", backupDoc.docName.docName)
             .first()
         } else if (backupDoc.journal) {
           doc = await db("JournalDocs")

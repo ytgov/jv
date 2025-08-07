@@ -1,5 +1,6 @@
 import Excel from "exceljs"
 import { isUndefined } from "lodash"
+import { join } from "path"
 
 import { JV_TEMPLATE_XLSX_FILEPATH } from "@/config"
 
@@ -19,7 +20,7 @@ export class GenerateExcelService extends BaseService {
     const recoveries = await db("Recovery").select("*").where("journalID", this.journalID)
 
     const workbook = new Excel.Workbook()
-    await workbook.xlsx.readFile(JV_TEMPLATE_XLSX_FILEPATH)
+    await workbook.xlsx.readFile(join(__dirname, JV_TEMPLATE_XLSX_FILEPATH))
 
     const worksheet = workbook.getWorksheet("GL Journal")
     if (isUndefined(worksheet)) {

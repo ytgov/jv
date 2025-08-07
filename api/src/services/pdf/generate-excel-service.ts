@@ -79,7 +79,7 @@ export class GenerateExcelService extends BaseService {
       row.getCell("E").value = glcodes[3] + glcodes[4]
       row.getCell("F").value = Number(recovery.totalPrice * -1)
       row.getCell("G").value = explanation.slice(0, 40)
-      row.getCell("K").value = recovery.recoveryID
+      row.getCell("J").value = recovery.refNum
 
       total += Number(recovery.totalPrice)
       if (Number(recovery.totalPrice) > 0) totalDebit += Number(recovery.totalPrice)

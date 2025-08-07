@@ -22,7 +22,7 @@
       ]"
       :default-tab="0"
     >
-      <v-tabs-window-item value="0">
+      <v-tabs-window-item :value="0">
         <div v-if="journal.status === JournalStatuses.DRAFT">
           <JournalEditForm
             class="mt-5"
@@ -39,7 +39,7 @@
         <v-btn @click="generateJournal">Generate Journal</v-btn>
       </v-tabs-window-item>
 
-      <v-tabs-window-item value="1">
+      <v-tabs-window-item :value="1">
         <v-data-table
           :items="journal.journalAudits"
           :headers="[
@@ -55,7 +55,7 @@
         </v-data-table>
       </v-tabs-window-item>
 
-      <v-tabs-window-item value="2">
+      <v-tabs-window-item :value="2">
         <div v-if="journal.recoveries.length == 0">None found</div>
 
         <div

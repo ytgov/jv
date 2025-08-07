@@ -17,13 +17,14 @@
 
 <script lang="ts">
 export const DEFAULT_HEADERS = [
-  { title: "Date", key: "submissionDate" },
-  { title: "JV Number", key: "jvNum" },
-  { title: "Department", key: "department" },
-  { title: "Period", key: "period" },
-  { title: "Description", key: "description" },
-  { title: "Amount", key: "jvAmount" },
-  { title: "Status", key: "status" },
+  { title: "Date", key: "submissionDate", sortable: true },
+  { title: "Fiscal Year", key: "fiscalYear", sortable: true },
+  { title: "JV Number", key: "jvNum", sortable: false },
+  { title: "Department", key: "department", sortable: true },
+  { title: "Period", key: "period", sortable: true },
+  { title: "Description", key: "description", sortable: false },
+  { title: "Amount", key: "jvAmount", sortable: true },
+  { title: "Status", key: "status", sortable: true },
 ]
 </script>
 

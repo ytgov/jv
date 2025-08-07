@@ -17,6 +17,15 @@
         style="width: 300px"
       />
 
+      <FiscalYearSelect
+        v-model="fiscalYear"
+        class="mr-4"
+        label="Fiscal year"
+        density="compact"
+        style="width: 50px"
+        clearable
+      />
+
       <v-spacer />
 
       <div class="text-right">
@@ -142,7 +151,7 @@
       </div>
     </div>
 
-    <v-data-table-server
+    <v-data-table
       class="striped"
       :headers="journalsHeaders"
       :items="filteredJournals"
@@ -158,7 +167,7 @@
       <template #item.jvAmount="{ item }">
         {{ formatMoney(item.jvAmount) }}
       </template>
-    </v-data-table-server>
+    </v-data-table>
   </SimpleCard>
 </template>
 
@@ -175,10 +184,12 @@ import useDepartments from "@/use/use-departments"
 
 import SimpleCard from "@/components/common/SimpleCard.vue"
 import { DEFAULT_HEADERS as JOURNALS_DEFAULT_HEADERS } from "@/components/journals/JournalsDataTableServer.vue"
+import FiscalYearSelect from "@/components/common/FiscalYearSelect.vue"
 
 const { departments } = useDepartments()
 
 const search = ref<string>("")
+const fiscalYear = ref<string>("")
 const statusFilter = ref<string[]>([])
 const departmentFilter = ref<string[]>([])
 
@@ -210,6 +221,11 @@ const filteredJournals = computed(() => {
         journal.description.toLowerCase().includes(search.value.toLowerCase())
     }
 
+    let fiscalMatch = true
+    if (fiscalYear.value) {
+      fiscalMatch = journal.fiscalYear == fiscalYear.value
+    }
+
     let statusMatch = true
     if (statusFilter.value.length > 0) {
       statusMatch = statusFilter.value.length === 0 || statusFilter.value.includes(journal.status)
@@ -218,7 +234,7 @@ const filteredJournals = computed(() => {
     const departmentMatch =
       departmentFilter.value.length === 0 ||
       departmentFilter.value.includes(journal.department ?? "")
-    return statusMatch && departmentMatch && searchMatch
+    return statusMatch && departmentMatch && searchMatch && fiscalMatch
   })
 })
 

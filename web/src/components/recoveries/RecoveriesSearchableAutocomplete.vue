@@ -12,10 +12,7 @@
     hide-selected
     clearable
     multiple
-    @update:model-value="
-      emit('update:modelValue', $event);
-      handleChange()
-    "
+    @update:model-value="handleChange($event)"
   />
 </template>
 
@@ -56,7 +53,8 @@ function formatRecoveryTitle(item: Recovery) {
   return `${item.branch} / ${item.refNum} (${item.recoveryItems?.map((item) => item.category).join(", ")}) = ${formatCurrency(item.totalPrice)}`
 }
 
-function handleChange() {
+function handleChange(event: number[] | null | undefined) {
+  emit("update:modelValue", event)
   nextTick(() => {
     const selectedRecoveries = recoveries.value.filter((r) =>
       props.modelValue?.includes(r.recoveryID)

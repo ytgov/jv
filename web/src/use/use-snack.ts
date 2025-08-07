@@ -1,5 +1,5 @@
 import { reactive, toRef, ToRef } from "vue"
-import { VSnackbar } from "vuetify/lib/components/index.mjs"
+import { VSnackbar } from "vuetify/components/VSnackbar"
 
 type VSnackbarProps = VSnackbar["$props"]
 

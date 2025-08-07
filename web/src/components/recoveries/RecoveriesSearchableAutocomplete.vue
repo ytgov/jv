@@ -13,7 +13,7 @@
     clearable
     multiple
     @update:model-value="
-      emit('update:modelValue', $event);
+      emit('update:modelValue', $event)
       handleChange()
     "
   />
@@ -64,7 +64,7 @@ function handleChange() {
 
     emit(
       "itemsTotal",
-      selectedRecoveries.reduce((acc, r) => acc + r.totalPrice, 0)
+      selectedRecoveries.reduce((acc, r) => acc + (r.totalPrice ?? 0), 0)
     )
   })
 }

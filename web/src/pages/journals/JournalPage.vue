@@ -248,7 +248,7 @@ async function downloadPdfFile() {
         for (const doc of docs) {
           console.log(doc)
           docNames.push({
-            docName: doc.docName,
+            docName: doc,
             id: item.itemCatID,
             itemCategory: true,
             journal: false,

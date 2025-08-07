@@ -234,6 +234,7 @@ import useItemCategories from "@/use/use-item-categories"
 import GroupSelect from "@/components/groups/GroupSelect.vue"
 import formatDate from "@/utils/format-date"
 import FiscalYearSelect from "@/components/common/FiscalYearSelect.vue"
+import { RecoveryStatuses } from "@/api/recoveries-api"
 
 const { currentUser, isAgent, isSystemAdmin } = useCurrentUser()
 const { itemCategories } = useItemCategories(ref({}))
@@ -347,7 +348,7 @@ const filteredRecoveries = computed(() => {
     let searchMatch = true
     if (search.value.length > 0) {
       searchMatch =
-        recovery.refNum.toLowerCase().includes(search.value.toLowerCase()) ||
+        (recovery.refNum ?? "").toLowerCase().includes(search.value.toLowerCase()) ||
         recovery.firstName.toLowerCase().includes(search.value.toLowerCase()) ||
         recovery.lastName.toLowerCase().includes(search.value.toLowerCase()) ||
         getRecoveryItems(recovery).toLowerCase().includes(search.value.toLowerCase())
@@ -370,28 +371,28 @@ const filteredRecoveries = computed(() => {
       }
 
       if (assignFilter.value.includes("Waiting on me")) {
-        if (isAgent.value) {
+        if (isAgent.value && recovery.status) {
           const relevantStatuses = [
-            "Draft",
-            "Purchase Approved",
-            "Partially Fulfilled",
-            "Fulfilled",
+            RecoveryStatuses.DRAFT,
+            RecoveryStatuses.PURCHASE_APPROVED,
+            RecoveryStatuses.PARTIALLY_FULFILLED,
+            RecoveryStatuses.FULFILLED,
           ]
           assignMatch =
             relevantStatuses.includes(recovery.status) &&
             recovery.supplier == currentUser.value?.branch
         } else if (recovery.requastorEmail == currentUser.value?.email) {
-          assignMatch = recovery.status == "Routed For Approval"
+          assignMatch = recovery.status == RecoveryStatuses.ROUTED_FOR_APPROVAL
         }
       }
     }
 
     let statusMatch = true
-    if (statusFilter.value.length > 0) {
+    if (statusFilter.value.length > 0 && recovery.status) {
       statusMatch = statusFilter.value.length === 0 || statusFilter.value.includes(recovery.status)
 
       if (!statusMatch && statusFilter.value.includes("Pending")) {
-        statusMatch = recovery.status === "Routed For Approval" || recovery.status === "Pending"
+        statusMatch = recovery.status === RecoveryStatuses.ROUTED_FOR_APPROVAL
       }
     }
 
@@ -427,7 +428,7 @@ function csvExportClick() {
         case "status":
           return recovery.status
         case "totalPrice":
-          return `$${recovery.totalPrice.toFixed(2)}`
+          return `$${(recovery.totalPrice ?? 0).toFixed(2)}`
         default:
           return ""
       }

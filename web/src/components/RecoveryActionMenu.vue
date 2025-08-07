@@ -105,7 +105,7 @@ import { computed, ref } from "vue"
 import { useRouter } from "vue-router"
 
 import ConfirmButton from "@/components/common/ConfirmButton.vue"
-import recoveriesApi from "@/api/recoveries-api"
+import recoveriesApi, { RecoveryStatuses } from "@/api/recoveries-api"
 import useSnack from "@/use/use-snack"
 import useRecovery from "@/use/use-recovery"
 import useCurrentUser from "@/use/use-current-user"
@@ -170,7 +170,7 @@ defineExpose({ fetch })
 async function routeForApprovalClick() {
   if (!recovery.value) return
 
-  recovery.value.status = "Routed For Approval"
+  recovery.value.status = RecoveryStatuses.ROUTED_FOR_APPROVAL
   recovery.value.action = "Routed For Approval"
   recovery.value.reasonForDecline = ""
   await save()
@@ -182,7 +182,7 @@ async function routeForApprovalClick() {
 async function approveClick() {
   if (!recovery.value) return
 
-  recovery.value.status = "Purchase Approved"
+  recovery.value.status = RecoveryStatuses.PURCHASE_APPROVED
   recovery.value.action = "Purchase Approved"
   await save()
   await fetch()
@@ -193,7 +193,7 @@ async function approveClick() {
 async function rejectClick(reason: string) {
   if (!recovery.value) return
 
-  recovery.value.status = "Draft"
+  recovery.value.status = RecoveryStatuses.DRAFT
   recovery.value.action = `Request Declined (${reason.slice(0, 25)}...)`
   recovery.value.reasonForDecline = reason
   await save()
@@ -205,7 +205,7 @@ async function rejectClick(reason: string) {
 async function completeClick() {
   if (!recovery.value) return
 
-  recovery.value.status = "Complete"
+  recovery.value.status = RecoveryStatuses.COMPLETE
   recovery.value.action = "Completed Request"
   await save()
   await fetch()

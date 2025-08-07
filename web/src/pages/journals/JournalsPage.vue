@@ -206,7 +206,7 @@ const filteredJournals = computed(() => {
     if (search.value.length > 0) {
       searchMatch =
         journal.jvNum.toLowerCase().includes(search.value.toLowerCase()) ||
-        journal.department.toLowerCase().includes(search.value.toLowerCase()) ||
+        (journal.department ?? "").toLowerCase().includes(search.value.toLowerCase()) ||
         journal.description.toLowerCase().includes(search.value.toLowerCase())
     }
 
@@ -216,7 +216,8 @@ const filteredJournals = computed(() => {
     }
 
     const departmentMatch =
-      departmentFilter.value.length === 0 || departmentFilter.value.includes(journal.department)
+      departmentFilter.value.length === 0 ||
+      departmentFilter.value.includes(journal.department ?? "")
     return statusMatch && departmentMatch && searchMatch
   })
 })

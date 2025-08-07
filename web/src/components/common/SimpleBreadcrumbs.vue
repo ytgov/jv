@@ -28,7 +28,7 @@ export { type Breadcrumb } from "@/use/use-breadcrumbs"
 import { computed } from "vue"
 
 import useBreadcrumbs from "@/use/use-breadcrumbs"
-import { useDisplay } from "vuetify/lib/framework.mjs"
+import { useDisplay } from "vuetify"
 import { isNil } from "lodash"
 
 const { mdAndUp } = useDisplay()

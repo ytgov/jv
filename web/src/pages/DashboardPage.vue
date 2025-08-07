@@ -238,7 +238,6 @@ import AssignedRecoveryTable from "@/modules/recoveries/views/TechRecovery/Assig
 import SimpleCard from "@/components/common/SimpleCard.vue"
 import GroupSelect from "@/components/groups/GroupSelect.vue"
 import FiscalYearSelect from "@/components/common/FiscalYearSelect.vue"
-import { RecoveryStatuses } from "@/api/recoveries-api"
 
 const { currentUser, isAgent, isSystemAdmin } = useCurrentUser()
 const { itemCategories } = useItemCategories(ref({}))
@@ -351,10 +350,6 @@ const filteredRecoveries = computed(() => {
   return recoveries.value.filter((recovery) => {
     let searchMatch = true
     if (search.value.length > 0) {
-      let refNumMatch = false
-      if (recovery.refNum) {
-        refNumMatch = recovery.refNum.toLowerCase().includes(search.value.toLowerCase())
-      }
       searchMatch =
         (recovery.refNum ?? "").toLowerCase().includes(search.value.toLowerCase()) ||
         recovery.firstName.toLowerCase().includes(search.value.toLowerCase()) ||

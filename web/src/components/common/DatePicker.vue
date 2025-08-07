@@ -1,13 +1,13 @@
 <template>
   <v-menu
+    v-model="menu"
     :close-on-content-click="false"
     :nudge-right="40"
     transition="scale-transition"
     offset-y
     min-width="auto"
-    v-model="menu"
   >
-    <template v-slot:activator="{ on, attrs }">
+    <template #activator="{ on, attrs }">
       <v-text-field
         :value="value || ''"
         :label="label || text"

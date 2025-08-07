@@ -165,7 +165,6 @@
 <script lang="ts" setup>
 import { computed, ref } from "vue"
 import { useRouter } from "vue-router"
-import { isNil } from "lodash"
 
 import formatDate from "@/utils/format-date"
 import formatMoney from "@/utils/format-currency"

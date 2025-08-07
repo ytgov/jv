@@ -224,15 +224,19 @@
 <script setup lang="ts">
 import { computed, onBeforeMount, onMounted, ref, watch } from "vue"
 
-import useDepartments from "@/use/use-departments"
-import useCurrentUser from "@/use/use-current-user"
+import formatDate from "@/utils/format-date"
+import { RecoveryStatuses } from "@/api/recoveries-api"
+
 import useBreadcrumbs from "@/use/use-breadcrumbs"
-import SimpleCard from "@/components/common/SimpleCard.vue"
-import AssignedRecoveryTable from "@/modules/recoveries/views/TechRecovery/AssignedRecoveryTable.vue"
+import useCurrentUser from "@/use/use-current-user"
+import useDepartments from "@/use/use-departments"
 import useRecoveries, { Recovery } from "@/use/use-recoveries"
 import useItemCategories from "@/use/use-item-categories"
+
+import AssignedRecoveryTable from "@/modules/recoveries/views/TechRecovery/AssignedRecoveryTable.vue"
+
+import SimpleCard from "@/components/common/SimpleCard.vue"
 import GroupSelect from "@/components/groups/GroupSelect.vue"
-import formatDate from "@/utils/format-date"
 import FiscalYearSelect from "@/components/common/FiscalYearSelect.vue"
 import { RecoveryStatuses } from "@/api/recoveries-api"
 
@@ -347,6 +351,10 @@ const filteredRecoveries = computed(() => {
   return recoveries.value.filter((recovery) => {
     let searchMatch = true
     if (search.value.length > 0) {
+      let refNumMatch = false
+      if (recovery.refNum) {
+        refNumMatch = recovery.refNum.toLowerCase().includes(search.value.toLowerCase())
+      }
       searchMatch =
         (recovery.refNum ?? "").toLowerCase().includes(search.value.toLowerCase()) ||
         recovery.firstName.toLowerCase().includes(search.value.toLowerCase()) ||
@@ -378,9 +386,13 @@ const filteredRecoveries = computed(() => {
             RecoveryStatuses.PARTIALLY_FULFILLED,
             RecoveryStatuses.FULFILLED,
           ]
-          assignMatch =
-            relevantStatuses.includes(recovery.status) &&
-            recovery.supplier == currentUser.value?.branch
+
+          let statusMatch = false
+          if (recovery.status) {
+            statusMatch = relevantStatuses.includes(recovery.status)
+          }
+
+          assignMatch = statusMatch && recovery.supplier == currentUser.value?.branch
         } else if (recovery.requastorEmail == currentUser.value?.email) {
           assignMatch = recovery.status == RecoveryStatuses.ROUTED_FOR_APPROVAL
         }

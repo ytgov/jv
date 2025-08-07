@@ -18,10 +18,10 @@ adminRouter.get("/item-categories", async function (req: Request, res: Response)
       .where("itemCatID", itemCategory.itemCatID)
     itemCategory.itemCategoryAudits = itemCategoryAudits
 
-    const itemCategoryDocument = await db("ItemCategoryDocs")
+    const documents = await db("ItemCategoryDocs")
       .select("docName")
       .where("itemCatID", itemCategory.itemCatID)
-    itemCategory.docName = itemCategoryDocument?.length > 0 ? itemCategoryDocument : ""
+    itemCategory.documents = documents?.length > 0 ? documents : ""
   }
   res.status(200).json({ itemCategories: itemCategoryList, totalCount: itemCategoryList.length })
 })

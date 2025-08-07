@@ -224,15 +224,19 @@
 <script setup lang="ts">
 import { computed, onBeforeMount, onMounted, ref, watch } from "vue"
 
-import useDepartments from "@/use/use-departments"
-import useCurrentUser from "@/use/use-current-user"
+import formatDate from "@/utils/format-date"
+import { RecoveryStatuses } from "@/api/recoveries-api"
+
 import useBreadcrumbs from "@/use/use-breadcrumbs"
-import SimpleCard from "@/components/common/SimpleCard.vue"
-import AssignedRecoveryTable from "@/modules/recoveries/views/TechRecovery/AssignedRecoveryTable.vue"
+import useCurrentUser from "@/use/use-current-user"
+import useDepartments from "@/use/use-departments"
 import useRecoveries, { Recovery } from "@/use/use-recoveries"
 import useItemCategories from "@/use/use-item-categories"
+
+import AssignedRecoveryTable from "@/modules/recoveries/views/TechRecovery/AssignedRecoveryTable.vue"
+
+import SimpleCard from "@/components/common/SimpleCard.vue"
 import GroupSelect from "@/components/groups/GroupSelect.vue"
-import formatDate from "@/utils/format-date"
 import FiscalYearSelect from "@/components/common/FiscalYearSelect.vue"
 
 const { currentUser, isAgent, isSystemAdmin } = useCurrentUser()
@@ -346,8 +350,12 @@ const filteredRecoveries = computed(() => {
   return recoveries.value.filter((recovery) => {
     let searchMatch = true
     if (search.value.length > 0) {
+      let refNumMatch = false
+      if (recovery.refNum) {
+        refNumMatch = recovery.refNum.toLowerCase().includes(search.value.toLowerCase())
+      }
       searchMatch =
-        recovery.refNum.toLowerCase().includes(search.value.toLowerCase()) ||
+        refNumMatch ||
         recovery.firstName.toLowerCase().includes(search.value.toLowerCase()) ||
         recovery.lastName.toLowerCase().includes(search.value.toLowerCase()) ||
         getRecoveryItems(recovery).toLowerCase().includes(search.value.toLowerCase())
@@ -371,27 +379,37 @@ const filteredRecoveries = computed(() => {
 
       if (assignFilter.value.includes("Waiting on me")) {
         if (isAgent.value) {
-          const relevantStatuses = [
-            "Draft",
-            "Purchase Approved",
-            "Partially Fulfilled",
-            "Fulfilled",
+          const relevantStatuses: RecoveryStatuses[] = [
+            RecoveryStatuses.ROUTED_FOR_APPROVAL,
+            RecoveryStatuses.DRAFT,
+            RecoveryStatuses.PURCHASE_APPROVED,
+            RecoveryStatuses.PARTIALLY_FULFILLED,
+            RecoveryStatuses.FULFILLED,
           ]
-          assignMatch =
-            relevantStatuses.includes(recovery.status) &&
-            recovery.supplier == currentUser.value?.branch
+
+          let statusMatch = false
+          if (recovery.status) {
+            statusMatch = relevantStatuses.includes(recovery.status)
+          }
+
+          assignMatch = statusMatch && recovery.supplier == currentUser.value?.branch
         } else if (recovery.requastorEmail == currentUser.value?.email) {
-          assignMatch = recovery.status == "Routed For Approval"
+          assignMatch = recovery.status == RecoveryStatuses.ROUTED_FOR_APPROVAL
         }
       }
     }
 
     let statusMatch = true
     if (statusFilter.value.length > 0) {
-      statusMatch = statusFilter.value.length === 0 || statusFilter.value.includes(recovery.status)
+      if (recovery.status) {
+        statusMatch =
+          statusFilter.value.length === 0 || statusFilter.value.includes(recovery.status)
+      }
 
       if (!statusMatch && statusFilter.value.includes("Pending")) {
-        statusMatch = recovery.status === "Routed For Approval" || recovery.status === "Pending"
+        statusMatch =
+          recovery.status === RecoveryStatuses.ROUTED_FOR_APPROVAL ||
+          recovery.status === RecoveryStatuses.DRAFT
       }
     }
 
@@ -427,7 +445,7 @@ function csvExportClick() {
         case "status":
           return recovery.status
         case "totalPrice":
-          return `$${recovery.totalPrice.toFixed(2)}`
+          return `$${recovery.totalPrice?.toFixed(2)}`
         default:
           return ""
       }

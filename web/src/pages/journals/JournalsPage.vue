@@ -165,6 +165,7 @@
 <script lang="ts" setup>
 import { computed, ref } from "vue"
 import { useRouter } from "vue-router"
+import { isNil } from "lodash"
 
 import formatDate from "@/utils/format-date"
 import formatMoney from "@/utils/format-currency"
@@ -204,9 +205,15 @@ const filteredJournals = computed(() => {
   return journals.value.filter((journal) => {
     let searchMatch = true
     if (search.value.length > 0) {
+      let departmentMatch = false
+      if (!isNil(journal.department)) {
+        departmentMatch =
+          departmentFilter.value.length === 0 || departmentFilter.value.includes(journal.department)
+      }
+
       searchMatch =
         journal.jvNum.toLowerCase().includes(search.value.toLowerCase()) ||
-        journal.department.toLowerCase().includes(search.value.toLowerCase()) ||
+        departmentMatch ||
         journal.description.toLowerCase().includes(search.value.toLowerCase())
     }
 
@@ -215,8 +222,12 @@ const filteredJournals = computed(() => {
       statusMatch = statusFilter.value.length === 0 || statusFilter.value.includes(journal.status)
     }
 
-    const departmentMatch =
-      departmentFilter.value.length === 0 || departmentFilter.value.includes(journal.department)
+    let departmentMatch = false
+    if (!isNil(journal.department)) {
+      departmentMatch =
+        departmentFilter.value.length === 0 || departmentFilter.value.includes(journal.department)
+    }
+
     return statusMatch && departmentMatch && searchMatch
   })
 })

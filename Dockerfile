@@ -19,7 +19,8 @@ COPY api ./
 RUN npm run build
 
 # Copy html files, remove once we are using Vite for build process
-#COPY api/src/templates ./dist/templates
+COPY api/src/assets ./dist/assets
+COPY api/src/JV_Template.xlsx ./dist/JV_Template.xlsx
 
 # Stage 2 - web build - requires development environment to install vue-cli-service
 FROM base-node AS web-build-stage

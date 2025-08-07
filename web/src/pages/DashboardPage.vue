@@ -257,17 +257,17 @@ const assignFilter = ref<string[]>(["Waiting on me"])
 
 const selectedHeaders = ref<string[]>([])
 const allHeaders = [
-  { title: "Fiscal Year", value: "fiscal_year" },
-  { title: "JV Num", value: "journal.jvNum" },
-  { title: "Create Date", value: "createDate" },
-  { title: "Client Dept", value: "department" },
-  { title: "Client", value: "requestor" },
-  { title: "Supplier", value: "supplier" },
-  { title: "Agent", value: "modUser" },
-  { title: "Reference", value: "refNum" },
-  { title: "Items", value: "recoveryItems" },
-  { title: "Status", value: "status" },
-  { title: "Cost", value: "totalPrice" },
+  { title: "Fiscal Year", value: "fiscal_year", sortable: true },
+  { title: "JV Num", value: "journal.jvNum", sortable: true },
+  { title: "Create Date", value: "createDate", sortable: true },
+  { title: "Client Dept", value: "department", sortable: false },
+  { title: "Client", value: "requestor", sortable: false },
+  { title: "Supplier", value: "supplier", sortable: false },
+  { title: "Agent", value: "modUser", sortable: false },
+  { title: "Reference", value: "refNum", sortable: false },
+  { title: "Items", value: "recoveryItems", sortable: false },
+  { title: "Status", value: "status", sortable: false },
+  { title: "Cost", value: "totalPrice", sortable: true },
 ]
 
 onBeforeMount(() => {

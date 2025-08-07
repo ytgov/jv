@@ -13,7 +13,7 @@
     clearable
     multiple
     @update:model-value="
-      emit('update:modelValue', $event)
+      emit('update:modelValue', $event);
       handleChange()
     "
   />

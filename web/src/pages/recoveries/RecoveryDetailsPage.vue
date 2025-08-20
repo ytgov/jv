@@ -40,7 +40,7 @@
     ]"
     :default-tab="0"
   >
-    <v-tabs-window-item value="0">
+    <v-tabs-window-item :value="0">
       <div
         v-if="recovery"
         class="pt-3"
@@ -338,7 +338,7 @@
       </div>
     </v-tabs-window-item>
 
-    <v-tabs-window-item value="1">
+    <v-tabs-window-item :value="1">
       <div v-if="recovery">
         <v-data-table
           :items="recovery.recoveryAudits"
@@ -356,7 +356,7 @@
       </div>
     </v-tabs-window-item>
 
-    <v-tabs-window-item value="2">
+    <v-tabs-window-item :value="2">
       <div v-if="recovery && recovery.recoveryID">
         <RecoveryDocumentList
           :recovery-id="recovery.recoveryID"

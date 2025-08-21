@@ -9,6 +9,8 @@ export enum RecoveryStatuses {
   PARTIALLY_FULFILLED = "Partially Fulfilled",
   PURCHASE_APPROVED = "Purchase Approved",
   ROUTED_FOR_APPROVAL = "Routed For Approval",
+  ON_JOURNAL = "On Journal",
+  RECOVERED = "Recovered",
   COMPLETE = "Complete",
 }
 

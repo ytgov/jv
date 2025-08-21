@@ -2,6 +2,8 @@ import { isNil } from "lodash"
 
 import BaseService from "@/services/base-service"
 import db from "@/data/db-client"
+import { RecoveryStatuses } from "@/models/recovery"
+import { JournalStatuses } from "@/models/journal"
 
 export class UpdateService extends BaseService {
   constructor(
@@ -54,6 +56,14 @@ export class UpdateService extends BaseService {
     }
 
     return db.transaction(async (trx) => {
+      const existingJournal = await trx("JournalVoucher")
+        .where("journalID", this.attributes.journalID)
+        .first()
+
+      if (isNil(existingJournal)) return existingJournal
+
+      const existingStatus = existingJournal.status
+
       const [updatedJournal] = await trx("JournalVoucher")
         .where("journalID", this.attributes.journalID)
         .update(safeAttributes)
@@ -63,17 +73,33 @@ export class UpdateService extends BaseService {
         throw new Error("Journal update failed or not found")
       }
 
+      console.log("HEREIN TRANS 333333", this.recoveryIDs)
+
       if (this.recoveryIDs) {
         // Remove association of recoveries that are not recoveryIDs
         await trx("Recovery")
-          .update({ journalID: null })
+          .update({ journalID: null, status: RecoveryStatuses.COMPLETE })
           .where("journalID", updatedJournal.journalID)
           .whereNotIn("recoveryID", this.recoveryIDs)
 
         // Add association of recoveries that are in recoveryIDs
         await trx("Recovery")
-          .update({ journalID: updatedJournal.journalID })
+          .update({ journalID: updatedJournal.journalID, status: RecoveryStatuses.ON_JOURNAL })
           .whereIn("recoveryID", this.recoveryIDs)
+      }
+
+      if (safeAttributes.status == JournalStatuses.PAID) {
+        await trx("Recovery")
+          .update({ status: RecoveryStatuses.RECOVERED })
+          .where("journalID", updatedJournal.journalID)
+      } else if (safeAttributes.status == JournalStatuses.DRAFT) {
+        await trx("Recovery")
+          .update({ status: RecoveryStatuses.ON_JOURNAL })
+          .where("journalID", updatedJournal.journalID)
+      } else if (safeAttributes.status == JournalStatuses.ROUTED) {
+        await trx("Recovery")
+          .update({ status: RecoveryStatuses.ON_JOURNAL })
+          .where("journalID", updatedJournal.journalID)
       }
 
       await this.addJournalAudit(

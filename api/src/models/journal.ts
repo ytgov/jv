@@ -1,6 +1,7 @@
 export enum JournalStatuses {
   DRAFT = "JV Draft",
-  ROUTED = "Routed",
+  ROUTED = "Routed to Client",
+  PAID = "Paid",
 }
 
 export type Journal = {

@@ -6,7 +6,8 @@ import { Recovery } from "@/api/recoveries-api"
 /** Keep in sync with api/src/models/journal.ts */
 export enum JournalStatuses {
   DRAFT = "JV Draft",
-  ROUTED = "Routed",
+  ROUTED = "Routed to Client",
+  PAID = "Paid",
 }
 
 export type JournalAudit = {

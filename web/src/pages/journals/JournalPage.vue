@@ -36,7 +36,39 @@
           />
         </div>
 
-        <v-btn @click="generateJournal">Generate Journal</v-btn>
+        <v-btn
+          class="mr-5"
+          @click="generateJournal"
+          >Generate Journal</v-btn
+        >
+        <v-label>Set status to:</v-label>
+
+        <v-btn
+          class="ml-5"
+          color="info"
+          size="small"
+          variant="outlined"
+          @click="setStatusSent"
+          >Routed to Client</v-btn
+        >
+        <v-btn
+          class="ml-5"
+          color="info"
+          size="small"
+          variant="outlined"
+          @click="setStatusPaid"
+        >
+          Paid</v-btn
+        >
+
+        <v-btn
+          class="ml-5"
+          color="info"
+          size="small"
+          variant="outlined"
+          @click="setStatusDraft"
+          >Draft</v-btn
+        >
       </v-tabs-window-item>
 
       <v-tabs-window-item :value="1">
@@ -117,7 +149,8 @@ export function printPdf(html: string, title: string, footer: string, header: st
 
 <script lang="ts" setup>
 import { isNil } from "lodash"
-import { computed, ref } from "vue"
+import { renderToString } from "@vue/server-renderer"
+import { computed, createApp, h, ref } from "vue"
 
 import { formatDateTime } from "@/utils/format-date"
 
@@ -133,10 +166,13 @@ import TabCard from "@/components/common/TabCard.vue"
 import JournalEditForm from "@/components/journals/JournalEditForm.vue"
 import JournalViewForm from "@/components/journals/JournalViewForm.vue"
 
+import JournalPrinter from "@/pages/journals/JournalPrinter.vue"
+import RecoveryPrinter from "@/pages/journals/RecoveryPrinter.vue"
+
 const journalId = defineProps<{ journalId: string }>()
 const journalIdNumber = computed(() => parseInt(journalId.journalId))
 
-const { journal, isLoading: isJournalLoading, refresh } = useJournal(journalIdNumber)
+const { journal, isLoading: isJournalLoading, refresh, save } = useJournal(journalIdNumber)
 
 function makeRecoveryTitle(recovery: Recovery) {
   return `${recovery.refNum} / ${recovery.supplier}`
@@ -205,12 +241,22 @@ async function downloadPdfFile() {
   */
   const data = []
   const currentTime = new Date().toLocaleString()
-  const jvNum = journal.value.jvNum
+
+  let tt = ""
+
+  // eslint-disable-next-line vue/one-component-per-file
+  const app = createApp({
+    render: () => h(JournalPrinter, { journal: journal.value }),
+  })
+
+  try {
+    tt = await renderToString(app, { journal: journal.value })
+  } catch (error) {
+    console.error("Error rendering component:", error)
+  }
 
   //JOURNAL
-  const jvEl = document.getElementById("journal-print")
-  const footerText = "Journal Voucher " + jvNum + "; Printed on " + currentTime
-  const jvHtml = printPdf(jvEl?.innerHTML || "", "Journal Voucher", footerText, "")
+  const jvHtml = tt
   const journalDocNames = []
   for (const doc of journal.value.docName) {
     journalDocNames.push({
@@ -225,11 +271,22 @@ async function downloadPdfFile() {
   //RECOVERIES
   const { itemCategories } = await itemCategoriesApi.list()
 
-  journal.value.recoveries.forEach((recovery, inx) => {
+  for (let recovery of journal.value.recoveries) {
     const recNum = recovery.refNum
-    const recEl = document.getElementById(`recovery-print-${inx}`)
-    const footerText = "Recovery " + recNum + "; Printed on " + currentTime
-    const recHtml = printPdf(recEl?.innerHTML || "", "Recovery", footerText, "")
+
+    let t2 = ""
+
+    // eslint-disable-next-line vue/one-component-per-file
+    const app2 = createApp({
+      render: () => h(RecoveryPrinter, { recovery }),
+    })
+
+    try {
+      t2 = await renderToString(app2, { journal: journal.value })
+    } catch (error) {
+      console.error("Error rendering component:", error)
+    }
+
     const docNames = []
     for (const doc of recovery.docName) {
       docNames.push({
@@ -259,8 +316,8 @@ async function downloadPdfFile() {
       }
     })
 
-    data.push({ html: recHtml, backupDocs: docNames })
-  })
+    data.push({ html: t2, backupDocs: docNames })
+  }
 
   const blob = await pdfApi.merge(journalIdNumber.value, data)
 
@@ -286,6 +343,30 @@ async function generateJournal() {
     console.error(error)
     snack.error("Failed to generate journal")
   }
+}
+
+async function setStatusDraft() {
+  if (!journal.value) return
+
+  journal.value.status = JournalStatuses.DRAFT
+  await save()
+  snack.success("Journal status saved")
+}
+
+async function setStatusSent() {
+  if (!journal.value) return
+
+  journal.value.status = JournalStatuses.ROUTED
+  await save()
+  snack.success("Journal status saved")
+}
+
+async function setStatusPaid() {
+  if (!journal.value) return
+
+  journal.value.status = JournalStatuses.PAID
+  await save()
+  snack.success("Journal status saved")
 }
 
 useBreadcrumbs("Journals", [

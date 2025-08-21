@@ -59,7 +59,7 @@
               <v-btn-toggle
                 v-model="statusFilter"
                 color="primary"
-                class="border mb-6"
+                class="border mb-1"
                 density="compact"
                 multiple
                 style="width: 100%; height: 34px"
@@ -71,10 +71,10 @@
                   >Draft</v-btn
                 >
                 <v-btn
-                  value="Pending"
+                  value="Routed For Approval"
                   size="small"
                   style="width: 25%"
-                  >Pending</v-btn
+                  >Routed</v-btn
                 >
                 <v-btn
                   value="Fulfilled"
@@ -87,6 +87,27 @@
                   size="small"
                   style="width: 25%"
                   >Complete</v-btn
+                >
+              </v-btn-toggle>
+              <v-btn-toggle
+                v-model="statusFilter"
+                color="primary"
+                class="border mb-6"
+                density="compact"
+                multiple
+                style="width: 100%; height: 34px"
+              >
+                <v-btn
+                  value="On Journal"
+                  size="small"
+                  style="width: 50%"
+                  >On Journal</v-btn
+                >
+                <v-btn
+                  value="Recovered"
+                  size="small"
+                  style="width: 50%"
+                  >Recovered</v-btn
                 >
               </v-btn-toggle>
 
@@ -397,10 +418,6 @@ const filteredRecoveries = computed(() => {
     let statusMatch = true
     if (statusFilter.value.length > 0 && recovery.status) {
       statusMatch = statusFilter.value.length === 0 || statusFilter.value.includes(recovery.status)
-
-      if (!statusMatch && statusFilter.value.includes("Pending")) {
-        statusMatch = recovery.status === RecoveryStatuses.ROUTED_FOR_APPROVAL
-      }
     }
 
     const departmentMatch =

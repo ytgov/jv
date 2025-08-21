@@ -37,6 +37,7 @@ journalsRouter.get(
     const journals = await db("JournalVoucher").modify(adminQuery)
     for (const journal of journals) {
       const recoveries = await db("Recovery").select("*").where("journalID", journal.journalID)
+
       for (const recovery of recoveries) {
         const recoveryItems = await db("RecoveryItem")
           .select("*")
@@ -87,16 +88,19 @@ journalsRouter.get(
     const journalID = Number(req.params.journalID)
 
     const journal = await db("JournalVoucher").select("*").where("journalID", journalID).first()
-
     const recoveries = await db("Recovery").select("*").where("journalID", journalID)
+
     for (const recovery of recoveries) {
       const recoveryItems = await db("RecoveryItem")
-        .select("*")
+        .innerJoin("ItemCategory", "RecoveryItem.itemCatID", "ItemCategory.itemCatID")
+        .select("RecoveryItem.*", "ItemCategory.category")
         .where("recoveryID", recovery.recoveryID)
+
       recovery.recoveryItems = recoveryItems
       const recoveryAudits = await db("RecoveryAudit")
         .select("*")
         .where("recoveryID", recovery.recoveryID)
+
       recovery.recoveryAudits = recoveryAudits
       const recoveryDocument = await db("BackUpDocs")
         .select("documentID", "docName")

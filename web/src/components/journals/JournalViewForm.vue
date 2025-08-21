@@ -117,12 +117,21 @@
           v-for="(recovery, index) of recoveries"
           :key="index"
         >
-          <v-list-item>
+          <v-list-item class="pl-1">
             <v-row no-gutters>
               <v-col
                 cols="7"
                 class="pt-1"
               >
+                <v-btn
+                  variant="text"
+                  icon="mdi-open-in-new"
+                  size="small"
+                  class="ma-0"
+                  :to="`/recoveries/${recovery.recoveryID}`"
+                  tag="a"
+                  target="_blank"
+                ></v-btn>
                 {{ recovery.refNum }} / {{ recovery.supplier }} /
                 {{ recovery.recoveryItems.map((r) => r.category).join(", ") }}
               </v-col>

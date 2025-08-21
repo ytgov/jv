@@ -350,6 +350,7 @@ async function setStatusDraft() {
 
   journal.value.status = JournalStatuses.DRAFT
   await save()
+  await refresh()
   snack.success("Journal status saved")
 }
 
@@ -358,6 +359,7 @@ async function setStatusSent() {
 
   journal.value.status = JournalStatuses.ROUTED
   await save()
+  await refresh()
   snack.success("Journal status saved")
 }
 
@@ -366,6 +368,7 @@ async function setStatusPaid() {
 
   journal.value.status = JournalStatuses.PAID
   await save()
+  await refresh()
   snack.success("Journal status saved")
 }
 

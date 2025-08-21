@@ -63,16 +63,23 @@
       </tr>
     </table>
 
-    <h3 style="margin: 15px 0 8px">Backup</h3>
+    <h3
+      v-if="journal.docName.length > 0"
+      style="margin: 15px 0 8px"
+    >
+      Backup
+    </h3>
 
-    <ul style="margin-left: 15px">
+    <ul
+      v-if="journal.docName.length > 0"
+      style="margin-left: 15px"
+    >
       <li
         v-for="(docName, index) in journal.docName"
         :key="index"
       >
         {{ docName.docName }}
       </li>
-      <li v-if="journal.docName.length === 0">No backup documents</li>
     </ul>
   </div>
 </template>

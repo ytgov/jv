@@ -2,10 +2,11 @@ import { DB_CONFIG } from "../config"
 import knex from "knex"
 import { sendPendingApprovalEmail } from "../services/email"
 import { updateDepartments, updateEmployees } from "../routes/lookup-router"
+import { RecoveryStatuses } from "@/models/recovery"
 const db = knex(DB_CONFIG)
 
 export async function emailCronjob() {
-  console.log("running a cron job")
+  console.log("running a cron job", new Date())
 
   await updateEmployees()
   await updateDepartments()
@@ -15,19 +16,21 @@ export async function emailCronjob() {
   const reminderDate = new Date()
   reminderDate.setDate(reminderDate.getDate() - 7)
 
-  const recoveries = await db("Recovery").select("*").where("status", "Routed For Approval")
-  // console.log(recoveries)
+  const recoveries = await db("Recovery").where({ status: RecoveryStatuses.ROUTED_FOR_APPROVAL })
+
   for (const recovery of recoveries) {
     const recoveryEmails = await db("RecoveryEmail")
-      .select("*")
       .where("recoveryID", recovery.recoveryID)
       .where("emailType", "Routed For Approval")
+
     let dates = recoveryEmails.map((recEmail) => {
       return recEmail.sentDate
     })
+
     dates = dates.sort((a, b) => {
       return a > b ? -1 : 1
     })
+
     // console.log(dates)
     // console.log(reminderDate)
     if (dates[0] < reminderDate) {

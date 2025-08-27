@@ -19,8 +19,9 @@ import {
 } from "@/routes"
 import jwtMiddleware from "@/middleware/jwt-middleware"
 import { ensureAndAuthorizeCurrentUser } from "@/middleware/authorization-middleware"
+import { emailCronjob } from "@/services/emailcronjob"
 
-//var cron = require("node-cron")
+import { schedule } from "node-cron"
 
 const app = express()
 
@@ -82,17 +83,17 @@ app.use((req: Request, res: Response) => {
   res.sendFile(path.join(__dirname, "web") + "/index.html")
 })
 
-/* cron.schedule(
-  "0 4 * * *",
-  () => {
+schedule(
+  "0 4 * * *", // run every day at 4:00 AM
+  async () => {
     //Running at 4:00AM PDT
-    emailCronjob()
+    await emailCronjob()
   },
   {
     scheduled: true,
     timezone: "America/Vancouver",
   }
-) */
+)
 
 app.listen(API_PORT, () => {
   console.log(`API listenting on port ${API_PORT}`)

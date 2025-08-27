@@ -59,14 +59,20 @@
                 <v-btn
                   value="JV Draft"
                   size="small"
-                  style="width: 50%"
+                  style="width: 33%"
                   text="JV Draft"
                 />
                 <v-btn
-                  value="Routed"
+                  value="Routed to Client"
                   size="small"
-                  style="width: 50%"
-                  text="Routed"
+                  style="width: 33%"
+                  text="Routed to Client"
+                />
+                <v-btn
+                  value="Paid"
+                  size="small"
+                  style="width: 34%"
+                  text="Paid"
                 />
               </v-btn-toggle>
 

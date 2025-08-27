@@ -6,6 +6,7 @@ import { JV_TEMPLATE_XLSX_FILEPATH } from "@/config"
 
 import BaseService from "@/services/base-service"
 import db from "@/data/db-client"
+import moment from "moment"
 
 export class GenerateExcelService extends BaseService {
   constructor(private journalID: number) {
@@ -30,9 +31,9 @@ export class GenerateExcelService extends BaseService {
     const jvDetails = [
       { col: "G", row: 3, value: journal.jvNum },
       { col: "G", row: 4, value: journal.description },
-      { col: "G", row: 5, value: journal.jvDate },
+      { col: "G", row: 5, value: moment.utc(journal.jvDate).format("MM/DD/yyyy") },
       { col: "G", row: 6, value: journal.period },
-      { col: "G", row: 7, value: journal.fiscalYear },
+      { col: "G", row: 7, value: journal.fiscalYear.substring(0, 4) },
       { col: "G", row: 10, value: journal.orgDepartment },
       { col: "G", row: 11, value: journal.odCompletedBy },
       { col: "G", row: 12, value: journal.recvDepartment },
@@ -73,6 +74,7 @@ export class GenerateExcelService extends BaseService {
         worksheet.duplicateRow(rowCounter - 1, 1, true)
       }
       const row = worksheet.getRow(rowCounter)
+      row.getCell("A").value = "Y"
       row.getCell("B").value = glcodes[0]
       row.getCell("C").value = glcodes[1]
       row.getCell("D").value = glcodes[2]

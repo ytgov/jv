@@ -15,8 +15,7 @@
     <template #item.totalPrice="{ item }">
       {{ formatMoney(item.totalPrice) }}
     </template>
-
-    <template #item.jvNum="{ item }">
+    <template #item.journal.jvNum="{ item }">
       <div v-if="item.journal && item.journal.jvNum">{{ item.journal.jvNum }}</div>
     </template>
   </v-data-table>

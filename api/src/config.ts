@@ -53,3 +53,5 @@ export const DB_CONFIG = {
 export const JV_TEMPLATE_XLSX_FILEPATH =
   process.env.JV_TEMPLATE_XLSX_FILEPATH || "../../JV_Template.xlsx"
 export const LOGO_FILEPATH = process.env.LOGO_FILEPATH || "../../assets/logo.svg"
+
+export const SEND_REMINDER_EMAILS = process.env.SEND_REMINDER_EMAILS === "true"

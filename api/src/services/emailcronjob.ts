@@ -1,4 +1,4 @@
-import { DB_CONFIG } from "../config"
+import { DB_CONFIG, SEND_REMINDER_EMAILS } from "../config"
 import knex from "knex"
 import { sendPendingApprovalEmail } from "../services/email"
 import { updateDepartments, updateEmployees } from "../routes/lookup-router"
@@ -6,6 +6,8 @@ import { RecoveryStatuses } from "@/models/recovery"
 const db = knex(DB_CONFIG)
 
 export async function emailCronjob() {
+  if (!SEND_REMINDER_EMAILS) return
+
   console.log("running a cron job", new Date())
 
   await updateEmployees()

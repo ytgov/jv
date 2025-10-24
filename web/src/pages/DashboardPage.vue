@@ -382,6 +382,8 @@ const filteredRecoveries = computed(() => {
         recovery.firstName.toLowerCase().includes(search.value.toLowerCase()) ||
         recovery.lastName.toLowerCase().includes(search.value.toLowerCase()) ||
         recovery.journal?.jvNum.toLowerCase().includes(search.value.toLowerCase()) ||
+        recovery.department.toLowerCase().includes(search.value.toLowerCase()) ||
+        recovery.createUser.toLowerCase().includes(search.value.toLowerCase()) ||
         getRecoveryItems(recovery).toLowerCase().includes(search.value.toLowerCase())
     }
 

@@ -436,6 +436,8 @@ function csvExportClick() {
       switch (header.value) {
         case "fiscal_year":
           return recovery.fiscal_year
+        case "journal.jvNum":
+          return recovery.journal?.jvNum
         case "createDate":
           return formatDate(recovery.createDate)
         case "department":

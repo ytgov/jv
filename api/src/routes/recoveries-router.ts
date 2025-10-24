@@ -4,12 +4,7 @@ import express, { Request, Response } from "express"
 import db from "@/data/db-client"
 
 import { DB_SCHEMA } from "@/config"
-import {
-  Recovery,
-  RecoveryUpdateAttributes,
-  RECOVERY_WHERE_OPTIONS,
-  RecoveryStatuses,
-} from "@/models/recovery"
+import { RECOVERY_WHERE_OPTIONS, RecoveryStatuses } from "@/models/recovery"
 
 import { ReturnValidationErrors } from "@/middleware"
 import { AuthorizationRequest } from "@/middleware/authorization-middleware"
@@ -340,7 +335,10 @@ function recoveryRoleCheck(req: any) {
     } else if (roleArray.includes("IctFinance")) {
       queryBuilder.select("*")
     } else if (roleArray.includes("Agent")) {
-      queryBuilder.whereLike("supplier", `${user.branch}%`).select("*")
+      queryBuilder.whereRaw(`(supplier like ? OR requastorEmail = ?)`, [
+        `${user.branch}%`,
+        `${user.email}`,
+      ])
     } else if (roleArray.includes("DeptFinance")) {
       queryBuilder.where("department", user.department).select("*")
     } else {
@@ -423,8 +421,6 @@ async function sendEmail(newRecovery: any, user: any, recoveryID: number, myDb =
 }
 
 function calculateItemTotal(recoveryItems: { totalPrice: number }[]) {
-  let total = 0
-
   if (recoveryItems && recoveryItems.length > 0) {
     return recoveryItems.reduce(
       (acc, item) => acc + (isNumber(item.totalPrice) ? item.totalPrice : 0),
@@ -446,14 +442,10 @@ function buildRecoveriesWhereQuery(queryParams: any) {
 
   return function (queryBuilder: any) {
     whereOptions.forEach((key) => {
-      console.log(`Checking where option: ${key} = ${queryParams.where[key]}`)
-
       if (RECOVERY_WHERE_OPTIONS.includes(key)) {
         if (isNil(queryParams.where[key]) || queryParams.where[key] === "")
           queryBuilder.whereNull(key)
         else queryBuilder.where(key, queryParams.where[key])
-
-        console.log(`Valid where option: ${key} = ${queryParams.where[key]}`)
       } else {
         console.log(`Invalid where option: ${key}`)
       }

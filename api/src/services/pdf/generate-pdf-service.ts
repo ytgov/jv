@@ -41,32 +41,34 @@ export class GeneratePdfService extends BaseService {
       }
 
       const backupDocs = recovery.backupDocs
+      const attachedDocNames = new Array<string>()
       for (const backupDoc of backupDocs) {
-        let doc = { document: "" }
+        let doc = { document: "", docName: "" }
 
         if (backupDoc.itemCategory) {
           doc = await db("ItemCategoryDocs")
-            .select("document")
+            .select("document", "docName")
             .where("itemCatID", backupDoc.id)
             .where("docName", backupDoc.docName.docName)
             .first()
         } else if (backupDoc.journal) {
           doc = await db("JournalDocs")
-            .select("document")
+            .select("document", "docName")
             .where("journalID", backupDoc.id)
             .where("docName", backupDoc.docName)
             .first()
         } else {
           doc = await db("BackUpDocs")
-            .select("document")
+            .select("document", "docName")
             .where("recoveryID", backupDoc.id)
             .where("docName", backupDoc.docName)
             .first()
         }
 
-        if (!isNil(doc.document)) {
+        if (!isNil(doc.document) && !attachedDocNames.includes(doc.docName)) {
           const pdfFile = Buffer.isBuffer(doc.document) ? doc.document : Buffer.from(doc.document)
           pdfsToMerge.push(pdfFile)
+          attachedDocNames.push(doc.docName)
         }
       }
     }

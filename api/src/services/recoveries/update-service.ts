@@ -73,7 +73,25 @@ export class UpdateService extends BaseService {
         .where("recoveryID", this.recovery.recoveryID)
         .returning("*")
 
-      await this.sendEmail(this.attributes, currentUserDisplayName, this.recovery.recoveryID, trx)
+      if (
+        // draft -> routed for approval
+        this.recovery.status == RecoveryStatuses.DRAFT &&
+        this.attributes.status == RecoveryStatuses.ROUTED_FOR_APPROVAL
+      ) {
+        await this.sendEmail(this.attributes, currentUserDisplayName, this.recovery.recoveryID, trx)
+      } else if (
+        // routed for approval -> draft (rejected)
+        this.recovery.status == RecoveryStatuses.ROUTED_FOR_APPROVAL &&
+        this.attributes.status == RecoveryStatuses.DRAFT
+      ) {
+        await this.sendEmail(this.attributes, currentUserDisplayName, this.recovery.recoveryID, trx)
+      } else if (
+        // routed for approval -> purchase approved
+        this.recovery.status == RecoveryStatuses.ROUTED_FOR_APPROVAL &&
+        this.attributes.status == RecoveryStatuses.PURCHASE_APPROVED
+      ) {
+        await this.sendEmail(this.attributes, currentUserDisplayName, this.recovery.recoveryID, trx)
+      }
 
       if (isNil(this.newRecoveryItems)) {
         return updatedRecovery
@@ -167,7 +185,7 @@ export class UpdateService extends BaseService {
       newRecovery.status == RecoveryStatuses.ROUTED_FOR_APPROVAL
         ? recovery.createUser
         : recovery.requastorEmail
-        
+
     const recipient =
       newRecovery.status == RecoveryStatuses.ROUTED_FOR_APPROVAL
         ? recovery.requastorEmail
@@ -200,6 +218,7 @@ export class UpdateService extends BaseService {
       )
     } else {
       const approved = newRecovery.status == RecoveryStatuses.PURCHASE_APPROVED
+
       emailSent = await sendPurchaseApprovedEmail(
         approved,
         user,

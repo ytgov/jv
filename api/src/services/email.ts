@@ -78,8 +78,6 @@ function generatePendingApprovalContent(
   recoveryId: number,
   items: { category: string }[]
 ) {
-  console.log("ITEMS", items)
-
   const itemList = items
     .map((item) => {
       return `<li>${item.category}</li>`

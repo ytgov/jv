@@ -4,7 +4,12 @@ import express, { Request, Response } from "express"
 import db from "@/data/db-client"
 
 import { DB_SCHEMA } from "@/config"
-import { Recovery, RecoveryUpdateAttributes, RECOVERY_WHERE_OPTIONS } from "@/models/recovery"
+import {
+  Recovery,
+  RecoveryUpdateAttributes,
+  RECOVERY_WHERE_OPTIONS,
+  RecoveryStatuses,
+} from "@/models/recovery"
 
 import { ReturnValidationErrors } from "@/middleware"
 import { AuthorizationRequest } from "@/middleware/authorization-middleware"
@@ -351,9 +356,9 @@ function recoveryRoleCheck(req: any) {
 
 async function sendEmail(newRecovery: any, user: any, recoveryID: number, myDb = db) {
   if (
-    newRecovery.status == "Purchase Approved" ||
-    newRecovery.status == "Re-Draft" ||
-    newRecovery.status == "Routed For Approval"
+    newRecovery.status == RecoveryStatuses.PURCHASE_APPROVED ||
+    newRecovery.status == RecoveryStatuses.DRAFT ||
+    newRecovery.status == RecoveryStatuses.ROUTED_FOR_APPROVAL
   ) {
     const recovery = await myDb("Recovery").where("recoveryID", recoveryID).first()
 
@@ -370,6 +375,12 @@ async function sendEmail(newRecovery: any, user: any, recoveryID: number, myDb =
 
     if (newRecovery.status == "Routed For Approval") {
       const reminder = false
+
+      const items = await db("RecoveryItem")
+        .innerJoin("ItemCategory", "RecoveryItem.itemCatID", "ItemCategory.itemCatID")
+        .select("RecoveryItem.*", "ItemCategory.category")
+        .where("recoveryID", recoveryID)
+
       emailSent = await sendPendingApprovalEmail(
         reminder,
         user,
@@ -377,7 +388,8 @@ async function sendEmail(newRecovery: any, user: any, recoveryID: number, myDb =
         recipient,
         recipientName,
         recovery.department,
-        recoveryID
+        recoveryID,
+        items
       )
     } else {
       const approved = newRecovery.status == "Purchase Approved"

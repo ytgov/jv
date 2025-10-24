@@ -31,9 +31,12 @@ export async function emailCronjob() {
       return a > b ? -1 : 1
     })
 
-    // console.log(dates)
-    // console.log(reminderDate)
     if (dates[0] < reminderDate) {
+      const items = await db("RecoveryItem")
+        .innerJoin("ItemCategory", "RecoveryItem.itemCatID", "ItemCategory.itemCatID")
+        .select("RecoveryItem.*", "ItemCategory.category")
+        .where("recoveryID", recovery.recoveryID)
+
       // console.log("___SENDING_REMINDER__")
       const emailSent = await sendPendingApprovalEmail(
         reminder,
@@ -42,7 +45,8 @@ export async function emailCronjob() {
         recovery.requastorEmail,
         recovery.firstName + " " + recovery.lastName,
         recovery.department,
-        recovery.recoveryID
+        recovery.recoveryID,
+        items
       )
       // console.log(emailSent)
       if (emailSent)

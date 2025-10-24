@@ -155,7 +155,7 @@ export class UpdateService extends BaseService {
   private async sendEmail(newRecovery: any, user: any, recoveryID: number, myDb = db) {
     if (
       newRecovery.status != RecoveryStatuses.PURCHASE_APPROVED &&
-      newRecovery.status != RecoveryStatuses.RE_DRAFT &&
+      newRecovery.status != RecoveryStatuses.DRAFT &&
       newRecovery.status != RecoveryStatuses.ROUTED_FOR_APPROVAL
     ) {
       return true
@@ -165,12 +165,14 @@ export class UpdateService extends BaseService {
 
     const sender =
       newRecovery.status == RecoveryStatuses.ROUTED_FOR_APPROVAL
-        ? recovery.modUser
+        ? recovery.createUser
         : recovery.requastorEmail
+        
     const recipient =
       newRecovery.status == RecoveryStatuses.ROUTED_FOR_APPROVAL
         ? recovery.requastorEmail
-        : recovery.modUser
+        : recovery.createUser
+
     const recipientName =
       newRecovery.status == RecoveryStatuses.ROUTED_FOR_APPROVAL
         ? recovery.firstName + " " + recovery.lastName
@@ -180,6 +182,12 @@ export class UpdateService extends BaseService {
 
     if (newRecovery.status == RecoveryStatuses.ROUTED_FOR_APPROVAL) {
       const reminder = false
+
+      const items = await db("RecoveryItem")
+        .innerJoin("ItemCategory", "RecoveryItem.itemCatID", "ItemCategory.itemCatID")
+        .select("RecoveryItem.*", "ItemCategory.category")
+        .where("recoveryID", recoveryID)
+
       emailSent = await sendPendingApprovalEmail(
         reminder,
         user,
@@ -187,7 +195,8 @@ export class UpdateService extends BaseService {
         recipient,
         recipientName,
         recovery.department,
-        recoveryID
+        recoveryID,
+        items
       )
     } else {
       const approved = newRecovery.status == RecoveryStatuses.PURCHASE_APPROVED

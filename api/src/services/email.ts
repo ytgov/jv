@@ -1,11 +1,4 @@
-import {
-  EMAILER_USERNAME,
-  EMAILER_PASSWORD,
-  EMAIL_HOST,
-  EMAIL_PORT,
-  EMAIL_SENDER,
-  FRONTEND_URL,
-} from "../config"
+import { EMAIL_HOST, EMAIL_PORT, EMAIL_SENDER, FRONTEND_URL } from "../config"
 
 const uuid = require("uuid")
 const nodemailer = require("nodemailer")
@@ -14,37 +7,24 @@ const transporter = nodemailer.createTransport({
   host: EMAIL_HOST,
   port: EMAIL_PORT,
   secure: false,
-  /* auth: {
-        user: EMAILER_USERNAME,
-        pass: EMAILER_PASSWORD
-    }, */
-  // connectionTimeout: 1000,
 })
 
 async function email(attachments: any[], receivers: string, subject: string, content: string) {
-  // console.log(receivers)
-  // console.log(subject)
-  // console.log(content)
   const message = {
     from: EMAIL_SENDER,
-    to: receivers, // list of receivers "comma seperated"
+    to: receivers,
     subject: subject,
     text: "",
     html: content,
     attachments: attachments,
   }
-  // console.log(message)
-  const info = await transporter.sendMail(message).catch((e: any) => {
+  return transporter.sendMail(message).catch((e: any) => {
     console.log("Email Error", e)
   })
-  // console.log("Message sent: %s", info.messageId);
-  return info
 }
 
 function generateAttachment(buf: Buffer, fileName: string) {
   const attachmentId = uuid.v4()
-  // console.log(attachmentId)
-  // console.log(buf?.toString('base64'))
   return {
     filename: fileName,
     content: Buffer.from(buf?.toString("base64"), "base64"),
@@ -62,8 +42,8 @@ function generateJvContent(
   receiverDept: string
 ) {
   return `<i>Department of ${receiverDept}</i>
-     <br><b>Dear ${receiverName.replace(".", " ")},</b><br><br>
-     <p>Please find attached the following file(s):</p>
+     <br><b>Hello ${receiverName.replace(".", " ")},</b><br><br>
+     <p>Please find attached the following file related to a Journal in the Recoveries App:</p>
      <ul>
         <li>Journal Voucher # ${journalID}.</li>        
      </ul>
@@ -95,20 +75,23 @@ function generatePendingApprovalContent(
   sender: string,
   receiverName: string,
   receiverDept: string,
-  recoveryId: number
+  recoveryId: number,
+  items: { category: string }[]
 ) {
+  console.log("ITEMS", items)
+
+  const itemList = items
+    .map((item) => {
+      return `<li>${item.category}</li>`
+    })
+    .join("")
+
   return `<i>Department of ${receiverDept}</i>
-    <br><b>Dear ${receiverName.replace(".", " ")},</b><br><br>
-    <p>
-        Your recoveries request has been created and is pending your approval. 
-        Please login to the <a href='${FRONTEND_URL}/recoveries/${recoveryId}'> Recoveries Application </a> 
-        and review the requests under 'Pending Approvals'.
-        <br>
-        If you need any further clarification, please contact me through Email (${sender}).
-    </p>
-    <br>regards,
-    <br><b>${senderName.replace(".", " ")}</b>
-    <br><b>${sender}</b>`
+    <br><b>Hello ${receiverName.replace(".", " ")},</b><br><br>
+    <p>A recovery request has been created and is pending your approval for the following items:</p>
+    ${itemList}
+    <p>Please sign in to review <a href='${FRONTEND_URL}/recoveries/${recoveryId}'>this recovery</a> in the Recoveries App.</p>
+    <br>Thank you!`
 }
 
 export async function sendPendingApprovalEmail(
@@ -118,7 +101,8 @@ export async function sendPendingApprovalEmail(
   receivers: string,
   receiverName: string,
   receiverDept: string,
-  recoveryId: number
+  recoveryId: number,
+  items: { category: string }[]
 ) {
   const attachments: any[] = []
   const reminder = addReminder ? "(Reminder) " : ""
@@ -128,7 +112,8 @@ export async function sendPendingApprovalEmail(
     sender,
     receiverName,
     receiverDept,
-    recoveryId
+    recoveryId,
+    items
   )
   return await email(attachments, receivers, subject, content).catch(console.error)
 }
@@ -146,9 +131,11 @@ function generatePurchaseApprovedContent(
 ) {
   return `<i>Department of ${receiverDept}</i>   
     <p>
-        ${senderName.replace(".", " ")} (${sender}) ${approval} purchase of the items with ref# ${reference}.
-        <br>
+        ${senderName.replace(".", " ")} (${sender}) ${approval} purchase of the items in recovery <strong>${reference}</strong>.
+        <br><br>
         ${comments}
+        <br/><br/>
+        <p>Please sign in to review <a href='${FRONTEND_URL}/recoveries/${recoveryId}'>this recovery</a> in the Recoveries App.</p>
     </p>`
 }
 

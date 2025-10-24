@@ -449,7 +449,7 @@ function csvExportClick() {
         case "refNum":
           return recovery.refNum
         case "recoveryItems":
-          return getRecoveryItems(recovery)
+          return `"${getRecoveryItems(recovery)}"`
         case "status":
           return recovery.status
         case "totalPrice":

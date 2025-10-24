@@ -45,6 +45,8 @@ export async function ensureAndAuthorizeCurrentUser(
 }
 
 export function RequiresRoleAdmin(req: AuthorizationRequest, res: Response, next: NextFunction) {
+  if (isNil(req.currentUser)) return res.status(401).send("You are not authenticated")
+
   if (req.currentUser && req.currentUser.roles.indexOf("Admin") == -1) {
     return res.status(401).send("You are not an Administrator")
   }
@@ -57,6 +59,7 @@ export function RequiresRoleAdminOrIctFinance(
   res: Response,
   next: NextFunction
 ) {
+  if (isNil(req.currentUser)) return res.status(401).send("You are not authenticated")
   const roles = (req.currentUser?.roles || "").split(",")
 
   if (roles.includes("Admin") || roles.includes("IctFinance")) {
@@ -69,6 +72,7 @@ export function RequiresRoleAdminOrFinance(
   res: Response,
   next: NextFunction
 ) {
+  if (isNil(req.currentUser)) return res.status(401).send("You are not authenticated")
   const roles = (req.currentUser?.roles || "").split(",")
   if (roles.includes("Admin") || roles.includes("IctFinance") || roles.includes("DeptFinance")) {
     next()
@@ -80,6 +84,7 @@ export function RequiresRoleAdminOrTech(
   res: Response,
   next: NextFunction
 ) {
+  if (isNil(req.currentUser)) return res.status(401).send("You are not authenticated")
   const roles = (req.currentUser?.roles || "").split(",")
   if (roles.includes("Admin") || roles.includes("Agent")) {
     next()

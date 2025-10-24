@@ -98,15 +98,21 @@
                 style="width: 100%; height: 34px"
               >
                 <v-btn
+                  value="Purchase Approved"
+                  size="small"
+                  style="width: 45%"
+                  >Purchase Approved</v-btn
+                >
+                <v-btn
                   value="On Journal"
                   size="small"
-                  style="width: 50%"
+                  style="width: 27%"
                   >On Journal</v-btn
                 >
                 <v-btn
                   value="Recovered"
                   size="small"
-                  style="width: 50%"
+                  style="width: 28%"
                   >Recovered</v-btn
                 >
               </v-btn-toggle>

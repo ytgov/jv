@@ -171,13 +171,13 @@ export class UpdateService extends BaseService {
   }
 
   private async sendEmail(newRecovery: any, user: any, recoveryID: number, myDb = db) {
-    if (
-      newRecovery.status != RecoveryStatuses.PURCHASE_APPROVED &&
-      newRecovery.status != RecoveryStatuses.DRAFT &&
-      newRecovery.status != RecoveryStatuses.ROUTED_FOR_APPROVAL
-    ) {
-      return true
-    }
+    const allowedStatuses = [
+      RecoveryStatuses.PURCHASE_APPROVED,
+      RecoveryStatuses.DRAFT,
+      RecoveryStatuses.ROUTED_FOR_APPROVAL,
+    ]
+
+    if (!allowedStatuses.includes(newRecovery.status)) return true
 
     const recovery = await myDb("Recovery").where("recoveryID", recoveryID).first()
 

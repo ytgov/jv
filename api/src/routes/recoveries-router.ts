@@ -162,7 +162,7 @@ recoveriesRouter.post("/", async function (req: AuthorizationRequest, res: Respo
         else await trx("RecoveryItem").insert(newRecoveryItem)
       }
 
-      await sendEmail(newRecovery, user, recoveryID, trx)
+      //await sendEmail(newRecovery, user, recoveryID, trx)
 
       res.status(200).json({ recovery: createdRecovery[0] })
     })

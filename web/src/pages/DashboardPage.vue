@@ -457,7 +457,7 @@ function csvExportClick() {
         case "modUser":
           return recovery.modUser
         case "refNum":
-          return recovery.refNum
+          return `"${recovery.refNum}"`
         case "recoveryItems":
           return `"${getRecoveryItems(recovery)}"`
         case "status":

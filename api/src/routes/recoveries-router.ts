@@ -361,17 +361,21 @@ async function sendEmail(newRecovery: any, user: any, recoveryID: number, myDb =
     const recovery = await myDb("Recovery").where("recoveryID", recoveryID).first()
 
     const sender =
-      newRecovery.status == "Routed For Approval" ? recovery.modUser : recovery.requastorEmail
+      newRecovery.status == RecoveryStatuses.ROUTED_FOR_APPROVAL
+        ? recovery.modUser
+        : recovery.requastorEmail
     const recipient =
-      newRecovery.status == "Routed For Approval" ? recovery.requastorEmail : recovery.modUser
+      newRecovery.status == RecoveryStatuses.ROUTED_FOR_APPROVAL
+        ? recovery.requastorEmail
+        : recovery.modUser
     const recipientName =
-      newRecovery.status == "Routed For Approval"
+      newRecovery.status == RecoveryStatuses.ROUTED_FOR_APPROVAL
         ? recovery.firstName + " " + recovery.lastName
         : "Recovery Agent"
 
     let emailSent = null
 
-    if (newRecovery.status == "Routed For Approval") {
+    if (newRecovery.status == RecoveryStatuses.ROUTED_FOR_APPROVAL) {
       const reminder = false
 
       const items = await db("RecoveryItem")
@@ -390,7 +394,7 @@ async function sendEmail(newRecovery: any, user: any, recoveryID: number, myDb =
         items
       )
     } else {
-      const approved = newRecovery.status == "Purchase Approved"
+      const approved = newRecovery.status == RecoveryStatuses.PURCHASE_APPROVED
       emailSent = await sendPurchaseApprovedEmail(
         approved,
         user,

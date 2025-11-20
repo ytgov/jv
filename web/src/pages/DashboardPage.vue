@@ -287,7 +287,7 @@ const allHeaders = [
   { title: "Fiscal Year", value: "fiscal_year", sortable: true },
   { title: "JV Num", value: "journal.jvNum", sortable: true },
   { title: "Create Date", value: "createDate", sortable: true },
-  { title: "Client Dept", value: "department", sortable: false },
+  { title: "Client Dept", value: "department", sortable: true },
   { title: "Client", value: "requestor", sortable: false },
   { title: "Supplier", value: "supplier", sortable: false },
   { title: "Agent", value: "modUser", sortable: false },

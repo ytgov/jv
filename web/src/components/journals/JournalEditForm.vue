@@ -110,7 +110,6 @@
         status: 'Complete',
       }"
       label="Recovery (Branch / Reference (Items) = Value)"
-      @items-total="journal.jvAmount = $event"
     />
 
     <v-btn
@@ -182,7 +181,7 @@ import { VForm } from "vuetify/components"
 import formatCurrency from "@/utils/format-currency"
 import formatDate from "@/utils/format-date"
 
-import recoveriesApi from "@/api/recoveries-api"
+import recoveriesApi, { RecoveryStatuses } from "@/api/recoveries-api"
 
 import useSnack from "@/use/use-snack"
 import useJournal from "@/use/use-journal"
@@ -233,8 +232,8 @@ const itemTotalCost = computed(() => {
 
 const isLoading = ref(false)
 
-function refresh() {
-  refreshRecoveries()
+async function refresh() {
+  await refreshRecoveries()
   recoveryIds.value = []
 }
 
@@ -275,10 +274,16 @@ async function addRecoveries() {
     if (isNil(journal.value)) return
 
     for (const recoveryId of recoveryIds.value) {
-      await recoveriesApi.update(recoveryId, { journalID: journal.value.journalID })
+      await recoveriesApi.update(recoveryId, {
+        journalID: journal.value.journalID,
+        status: RecoveryStatuses.ON_JOURNAL,
+      })
     }
 
     await refresh()
+
+    journal.value.jvAmount = Number(itemTotalCost.value.toFixed(2))
+    await save()
 
     snack.success("Recoveries added!")
     emit("saved", journal.value.journalID)
@@ -296,8 +301,17 @@ async function removeRecovery(recoveryId: number) {
 
     if (isNil(journal.value)) return
 
-    await recoveriesApi.update(recoveryId, { journalID: null })
+    await recoveriesApi.update(recoveryId, {
+      journalID: null,
+      status: RecoveryStatuses.COMPLETE,
+      glCode: null,
+    })
+
     await refresh()
+
+    journal.value.jvAmount = Number(itemTotalCost.value.toFixed(2))
+    await save()
+
     snack.success("Recovery removed!")
   } catch (error) {
     console.error(error)

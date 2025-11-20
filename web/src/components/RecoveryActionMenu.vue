@@ -160,7 +160,8 @@ const canApprove = computed(() => {
 const canDelete = computed(() => {
   return (
     (isSystemAdmin.value || currentUser.value?.email == recovery.value?.createUser) &&
-    recovery.value?.status == "Draft"
+    recovery.value?.status != RecoveryStatuses.ON_JOURNAL &&
+    recovery.value?.status != RecoveryStatuses.RECOVERED
   )
 })
 

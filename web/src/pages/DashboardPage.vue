@@ -17,6 +17,7 @@
         prepend-inner-icon="mdi-magnify"
         density="compact"
         style="width: 300px"
+        clearable
       />
       <GroupSelect
         v-model="branch"
@@ -313,10 +314,18 @@ onMounted(() => {
 })
 
 const filterString = computed(() => {
+  const existing = localStorage.getItem("filters")
+  let baseFilters = {}
+  if (existing) baseFilters = JSON.parse(existing)
+
   return JSON.stringify({
+    ...baseFilters,
     statusFilter: statusFilter.value,
     departmentFilter: departmentFilter.value,
     assignFilter: assignFilter.value,
+    fiscalYear: fiscalYear.value,
+    branch: branch.value,
+    search: search.value,
   })
 })
 
@@ -331,6 +340,9 @@ function loadSavedFilters() {
     statusFilter.value = filters.statusFilter || []
     departmentFilter.value = filters.departmentFilter || []
     assignFilter.value = filters.assignFilter || []
+    fiscalYear.value = filters.fiscalYear || ""
+    branch.value = filters.branch || ""
+    search.value = filters.search || ""
   } else {
     statusFilter.value = []
     departmentFilter.value = []
@@ -376,7 +388,7 @@ const filteredRecoveries = computed(() => {
 
   return recoveries.value.filter((recovery) => {
     let searchMatch = true
-    if (search.value.length > 0) {
+    if (search.value?.length > 0) {
       searchMatch =
         (recovery.refNum ?? "").toLowerCase().includes(search.value.toLowerCase()) ||
         recovery.firstName.toLowerCase().includes(search.value.toLowerCase()) ||

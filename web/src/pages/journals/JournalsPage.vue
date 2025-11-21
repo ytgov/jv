@@ -15,6 +15,7 @@
         prepend-inner-icon="mdi-magnify"
         density="compact"
         style="width: 300px"
+        clearable
       />
 
       <FiscalYearSelect
@@ -191,6 +192,7 @@ import useDepartments from "@/use/use-departments"
 import SimpleCard from "@/components/common/SimpleCard.vue"
 import { DEFAULT_HEADERS as JOURNALS_DEFAULT_HEADERS } from "@/components/journals/JournalsDataTableServer.vue"
 import FiscalYearSelect from "@/components/common/FiscalYearSelect.vue"
+import { onBeforeMount } from "vue"
 
 const { departments } = useDepartments()
 
@@ -208,6 +210,43 @@ const journalsHeaders = computed<{ title: string; key: string }[]>(() => {
   })
 })
 
+onBeforeMount(() => {
+  // Ensure the current user is loaded before proceeding
+  loadSavedFilters()
+})
+
+const filterString = computed(() => {
+  const existing = localStorage.getItem("filters")
+  let baseFilters = {}
+  if (existing) baseFilters = JSON.parse(existing)
+
+  return JSON.stringify({
+    ...baseFilters,
+    jvStatusFilter: statusFilter.value,
+    departmentFilter: departmentFilter.value,
+    fiscalYear: fiscalYear.value,
+    search: search.value,
+  })
+})
+
+function saveFilters() {
+  localStorage.setItem("filters", filterString.value)
+}
+
+function loadSavedFilters() {
+  const savedFilters = localStorage.getItem("filters")
+  if (savedFilters) {
+    const filters = JSON.parse(savedFilters)
+    statusFilter.value = filters.jvStatusFilter || []
+    departmentFilter.value = filters.departmentFilter || []
+    fiscalYear.value = filters.fiscalYear || ""
+    search.value = filters.search || ""
+  } else {
+    statusFilter.value = []
+    departmentFilter.value = []
+  }
+}
+
 const { journals, totalCount, isLoading } = useJournals()
 
 const filterCount = computed(() => {
@@ -218,9 +257,13 @@ const filterCount = computed(() => {
 })
 
 const filteredJournals = computed(() => {
+  if (filterString.value != localStorage.getItem("filters")) {
+    saveFilters()
+  }
+
   return journals.value.filter((journal) => {
     let searchMatch = true
-    if (search.value.length > 0) {
+    if (search.value?.length > 0) {
       searchMatch =
         journal.jvNum.toLowerCase().includes(search.value.toLowerCase()) ||
         (journal.department ?? "").toLowerCase().includes(search.value.toLowerCase()) ||

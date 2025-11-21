@@ -225,7 +225,7 @@ const filterString = computed(() => {
     jvStatusFilter: statusFilter.value,
     departmentFilter: departmentFilter.value,
     fiscalYear: fiscalYear.value,
-    search: search.value,
+    jvSearch: search.value,
   })
 })
 
@@ -240,7 +240,7 @@ function loadSavedFilters() {
     statusFilter.value = filters.jvStatusFilter || []
     departmentFilter.value = filters.departmentFilter || []
     fiscalYear.value = filters.fiscalYear || ""
-    search.value = filters.search || ""
+    search.value = filters.jvSearch || ""
   } else {
     statusFilter.value = []
     departmentFilter.value = []

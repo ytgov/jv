@@ -213,6 +213,9 @@ recoveriesRouter.get(
       .select("documentID", "docName", "itemCatName")
       .where("recoveryID", recovery.recoveryID)
 
+    if (recovery.journalID)
+      recovery.journal = await db("JournalVoucher").where("journalID", recovery.journalID).first()
+
     res.json({ recovery })
   }
 )

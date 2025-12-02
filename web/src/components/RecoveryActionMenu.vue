@@ -129,7 +129,8 @@ const canRouteForApproval = computed(() => {
 
   return (
     (isSystemAdmin.value || currentUser.value?.email == recovery.value?.createUser) &&
-    (recovery.value?.status == "Draft" || recovery.value?.status == "Re-Draft")
+    (recovery.value?.status == RecoveryStatuses.DRAFT ||
+      recovery.value?.status == RecoveryStatuses.RE_DRAFT)
   )
 })
 
@@ -138,7 +139,7 @@ const canComplete = computed(() => {
 
   return (
     (isSystemAdmin.value || currentUser.value?.email == recovery.value?.createUser) &&
-    recovery.value?.status == "Fulfilled"
+    recovery.value?.status == RecoveryStatuses.FULFILLED
   )
 })
 
@@ -147,13 +148,13 @@ const canApprove = computed(() => {
 
   if (
     currentUser.value.email == recovery.value?.requastorEmail &&
-    recovery.value?.status == "Routed For Approval"
+    recovery.value?.status == RecoveryStatuses.ROUTED_FOR_APPROVAL
   )
     return true
 
   return (
     (isSystemAdmin.value || currentUser.value.email == recovery.value?.requastorEmail) &&
-    recovery.value?.status == "Routed For Approval"
+    recovery.value?.status == RecoveryStatuses.ROUTED_FOR_APPROVAL
   )
 })
 
@@ -219,18 +220,5 @@ async function deleteClick() {
     snack.success("Recovery deleted")
     router.push({ name: "DashboardPage" })
   })
-}
-
-function getActionType(status: string) {
-  const reasonForDecline = ref("")
-
-  if (status == RecoveryStatuses.ROUTED_FOR_APPROVAL) return "Routed For Approval"
-  if (status == RecoveryStatuses.RE_DRAFT)
-    return `Request Declined (${reasonForDecline.value.slice(0, 25)}...)`
-  if (status == RecoveryStatuses.PURCHASE_APPROVED) return "Purchase Approved"
-  if (status == RecoveryStatuses.PARTIALLY_FULFILLED) return "Partially Filled Items"
-  if (status == RecoveryStatuses.FULFILLED) return "Filled Items"
-  if (status == RecoveryStatuses.COMPLETE) return "Completed Request"
-  return "Updated Request"
 }
 </script>

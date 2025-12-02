@@ -62,9 +62,9 @@
     :close-on-content-click="false"
     :scrim="true"
   >
-    <template #activator="{ props }">
+    <template #activator="{ props: activatorProps }">
       <v-btn
-        v-bind="props"
+        v-bind="activatorProps"
         variant="tonal"
         size="small"
         class="ml-4 border"

@@ -91,6 +91,19 @@ export class UpdateService extends BaseService {
         this.attributes.status == RecoveryStatuses.PURCHASE_APPROVED
       ) {
         await this.sendEmail(this.attributes, currentUserDisplayName, this.recovery.recoveryID, trx)
+      } else if (
+        // routed for approval -> purchase approved
+        this.recovery.status == RecoveryStatuses.ROUTED_FOR_APPROVAL &&
+        this.recovery.requastorEmail != this.attributes.requastorEmail
+      ) {
+        await this.sendEmail(this.attributes, currentUserDisplayName, this.recovery.recoveryID, trx)
+
+        await trx("RecoveryAudit").insert({
+          date: new Date(),
+          recoveryID: this.recovery.recoveryID,
+          user: currentUserDisplayName,
+          action: `Changing Client from ${this.recovery.requastorEmail} to ${this.attributes.requastorEmail}`,
+        })
       }
 
       if (isNil(this.newRecoveryItems)) {

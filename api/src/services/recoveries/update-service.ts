@@ -73,6 +73,18 @@ export class UpdateService extends BaseService {
         .where("recoveryID", this.recovery.recoveryID)
         .returning("*")
 
+      // update the journal voucher's total if linked
+      if (updatedRecovery.journalID) {
+        const journalTotal = await trx("Recovery")
+          .where("journalID", updatedRecovery.journalID)
+          .sum<{ sum: number }>("totalPrice as sum")
+          .first()
+
+        await trx("JournalVoucher")
+          .where("journalID", updatedRecovery.journalID)
+          .update({ jvAmount: journalTotal?.sum ?? 0 })
+      }
+
       if (
         // draft -> routed for approval
         this.recovery.status == RecoveryStatuses.DRAFT &&

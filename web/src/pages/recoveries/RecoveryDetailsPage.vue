@@ -7,8 +7,8 @@
         class="mr-3"
         variant="flat"
         dark
-        :to="{ name: 'JournalPage', params: { journalId: recovery?.journalID } }"
-        ><strong>Status:</strong>&nbsp;{{ recovery?.status }} = {{ recovery?.journal?.jvNum }}
+        :to="{ name: 'JournalPage', params: { journalId: recovery.journalID } }"
+        ><strong>Status:</strong>&nbsp;{{ recovery.status }} = {{ recovery.journal.jvNum }}
       </v-chip>
       <v-chip
         v-else

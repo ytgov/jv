@@ -2,6 +2,16 @@
   <div class="mb-4 d-flex">
     <div class="pt-2">
       <v-chip
+        v-if="recovery && recovery.journal"
+        color="warning"
+        class="mr-3"
+        variant="flat"
+        dark
+        :to="{ name: 'JournalPage', params: { journalId: recovery?.journalID } }"
+        ><strong>Status:</strong>&nbsp;{{ recovery?.status }} = {{ recovery?.journal?.jvNum }}
+      </v-chip>
+      <v-chip
+        v-else
         color="warning"
         class="mr-3"
         variant="flat"
@@ -458,7 +468,12 @@ const itemTotalCost = computed(() => {
 const canEdit = computed(() => {
   if (!recovery.value || !currentUser.value) return false
   if (isSystemAdmin.value) return true
-  if (isAgent.value && recovery.value.status == "Draft") return true
+  if (
+    isAgent.value &&
+    (recovery.value?.status == RecoveryStatuses.DRAFT ||
+      recovery.value?.status == RecoveryStatuses.ROUTED_FOR_APPROVAL)
+  )
+    return true
 
   return false
 })
@@ -468,9 +483,9 @@ const canFill = computed(() => {
 
   if (isAgent.value || isSystemAdmin.value) {
     return (
-      recovery.value.status == "Purchase Approved" ||
-      recovery.value.status == "Partially Fulfilled" ||
-      recovery.value.status == "Fulfilled"
+      recovery.value.status == RecoveryStatuses.PURCHASE_APPROVED ||
+      recovery.value.status == RecoveryStatuses.PARTIALLY_FULFILLED ||
+      recovery.value.status == RecoveryStatuses.FULFILLED
     )
   }
   return false
